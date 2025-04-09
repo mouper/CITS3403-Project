@@ -6,7 +6,7 @@ Group project for CITS3403 - Agile Web Development
 | Keandria Ong | 23365164 | mouper |
 | JG |   |   |
 | KS |   |   |
-| AH |   |   |
+| Aidan Hutchison | 23722738  | Lion-Rampant  |
 
 # Set Up
 ```
