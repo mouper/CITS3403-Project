@@ -4,7 +4,7 @@ Group project for CITS3403 - Agile Web Development
 | Name      | Student ID | Github Username |
 | ----------- | ----------- | ----------- |
 | Keandria Ong | 23365164 | mouper |
-| JG |   |   |
+| Jessie Guanwan | 24125314 | jessiecg |
 | KS |   |   |
 | Aidan Hutchison | 23722738  | Lion-Rampant  |
 
