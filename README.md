@@ -11,6 +11,7 @@ Group project for CITS3403 - Agile Web Development
 
 # Set Up
 ```
+*ONLY WORKS ON LINUX (WSL ON WINDOWS) AND MAC*
 Initial Set Up:
     cd src
     python3 -m venv env
