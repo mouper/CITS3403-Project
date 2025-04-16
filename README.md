@@ -8,10 +8,17 @@ Group project for CITS3403 - Agile Web Development
 | Kunning Shao | 23825311 | Kunning Shao |
 | Aidan Hutchison | 23722738  | Lion-Rampant  |
 
+
 # Set Up
 ```
-    TBD
+    cd src
+    python3 -m venv env
+    source env/bin/activate
+    pip install -r requirements.txt
+    flask run
 ```
+Site can now be viewed from [http://127.0.0.1:5000/index](http://127.0.0.1:5000/index)
+
 
 # Issue Creation Rules
 1. Use present tense verbage in title e.g. Create navbar component
