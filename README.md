@@ -12,3 +12,9 @@ Group project for CITS3403 - Agile Web Development
 ```
     TBD
 ```
+
+# Issue Creation Rules
+1. Use present tense verbage in title e.g. Create navbar component
+2. Add image of design
+3. List any reusable components + styles being used
+4. Reminder to create new branch for issue
