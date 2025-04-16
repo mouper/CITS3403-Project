@@ -21,6 +21,9 @@ Initial Set Up:
 After Set Up Has Been Completed Once:
     source env/bin/activate
     flask run
+
+If you want to leave the environment:
+    deactivate
 ```
 Site can now be viewed from [http://127.0.0.1:5000/index](http://127.0.0.1:5000/index)
 
