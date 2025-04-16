@@ -32,5 +32,5 @@ Site can now be viewed from [http://127.0.0.1:5000/index](http://127.0.0.1:5000/
 # Issue Creation Rules
 1. Use present tense verbage in title e.g. Create navbar component
 2. Add image of design
-3. List any reusable components + styles being used
+3. List any reusable components + styles being created
 4. Reminder to create new branch for issue
