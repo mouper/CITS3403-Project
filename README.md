@@ -11,10 +11,15 @@ Group project for CITS3403 - Agile Web Development
 
 # Set Up
 ```
+Initial Set Up:
     cd src
     python3 -m venv env
     source env/bin/activate
     pip install -r requirements.txt
+    flask run
+
+After Set Up Has Been Completed Once:
+    source env/bin/activate
     flask run
 ```
 Site can now be viewed from [http://127.0.0.1:5000/index](http://127.0.0.1:5000/index)
