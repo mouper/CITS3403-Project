@@ -1,0 +1,42 @@
+.off-white {
+    color: #FAFAFA; 
+}
+
+.primary-shade1 { 
+    color: #BBB2FF; 
+}
+
+.primary-shade2 { 
+    color: #D6D6EE; 
+}
+
+.background-shade1 { 
+    color: #121212; 
+}
+.background-shade2 { 
+    color: #1E1E1E; 
+}
+
+.background-shade3 { 
+    color: #0E0E0E; 
+}
+
+.overlay-white { 
+    color: #FAFAFA, 20%;
+}
+
+.overlay-primary1 { 
+    color: #BBB2FF, 20%; 
+}
+
+.overlay-primary2 { 
+    color: #BBB2FF, 50%; 
+}
+
+.overlay-shade1 { 
+    color: #000000, 20%; 
+}
+
+.overlay-shade2 { 
+    color: #121212, 40%; 
+}
