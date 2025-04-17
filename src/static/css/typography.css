@@ -1,0 +1,128 @@
+.largeTitle {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1rem;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 110%;
+}
+
+.title1 {
+    font-family: 'Monsterrat', sans-serif;
+    font-size: 2.375rem;
+    font-style: italic;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.title2 {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 2.1875rem;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.subheadline{
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.5rem;
+    font-style: italic;
+    font-weight: 500;
+    line-height: normal;
+}
+
+.headline {
+    font-family: Montserrat;
+    font-size: 1.625rem;
+    font-style: normal;
+    font-weight: 500;
+    line-height: normal;
+}
+
+.semibold1 {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.125rem;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.medium1 {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.375rem;
+    font-style: normal;
+    font-weight: 500;
+    line-height: normal;
+}
+
+.medium2 {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.25rem;
+    font-style: normal;
+    font-weight: 500;
+    line-height: normal;
+}
+
+.medium3 {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.125rem;
+    font-style: normal;
+    font-weight: 500;
+    line-height: normal;
+}
+
+.medium4 {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1rem;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 1.5rem;
+    letter-spacing: 0.0125rem;
+}
+
+.medium5 {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.875rem;
+    font-style: normal;
+    font-weight: 500;
+    line-height: normal;
+}
+
+.regular1 {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.375rem;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+}
+
+.regular2 {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.125rem;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+}
+
+.regular3 {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1rem;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 1.5rem;
+}
+
+.regular4 {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.875rem;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+}
+
+.caption {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.875rem;
+    font-style: italic;
+    font-weight: 300;
+    line-height: 1.5rem;
+}
