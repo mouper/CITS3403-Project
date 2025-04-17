@@ -30,7 +30,7 @@ After Set Up Has Been Completed Once:
 If you want to leave the environment:
     deactivate
 ```
-Site can now be viewed from [http://127.0.0.1:5000/index](http://127.0.0.1:5000/index)
+Site can now be viewed from [http://127.0.0.1:5000](http://127.0.0.1:5000)
 
 
 ---
