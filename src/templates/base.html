@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8">
@@ -45,15 +45,20 @@
         </div>
     </nav>
 
-    <h1> Hello </h1>
-
-    <div class="container">
-        <!-- Content Placeholder-->
-        {% block content %} {% endblock %}
-    </div>
-
-    <!-- Example Component Usage -->
-    {% include 'components/footer.html' %}
+    <head>
+        {% if title %}
+        <title>{{ title }} - Microblog</title>
+        {% else %}
+        <title>Microblog</title>
+        {% endif %}
+    </head>
+    <body>
+        <div>Microblog: <a href="/index">Home</a></div>
+        <hr>
+        {% block content %}{% endblock %}
+        <!-- Example Component Usage -->
+        {% include 'components/footer.html' %}
+    </body>
 
     <!-- JavaScript Below: -->
 
