@@ -27,40 +27,15 @@
   </head>
 
   <body>
-    <!-- Example Component Usage -->
-    {% include 'components/navbar.html' %}
-
-    <head>
-        {% if title %}
-        <title>{{ title }} - Microblog</title>
-        {% else %}
-        <title>Microblog</title>
+    <div class="app-container">
+        {% if current_user.is_authenticated %}
+            {% include 'components/navbar.html' %}
         {% endif %}
-        <div class="row bg-dark">
-            <div class="LogoLandingNav col"></div>
-            <div class="LogoNavbar col"></div>
-            <div class="DashboardIcon col"></div>
-            <div class="DashboardIcon DashboardIcon-primary col"></div>
-            <div class="RequestsIcon col"></div>
-        </div>
-        <div class="row bg-dark">
-            <div class="AnalyticsIcon col"></div>
-            <div class="AnalyticsIcon AnalyticsIcon-primary col"></div>
-            <div class="FilterIcon col"></div>
-            <div class="FilterIcon FilterIcon-open col"></div>
-            <div class="DropdownIcon col"></div>
-            <div class="DropdownIcon DropdownIcon-open col"></div>
-            <div class="RadialSelectedIcon col"></div>
-            <div class="RadialIcon col"></div>
-        </div>
-    </head>
-    <body>
-        <div>Microblog: <a href="/index">Home</a></div>
-        <hr>
-        {% block content %}{% endblock %}
-        <!-- Example Component Usage -->
-        {% include 'components/footer.html' %}
-    </body>
+        
+        <main class="content">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
 
     <!-- JavaScript Below: -->
 
