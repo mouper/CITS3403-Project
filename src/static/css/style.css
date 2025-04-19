@@ -35,6 +35,11 @@
     text-decoration: none;
 }
 
+.navbar-item.active {
+    color: #C4B5FD;
+    text-decoration: none;
+}
+
 .navbar-item > div {
     background-color: currentColor;
     margin-right: 1rem;
