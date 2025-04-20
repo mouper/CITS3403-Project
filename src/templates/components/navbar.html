@@ -25,7 +25,11 @@
           <span class="medium3">My Account</span>
         </a>
       </div>
-    {% if current_user.is_authenticated %}
-        <a href="{{ url_for('logout') }}">Logout</a>
-    {% endif %}
+
+    <!-- temporary logout button --> 
+    <div class="navbar-logout-container">
+      {% if current_user.is_authenticated %}
+        <a class="navbar-logout medium4" href="{{ url_for('logout') }}">Logout</a>
+      {% endif %}
+    </div>
   </nav>
