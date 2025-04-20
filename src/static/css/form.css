@@ -10,7 +10,7 @@
 /* 📦 TextForm */
 .TextForm input[type="text"] {
   background-color: var(--background-shade3);
-  border: none;
+  border: 1px solid var(--primary-shade1);
   border-radius: 0.75rem;
   padding: 0.75rem 1rem;
   margin-bottom: 1rem;
@@ -20,31 +20,45 @@
   color: var(--off-white);
 }
 
+::placeholder {
+  color: var(--primary-shade2);
+  opacity: 1; 
+}
+
 /* 💾 SaveBtn */
 .SaveBtn button {
-  background: linear-gradient(to bottom, var(--primary-shade1), var(--primary-shade2));
-  border: none;
-  border-radius: 0.5rem;
-  padding: 0.5rem 1rem;
-  font-weight: bold;
-  color: var(--background-shade1);
+  background-color: var(--overlay-primary1);
+  border: 1.5px solid var(--primary-shade1);
+  box-shadow: 6px 6px 25px #0e0e0e;
+  border-radius: 0.75rem;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  padding: 0.72rem 1.062rem;
+  gap: 0.75rem;
+  color: var(--off-white);
   cursor: pointer;
-  margin: 0.25rem 0;
+  transition: background-color 0.3s ease;
+}
+.SaveBtn button:hover{
+  background-color: var(--overlay-primary2);
 }
 
 /* ⬇️ Dropdown */
 .Dropdown select {
   background-color: var(--background-shade3);
-  border: none;
+  border: 1px solid var(--primary-shade1);
   border-radius: 0.75rem;
   padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
   color: var(--off-white);
   width: 100%;
   box-shadow: inset 0 0 0 1px var(--overlay-white);
   appearance: none;
-  background-image: url('/static/icons/dropdown.svg'); /* 或用图标类 */
+  background-image: url('/static/assets/DropdownIcon.svg'); /* 或用图标类 */
   background-repeat: no-repeat;
-  background-position: right 1rem center;
+  background-position: right 1.2rem center;
 }
 
 /* 🧍 PlayerTab */
@@ -61,50 +75,79 @@
 
 /* 📩 SendJoinBtn */
 .SendJoinBtn button {
-  background-color: var(--background-shade2);
+  background-color: var(--background-shade3);
   border-radius: 0.75rem;
-  padding: 0.75rem 1.5rem;
-  border: 1px solid var(--overlay-primary1);
+  padding: 0.72rem 1.062rem;
+  border: 1.5px solid var(--primary-shade2);
   color: var(--off-white);
   display: flex;
+  font-size: 1rem;
   align-items: center;
-  gap: 0.5rem;
-  font-weight: 500;
+  justify-content: center;
+  gap: 0.75rem;
   cursor: pointer;
+  transition: background-color 0.3s ease;
+  box-shadow: 6px 6px 25px #0e0e0e;
 }
+
 .SendJoinBtn button:hover {
-  border-color: var(--overlay-primary2);
+  background-color: var(--overlay-white);
 }
 
 /* 🗨️ Dialog */
 .Dialog {
   display: flex;
   gap: 1rem;
+  height: 2.2rem;
+  align-items: center;
 }
 
 .Dialog button.cancel {
   background-color: var(--background-shade3);
-  border: 1px solid var(--overlay-white);
-  border-radius: 0.5rem;
-  padding: 0.5rem 1.5rem;
+  border: 1.5px solid var(--primary-shade2);
+  border-radius: 0.8rem;
+  padding: 0.75rem 1.1rem;
+  color: var(--primary-shade2);
+  transition: background-color 0.3s ease;
+  transition: color 0.3s ease;
+  transition: border 0.3s ease;
+}
+
+.Dialog button.cancel:hover{
+  background-color: var(--overlay-primary1);
   color: var(--off-white);
+  border: 1.5px solid var(--off-white);
 }
 
 .Dialog button.accept {
   background-color: var(--primary-shade1);
   color: var(--background-shade1);
-  border: none;
-  border-radius: 0.5rem;
-  padding: 0.5rem 1.5rem;
+  border: 1.5px solid transparent;
+  border-radius: 0.8rem;
+  padding: 0.75rem 1.1rem;
+  transition: background-color 0.3s ease;
+  transition: color 0.3s ease;
+  transition: border 0.3s ease;
+}
+
+.Dialog button.accept:hover{
+  background-color: var(--overlay-primary1);
+  border: 1.5px solid var(--primary-shade1);
+  color: var(--off-white);
 }
 
 /* 🗑️ Discard */
 .DiscardBtn {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  color: var(--off-white);
+  gap: 0.75rem;
+  color: var(--primary-shade2);
   cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.DiscardBtn button:hover {
+  color: var(--primary-shade1);
 }
 
 /* 📻 RadioSelection */
@@ -116,15 +159,65 @@
   font-size: 1rem;
 }
 
-.RadioSelection input[type="radio"] {
-  accent-color: var(--primary-shade1);
+.radio-option {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.radio-input {
+  position: absolute;
+  opacity: 0;
+}
+
+.radio-custom {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.radio-icon {
+  position: relative;
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.unselected-icon,
+.selected-icon {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transition: opacity 0.2s ease;
+}
+
+.unselected-icon {
+  opacity: 1;
+}
+
+.selected-icon {
+  opacity: 0;
+}
+
+.radio-input:checked ~ .radio-custom .unselected-icon {
+  opacity: 0;
+}
+
+.radio-input:checked ~ .radio-custom .selected-icon {
+  opacity: 1;
+}
+
+.radio-label {
+  font-size: 1rem;
+  color: var(--text-color, #ffffff);
 }
 
 /* ☑️ Checkbox */
 .Checkbox label {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 1rem;
   font-size: 1rem;
 }
 
@@ -132,5 +225,49 @@
   width: 1.2rem;
   height: 1.2rem;
   accent-color: var(--primary-shade1);
+}
+
+.checkbox-input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.checkbox-icon {
+  position: relative;
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+}
+
+.unchecked-icon,
+.checked-icon {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transition: all 0.2s ease;
+}
+
+.unchecked-icon {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.checked-icon {
+  opacity: 0;
+  transform: scale(0.8);
+}
+
+.checkbox-input:checked ~ .checkbox-icon .unchecked-icon {
+  opacity: 0;
+  transform: scale(0.8);
+}
+
+.checkbox-input:checked ~ .checkbox-icon .checked-icon {
+  opacity: 1;
+  transform: scale(1);
 }
 

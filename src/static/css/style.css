@@ -1,6 +1,7 @@
 @import url("icons.css");
 @import url("typography.css");
 @import url("colours.css");
+@import url("form.css");
 
 html {
     scroll-behavior: smooth;
