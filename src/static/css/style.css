@@ -27,6 +27,7 @@ html {
 .app-container:has(.navbar-div) .content {
     margin-left: 17.438rem;
     width: calc(100% - 17.438rem);
+    padding: 5rem 5rem 2rem 5rem;
 }
 
 /* NAVBAR STYLES */
