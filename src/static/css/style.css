@@ -1,10 +1,12 @@
 @import url("icons.css");
+@import url("typography.css");
+@import url("colours.css");
 
 .navbar-div {
     display: flex;
     flex-direction: column;
-    background-color: #1E1E1E;
-    color: #FAFAFA;
+    background-color: var(--background-shade2);
+    color: var(--off-white);
     width: 17.438rem;
     height: 100vh;
   }
@@ -24,14 +26,14 @@
 .navbar-item {
     display: flex;
     align-items: center;
-    padding: 1.0415rem 4.094rem 1.0415rem;
-    color: #FAFAFA;
+    padding: 1.2rem 1.0415rem 1.2rem 4rem;
+    color: var(--off-white);
     text-decoration: none;
     font-size: 0.875rem;
   }
   
 .navbar-item:hover {
-    color: #C4B5FD;
+    color: var(--primary-shade1);
     text-decoration: none;
 }
 
@@ -42,5 +44,5 @@
 
 .navbar-item > div {
     background-color: currentColor;
-    margin-right: 1rem;
+    margin-right: 1.05rem;
 }

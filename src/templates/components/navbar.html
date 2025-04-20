@@ -7,22 +7,22 @@
     <div class="navbar-menu">
         <a href="{{ url_for('dashboard') }}" class="navbar-item {{ 'active' if request.path == '/dashboard' else '' }}">
           <div class="DashboardIcon"></div>
-          <span>Dashboard</span>
+          <span class="medium3">Dashboard</span>
         </a>
         
         <a href="{{ url_for('analytics') }}" class="navbar-item {{ 'active' if request.path == '/analytics' else '' }}">
           <div class="AnalyticsIcon"></div>
-          <span>Analytics</span>
+          <span class="medium3">Analytics</span>
         </a>
         
         <a href="{{ url_for('requests') }}" class="navbar-item {{ 'active' if request.path == '/requests' else '' }}">
           <div class="RequestsIcon"></div>
-          <span>My Requests</span>
+          <span class="medium3">My Requests</span>
         </a>
         
         <a href="{{ url_for('account') }}" class="navbar-item {{ 'active' if request.path == '/account' else '' }}">
           <div class="ProfileIcon"></div>
-          <span>My Account</span>
+          <span class="medium3">My Account</span>
         </a>
       </div>
     {% if current_user.is_authenticated %}
