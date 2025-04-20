@@ -1,14 +1,14 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <div class="requests-container">
-        <div class="landing-container">
-            <h1 class="title2">Welcome to My Application</h1>
-            <p class="medium4">Please sign in to continue</p>
-            <div class="auth-buttons">
-                <a href="{{ url_for('login') }}" class="btn btn-primary">Login</a>
-                <a href="{{ url_for('signup') }}" class="btn btn-secondary">Sign Up</a>
-            </div>
+    <div class="landing-container">
+        <div class="landing-nav-container"></div>
+        <h1 class="title2">Welcome to My Application</h1>
+        <p class="medium4">Please sign in to continue</p>
+        <div class="auth-buttons">
+            <a href="{{ url_for('login') }}" class="btn btn-primary">Login</a>
+            <a href="{{ url_for('signup') }}" class="btn btn-secondary">Sign Up</a>
         </div>
+        {% include 'components/typecards.html' %}
     </div>
 {% endblock %}
