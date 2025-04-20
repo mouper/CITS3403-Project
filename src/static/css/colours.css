@@ -1,0 +1,15 @@
+:root {
+    --off-white: #FAFAFA;
+    --primary-shade1: #BBB2FF;
+    --primary-shade2: #D6D6EE;
+  
+    --background-shade1: #121212;
+    --background-shade2: #1E1E1E;
+    --background-shade3: #0E0E0E;
+  
+    --overlay-white: rgba(250, 250, 250, 0.2);
+    --overlay-primary1: rgba(187, 178, 255, 0.2);
+    --overlay-primary2: rgba(187, 178, 255, 0.5);
+    --overlay-shade1: rgba(0, 0, 0, 0.2);
+    --overlay-shade2: rgba(18, 18, 18, 0.4);
+  }  
