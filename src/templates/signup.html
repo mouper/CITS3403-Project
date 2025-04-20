@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
     <div class="signup-form">
-        <h1>Sign Up</h1>
+        <h1 class="title2">Sign Up</h1>
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
         <div class="flashes">
@@ -16,6 +16,6 @@
             <input type="password" name="password" placeholder="Password" required>
             <button type="submit">Sign Up</button>
         </form>
-        <p>Already have an account? <a href="{{ url_for('login') }}">Login</a></p>
+        <p class="medium4">Already have an account? <a href="{{ url_for('login') }}">Login</a></p>
     </div>
 {% endblock %}

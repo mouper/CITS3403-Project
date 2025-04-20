@@ -2,7 +2,7 @@
 
 {% block content %}
 <div class="dashboard-container">
-    <h1>My Dashboard</h1>
+    <h1 class="title2">My Dashboard</h1>
     
     {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
@@ -14,7 +14,7 @@
     {% endif %}
   {% endwith %}
 
-    <p>Welcome to your dashboard!</p>
+    <p class="medium4">Welcome to your dashboard!</p>
     <!-- Page content goes here -->
 </div>
 {% endblock %}
