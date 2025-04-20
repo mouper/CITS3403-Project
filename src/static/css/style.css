@@ -14,7 +14,6 @@ html {
 /* Content styles - default (no navbar) */
 .content {
     width: 100%;
-    padding: 4.688rem 5rem;
     background-color: var(--background-shade1);
     color: var(--off-white);
 }
@@ -25,7 +24,7 @@ html {
     width: calc(100% - 17.438rem);
 }
 
-/* navbar styles */
+/* NAVBAR STYLES */
 .app-container > .navbar-div {
     display: flex;
     flex-direction: column;
@@ -95,7 +94,7 @@ html {
     text-decoration: none !important;
 }
 
-/* typecard component styles */
+/* TYPECARD COMPONENT STYLES */
 /* Container for 3 cards in a row */
 .card-container {
     display: flex;
@@ -149,7 +148,7 @@ html {
 }
 
 /* Content area styling */
-.content {
+.card-content {
     padding: 1.9rem 1.5rem 1rem 1.5rem;
     display: flex;
     flex-direction: column;
@@ -188,4 +187,134 @@ html {
     width: 14.25rem;
     max-height: 100%;
     object-fit: cover;
+}
+
+/* LANDING PAGE STYLES */
+.landing-container{
+    width: 100%;
+}
+
+.landing-nav-container{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2.9rem 5%;
+    width: 100%;
+}
+
+.landinglogo {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.nav-links {
+    display: flex;
+    gap: 3rem;
+    align-items: center;
+}
+
+.login-btn {
+    color: var(--off-white) !important;
+    text-decoration: none;
+    transition: color 0.3s ease;
+    text-decoration: none !important;
+}
+
+.login-btn:hover {
+    color: var(--primary-shade1) !important;
+    text-decoration: none !important;
+}
+
+.signup-btn {
+    display: inline-block;
+    border-radius: 15px;
+    background-color: var(--primary-shade1);
+    padding: 0.75rem 1.312rem;
+    color: var(--background-shade1) !important;
+    transition: color 0.3s ease;
+    text-decoration: none !important;
+}
+
+.signup-btn:hover {
+    color: var(--off-white) !important;
+    text-decoration: none !important;
+}
+
+.hero {
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    padding: 0 5%;
+}
+
+.hero-content {
+    max-width: 78.75rem;
+}
+
+.hero-content h2 {
+    margin-top: 3rem;
+    margin-bottom: 4.5rem;
+}
+
+.hero-content p {
+    color: var(--primary-shade1);
+    margin-bottom: 4.9rem;
+}
+
+.hero-buttons {
+    display: flex;
+    gap: 2.313rem;
+}
+
+.herobtn-base {
+    display: inline-block;
+    box-shadow: 6px 6px 25px #0e0e0e;
+    border-radius: 20px;
+    padding: 0.75rem 1.875rem;
+    text-decoration: none;
+  }
+  
+.herobtn-signup {
+    background-color: var(--overlay-primary1);
+    border: 2px solid var(--primary-shade1);
+    color: var(--off-white) !important;
+    transition: background-color 0.3s ease;
+    text-decoration: none !important;
+}
+
+.herobtn-signup:hover {
+    background-color: var(--overlay-primary2);
+    text-decoration: none !important;
+}
+  
+.herobtn-formats {
+    background-color: var(--background-shade1);
+    border: 1px solid var(--primary-shade1);
+    color: var(--primary-shade1) !important;
+    transition: border 0.3s ease;
+    transition: color 0.3s ease;
+    text-decoration: none !important;
+}
+
+.herobtn-formats:hover {
+    border-color: var(--off-white);
+    color: var(--off-white) !important;
+    text-decoration: none !important;
+}
+
+/* Formats Section */
+.types-section {
+    background-color: var(--overlay-shade1);
+    width: 100%;
+    padding-bottom: 2.625rem;
+}
+
+.types-section h2 {
+    padding: 3.875rem 4.375rem 0rem 4.375rem;
+}
+
+.types-section p {
+    color: var(--primary-shade1);
+    padding: 1.5rem 4.375rem 2.625rem 4.375rem;
 }
