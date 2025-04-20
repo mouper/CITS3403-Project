@@ -2,12 +2,17 @@
 @import url("typography.css");
 @import url("colours.css");
 /* 通用字体颜色和字体 */
-* {
-  font-family: 'Montserrat', sans-serif;
-  color: var(--off-white);
-}
 
 /* 📦 TextForm */
+
+/* Usage:
+
+<div class="TextForm">
+    <input type="text" placeholder="Enter your name">
+    <input type="text" placeholder="Another text field">
+</div>
+
+*/
 .TextForm input[type="text"] {
   background-color: var(--background-shade3);
   border: 1px solid var(--primary-shade1);
@@ -26,6 +31,17 @@
 }
 
 /* 💾 SaveBtn */
+
+/* Usage:
+
+<div class="SaveBtn">
+  <button>
+      <div class="SaveIcon"></div>
+      Save Changes
+  </button>
+</div>
+
+*/
 .SaveBtn button {
   background-color: var(--overlay-primary1);
   border: 1.5px solid var(--primary-shade1);
@@ -46,6 +62,18 @@
 }
 
 /* ⬇️ Dropdown */
+
+/* Usage:
+
+<div class="Dropdown">
+    <select>
+        <option>Select an option </option>
+        <option>Option 1</option>
+        <option>Option 2</option>
+    </select>
+</div>
+
+*/
 .Dropdown select {
   background-color: var(--background-shade3);
   border: 1px solid var(--primary-shade1);
@@ -62,6 +90,7 @@
 }
 
 /* 🧍 PlayerTab */
+/* Usage TBD */
 .PlayerTab select {
   background-color: black;
   border: none;
@@ -74,6 +103,17 @@
 }
 
 /* 📩 SendJoinBtn */
+
+/* Usage:
+
+<div class="SendJoinBtn">
+  <button>
+      <div class="SendIcon"></div> 
+      Send Invite
+  </button>
+</div>
+
+*/
 .SendJoinBtn button {
   background-color: var(--background-shade3);
   border-radius: 0.75rem;
@@ -95,6 +135,20 @@
 }
 
 /* 🗨️ Dialog */
+
+/* Usage:
+
+<div class="Dialog">
+    <button class="cancel">Cancel</button>
+</div>
+
+OR
+
+<div class="Dialog">
+    <button class="cancel">Cancel</button>
+</div>
+
+*/
 .Dialog {
   display: flex;
   gap: 1rem;
@@ -137,6 +191,15 @@
 }
 
 /* 🗑️ Discard */
+
+/* Usage:
+
+<div class="DiscardBtn">
+    <div class="DiscardIcon"></div> 
+    <span>Discard Changes</span>
+</div>
+
+*/
 .DiscardBtn {
   display: flex;
   align-items: center;
@@ -151,6 +214,23 @@
 }
 
 /* 📻 RadioSelection */
+
+/* Usage:
+
+<div class="RadioSelection">
+  <label class="radio-option">
+    <input type="radio" name="options" class="radio-input" checked>
+    <div class="radio-custom">
+      <div class="radio-icon">
+        <div class="unselected-icon RadialIcon"></div>
+        <div class="selected-icon RadialSelectedIcon"></div>
+      </div>
+      <span class="radio-label">Option A</span>
+    </div>
+  </label>
+</div>
+
+*/
 .RadioSelection label {
   display: flex;
   align-items: center;
@@ -214,6 +294,21 @@
 }
 
 /* ☑️ Checkbox */
+
+/* Usage:
+
+<div class="Checkbox">
+  <label class="checkbox-option">
+    <input type="checkbox" class="checkbox-input">
+    <div class="checkbox-icon">
+      <div class="unchecked-icon UncheckBoxIcon"></div>
+      <div class="checked-icon CheckedBoxIcon"></div>
+    </div>
+    <span class="checkbox-label">Option 1</span>
+  </label>
+</div>
+
+*/
 .Checkbox label {
   display: flex;
   align-items: center;
