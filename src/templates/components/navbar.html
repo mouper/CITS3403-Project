@@ -5,24 +5,31 @@
     </div>
     
     <div class="navbar-menu">
-      <a href="#" class="navbar-item">
-        <div class="DashboardIcon"></div>
-        <span class="medium3">Dashboard</span>
-      </a>
-      
-      <a href="#" class="navbar-item">
-        <div class="AnalyticsIcon"></div>
-        <span class="medium3">Analytics</span>
-      </a>
-      
-      <a href="#" class="navbar-item">
-        <div class="RequestsIcon"></div>
-        <span class="medium3">My Requests</span>
-      </a>
-      
-      <a href="#" class="navbar-item">
-        <div class="ProfileIcon"></div>
-        <span class="medium3">My Account</span>
-      </a>
+        <a href="{{ url_for('dashboard') }}" class="navbar-item {{ 'active' if request.path == '/dashboard' else '' }}">
+          <div class="DashboardIcon"></div>
+          <span class="medium3">Dashboard</span>
+        </a>
+        
+        <a href="{{ url_for('analytics') }}" class="navbar-item {{ 'active' if request.path == '/analytics' else '' }}">
+          <div class="AnalyticsIcon"></div>
+          <span class="medium3">Analytics</span>
+        </a>
+        
+        <a href="{{ url_for('requests') }}" class="navbar-item {{ 'active' if request.path == '/requests' else '' }}">
+          <div class="RequestsIcon"></div>
+          <span class="medium3">My Requests</span>
+        </a>
+        
+        <a href="{{ url_for('account') }}" class="navbar-item {{ 'active' if request.path == '/account' else '' }}">
+          <div class="ProfileIcon"></div>
+          <span class="medium3">My Account</span>
+        </a>
+      </div>
+
+    <!-- temporary logout button --> 
+    <div class="navbar-logout-container">
+      {% if current_user.is_authenticated %}
+        <a class="navbar-logout medium4" href="{{ url_for('logout') }}">Logout</a>
+      {% endif %}
     </div>
   </nav>
