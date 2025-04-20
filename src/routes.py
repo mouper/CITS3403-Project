@@ -35,7 +35,7 @@ def login():
 def logout():
     logout_user()
     # Redirect with fresh=1 to indicate a clean state
-    return redirect(url_for('login', fresh=1))
+    return redirect(url_for('landing', fresh=1))
 
 @application.route('/signup', methods=['GET', 'POST'])
 def signup():
