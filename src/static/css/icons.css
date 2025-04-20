@@ -1,0 +1,257 @@
+/* Usage: <div class="iconclassname"></div>*/
+
+.LogoLandingNav {
+    width: 16.125rem;
+    height: 4.4375rem;
+    flex-shrink: 0;
+    background-color: #BBB2FF;
+    mask-image: url('../assets/LogoLandingNav.svg');
+    mask-size: contain;
+    mask-position: center;
+    mask-repeat: no-repeat;
+  }
+
+.LogoNavbar {
+    width: 4.5625rem;
+    height: 4.5625rem;
+    flex-shrink: 0;
+    background-color: #BBB2FF;
+    mask-image: url('../assets/LogoNavbar.svg');
+    mask-size: contain;
+    mask-position: center;
+    mask-repeat: no-repeat;
+}
+
+.DashboardIcon {
+    width: 1.3rem;
+    height: 1.3rem;
+    flex-shrink: 0;
+    background-color: #FAFAFA;
+    mask-image: url('../assets/DashboardIcon.svg');
+    mask-size: contain;
+    mask-position: center;
+    mask-repeat: no-repeat;
+}
+
+.DashboardIcon.DashboardIcon-primary {
+    background-color: #BBB2FF;
+}
+
+.AnalyticsIcon {
+    width: 1.3125rem;
+    height: 1.32531rem;
+    flex-shrink: 0;
+    background-color: #FAFAFA;
+    mask-image: url('../assets/AnalyticsIcon.svg');
+    mask-size: contain;
+    mask-position: center;
+    mask-repeat: no-repeat;
+}
+
+.AnalyticsIcon.AnalyticsIcon-primary {
+    background-color: #BBB2FF;
+}
+
+.RequestsIcon {
+    width: 1.4rem;
+    height: 1.4rem;
+    flex-shrink: 0;
+    background-color: #FAFAFA;
+    mask-image: url('../assets/RequestsIcon.svg');
+    mask-size: contain;
+    mask-position: center;
+    mask-repeat: no-repeat;
+}
+
+.RequestsIcon.RequestsIcon-primary {
+    background-color: #BBB2FF;
+}
+
+.ProfileIcon {
+    width: 1.27781rem;
+    height: 1.09375rem;
+    flex-shrink: 0;
+    background-color: #FAFAFA;
+    mask-image: url('../assets/ProfileIcon.svg');
+    mask-size: contain;
+    mask-position: center;
+    mask-repeat: no-repeat;
+}
+
+.ProfileIcon.ProfileIcon-primary {
+    background-color: #BBB2FF;
+}
+
+.CreateIcon {
+    width: 1.05rem;
+    height: 1.575rem;
+    flex-shrink: 0;
+    background-color: #FAFAFA;
+    mask-image: url('../assets/CreateIcon.svg');
+    mask-size: contain;
+    mask-position: center;
+    mask-repeat: no-repeat;
+}
+
+.UploadIcon {
+    width: 1.16669rem;
+    height: 1.3125rem;
+    flex-shrink: 0;
+    background-color: #FAFAFA;
+    mask-image: url('../assets/UploadIcon.svg');
+    mask-size: contain;
+    mask-position: center;
+    mask-repeat: no-repeat;
+}
+
+.FilterIcon {
+    width: 0.7625rem;
+    height: 0.7625rem;
+    flex-shrink: 0;
+    background-color: #FAFAFA;
+    mask-image: url('../assets/FilterIcon.svg');
+    mask-size: contain;
+    mask-position: center;
+    mask-repeat: no-repeat;
+}
+
+.FilterIcon.FilterIcon-open {
+    transform: rotate(90deg) scale(1.1);
+    transform-origin: center;
+}
+
+.DropdownIcon {
+    width: 0.96875rem;
+    height: 0.53125rem;
+    flex-shrink: 0;
+    background-color: #BBB2FF;
+    mask-image: url('../assets/DropdownIcon.svg');
+    mask-size: contain;
+    mask-position: center;
+    mask-repeat: no-repeat;
+}
+
+.DropdownIcon.DropdownIcon-open {
+    transform: rotate(180deg);
+    background-color: #FAFAFA;
+}
+
+.SaveIcon {
+    width: 1rem;
+    height: 1rem;
+    flex-shrink: 0;
+    background-color: #FAFAFA;
+    mask-image: url('../assets/SaveIcon.svg');
+    mask-size: contain;
+    mask-position: center;
+    mask-repeat: no-repeat;
+}
+
+.RadialSelectedIcon {
+    display: flex;
+    width: 1.25rem;
+    height: 1.25rem;
+    padding: 0.3125rem;
+    align-items: flex-start;
+    gap: 0.625rem;
+    background-color: #BBB2FF;
+    mask-image: url('../assets/RadialSelectedIcon.svg');
+    mask-size: contain;
+    mask-position: center;
+    mask-repeat: no-repeat;
+}
+
+.RadialIcon {
+    display: flex;
+    width: 1.25rem;
+    height: 1.25rem;
+    padding: 0.3125rem;
+    align-items: flex-start;
+    gap: 0.625rem;
+    flex-shrink: 0;
+    background-color: #BBB2FF;
+    mask-image: url('../assets/RadialIcon.svg');
+    mask-size: contain;
+    mask-position: center;
+    mask-repeat: no-repeat;
+}
+
+.UncheckBoxIcon {
+    display: flex;
+    width: 1.25rem;
+    height: 1.25rem;
+    padding: 0.125rem;
+    align-items: flex-start;
+    gap: 0.625rem;
+    flex-shrink: 0;
+    background-color: #BBB2FF;
+    mask-image: url('../assets/UncheckBoxIcon.svg');
+    mask-size: contain;
+    mask-position: center;
+    mask-repeat: no-repeat;
+}
+
+/* Uses background image instead because masking doesn't work since this svg has multiple background colours*/
+.CheckedBoxIcon {
+    background-image: url('../assets/CheckedBoxIcon.svg');
+    display: flex;
+    width: 1.25rem;
+    height: 1.25rem;
+    align-items: flex-start;
+    gap: 0.625rem;
+    flex-shrink: 0;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.DiscardIcon {
+    width: 0.875rem;
+    height: 1rem;
+    flex-shrink: 0;
+    background-color: #D6D6EE;
+    mask-image: url('../assets/DiscardIcon.svg');
+    mask-size: contain;
+    mask-position: center;
+    mask-repeat: no-repeat;
+}
+
+.DiscardIcon.DiscardIcon-primary {
+    background-color: #BBB2FF;
+}
+
+.EditIcon {
+    width: 1rem;
+    height: 1rem;
+    flex-shrink: 0;
+    background-color: #FAFAFA;
+    mask-image: url('../assets/EditIcon.svg');
+    mask-size: contain;
+    mask-position: center;
+    mask-repeat: no-repeat;
+}
+
+.EditIcon.EditIcon-primary {
+    background-color: #BBB2FF;
+}
+
+.SendIcon {
+    width: 1.125rem;
+    height: 1.125rem;
+    flex-shrink: 0;
+    background-color: #FAFAFA;
+    mask-image: url('../assets/SendIcon.svg');
+    mask-size: contain;
+    mask-position: center;
+    mask-repeat: no-repeat;
+}
+
+.CreateIconLg {
+    width: 1.725rem;
+    height: 2.5875rem;
+    flex-shrink: 0;
+    background-color: #BBB2FF;
+    mask-image: url('../assets/CreateIconLg.svg');
+    mask-size: contain;
+    mask-position: center;
+    mask-repeat: no-repeat;
+}

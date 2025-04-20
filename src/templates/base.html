@@ -37,7 +37,7 @@
     {% include 'components/navbar.html' %}
 
     <!-- Example Navbar Code -->
-    <nav class="navbar navbar-expand-md navbar-light bg-light">
+    <nav class="navbar navbar-expand-md navbar-light">
         <a class="navbar-brand" href="{{ url_for('index')}}">FlaskBlog</a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
@@ -57,6 +57,19 @@
         {% else %}
         <title>Microblog</title>
         {% endif %}
+        <div class="row bg-dark">
+            <div class="LogoLandingNav col"></div>
+            <div class="LogoNavbar col"></div>
+            <div class="DashboardIcon col"></div>
+            <div class="DashboardIcon DashboardIcon-primary col"></div>
+            <div class="RequestsIcon col"></div>
+        </div>
+        <div class="row bg-dark">
+            <div class="AnalyticsIcon col"></div>
+            <div class="AnalyticsIcon AnalyticsIcon-primary col"></div>
+            <div class="CheckedBoxIcon col"></div>
+            <div class="UncheckBoxIcon col"></div>
+        </div>
     </head>
     <body>
         <div>Microblog: <a href="/index">Home</a></div>
