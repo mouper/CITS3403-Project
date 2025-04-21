@@ -105,11 +105,12 @@ html {
 .card-container {
     display: flex;
     flex-wrap: wrap;
-    gap: 2.5rem;
+    gap: 5vw;
+    max-width: 100%;
     justify-content: center;
-    padding: 2rem;
+    padding: 3.7rem 0rem 3.7rem 0rem;
     width: 100vw;
-    margin-left: calc(-50vw + 50%);
+    align-items: center;
     background-color: var(--overlay-white);
     box-sizing: border-box;
 }
@@ -248,7 +249,7 @@ html {
 }
 
 .hero {
-    min-height: 80vh;
+    min-height: 75vh;
     display: flex;
     align-items: center;
     padding: 0 5%;
@@ -259,7 +260,6 @@ html {
 }
 
 .hero-content h2 {
-    margin-top: 3rem;
     margin-bottom: 4.5rem;
 }
 
@@ -313,14 +313,20 @@ html {
 .types-section {
     background-color: var(--overlay-shade1);
     width: 100%;
-    padding-bottom: 2.625rem;
+    padding-bottom: 0.2rem;
 }
 
 .types-section h2 {
-    padding: 3.875rem 4.375rem 0rem 4.375rem;
+    padding: 4rem 4.375rem 0rem 4.375rem;
 }
 
 .types-section p {
     color: var(--primary-shade1);
-    padding: 1.5rem 4.375rem 2.625rem 4.375rem;
+    padding: 1.2rem 4.375rem 1.3rem 4.375rem;
+}
+
+.typecards-section{
+    background-color: var(--overlay-shade1);
+    max-width: 100%;
+    margin-bottom: 6rem;
 }
