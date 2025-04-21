@@ -4,6 +4,7 @@
     font-style: italic; 
     font-weight: 700; 
     line-height: normal;
+    text-shadow: 6px 6px 25px #0e0e0e;
 }
 
 .title1 {
@@ -12,6 +13,7 @@
     font-style: italic;
     font-weight: 600;
     line-height: normal;
+    text-shadow: 6px 6px 25px #0e0e0e;
 }
 
 .title2 {

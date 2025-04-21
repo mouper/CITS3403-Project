@@ -1,14 +1,36 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <div class="requests-container">
-        <div class="landing-container">
-            <h1 class="title2">Welcome to My Application</h1>
-            <p class="medium4">Please sign in to continue</p>
-            <div class="auth-buttons">
-                <a href="{{ url_for('login') }}" class="btn btn-primary">Login</a>
-                <a href="{{ url_for('signup') }}" class="btn btn-secondary">Sign Up</a>
+    <div class="landing-container">
+        <nav class="landing-nav-container">
+            <div class="landinglogo"> 
+                <div class="LogoLandingNav"></div>
             </div>
-        </div>
+            <div class="nav-links">
+                <a href="{{ url_for('login') }}" class="login-btn medium2">Login</a>
+                <a href="{{ url_for('signup') }}" class="signup-btn medium2">Sign Up</a>
+            </div>
+        </nav>
+        
+        <section class="hero">
+            <div class="hero-content">
+                <h2 class="largeTitle">CREATE, MANAGE AND ANALYSE YOUR TOURNAMENTS.</h2>
+                <p class="headline">All in one place. All for free.</p>
+                <div class="hero-buttons">
+                    <a href="{{ url_for('signup') }}" class="herobtn-base herobtn-signup medium1">Sign Up</a>
+                    <a href="#types" class="herobtn-base herobtn-formats regular1">View Our Bracket Formats</a>
+                </div>
+            </div>
+        </section>
+
+        <section id="types" class="types-section">
+            <h2 class="title1">OUR TOURNAMENT BRACKET FORMATS</h2>
+            <p class="regular2">Choose from our selection of popular tournament types.</p>
+        </section>
+        <section class="typecards-section">
+            {% include 'components/typecards.html' %}
+        </section>
+        <section id="types" class="types-section">
+        </section>
     </div>
 {% endblock %}
