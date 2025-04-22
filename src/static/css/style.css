@@ -357,3 +357,31 @@ html {
 .UploadBtn:hover {
     background-color: var(--overlay-primary2);
 }
+
+.tournament-section {
+    margin-top: 4rem;
+    width: 100%;
+}
+
+.tournament-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding: 0 0.5rem;
+}
+  
+.tournament-header .subheadline {
+    font-style: italic;
+    font-weight: 500;
+    font-size: 1.5rem;
+    color: var(--primary-shade1);
+}
+
+.FilterComponent {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--primary-shade2);
+    font-size: 1rem;
+}
