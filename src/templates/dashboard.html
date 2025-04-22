@@ -2,19 +2,50 @@
 
 {% block content %}
 <div class="dashboard-container">
-    <h1 class="title2">My Dashboard</h1>
-    
-    {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      <div class="flashes">
-        {% for category, message in messages %}
-          <div class="alert alert-{{ category }}">{{ message }}</div>
-        {% endfor %}
-      </div>
-    {% endif %}
+  <h1 class="title2">My Dashboard</h1>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="flashes">
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
   {% endwith %}
 
-    <p class="medium4">Welcome to your dashboard!</p>
-    <!-- Page content goes here -->
+  <p class="medium4">Welcome to your dashboard!</p>
+  <!-- Page content goes here -->
+
+  <!-- Button Container -->
+  <div class="dashboard-btn-container">
+    <button class="NewBtn">
+      <div class="CreateIcon"></div>
+      New Tournament
+    </button>
+    <button class="UploadBtn">
+      <div class="UploadIcon"></div>
+      Upload CSV
+    </button>
+  </div>
+
+  <!-- Filter Section -->
+  <div class="FilterComponent">
+    <div class="FilterIcon"></div>
+    <span>Filter by Game</span>
+  </div>
+
+  <!-- Card Section -->
+  <div class="card-container">
+    <!-- GameCard Placeholder -->
+    <div class="typecard gamecard">
+      <div class="card-image">
+        <img src="/static/assets/GameImage.svg" alt="Game Preview">
+      </div>
+      <div class="card-content">
+        <h2 class="title headline">Game Name</h2>
+        <p class="paragraph regular3">Description of the game or status</p>
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock %}
