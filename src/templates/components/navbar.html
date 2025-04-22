@@ -2,50 +2,99 @@
  <nav class="navbar-div">
     <!-- Div for Logo -->
     <div class="navbar-logo">
-        <div class="LogoNavbar"></div>
+      <!-- Desktop Logo (hidden on mobile) -->
+      <div class="LogoNavbar"></div>
+      <!-- Mobile Logo (hidden on desktop) -->
+      <div class="LogoNavbarMobile"></div>
     </div>
 
-    <!-- Hamburger Menu Button (only visible on mobile) -->
+    <!-- Hamburger Menu Button -->
     <button class="hamburger" id="hamburger-btn" aria-label="Toggle menu">
-        &#9776; <!-- This is the hamburger icon (≡) -->
+      <!-- Added Custom Hamburger SVG-->
+      <svg class="hamburger-icon"  width="21" height="22" viewBox="0 0 65 46" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M62.8332 44H2.1665M62.8332 23H2.1665M62.8332 2H2.1665" stroke="#FAFAFA" stroke-width="4" stroke-linecap="round"/>
+        </svg>
+      <!-- Added Custom Close Icon SVG-->
+      <svg class="close-icon" width="21" height="21" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M54 2.00001L2 54M54 54L2 2" stroke="#FAFAFA" stroke-width="2.5" stroke-linecap="round"/>
+        </svg>
     </button>
+
+    <!-- Menu Overlay -->
+    <div class="menu-overlay" id="menu-overlay"></div>
 
     <!-- Div for Menu -->
     <div class="navbar-menu" id="mobile-menu">
         <a href="{{ url_for('dashboard') }}" class="navbar-item {{ 'active' if request.path == '/dashboard' else '' }}">
+          <span class="icon-container">
             <div class="DashboardIcon"></div>
+          </span>
             <span class="medium3">Dashboard</span>
           </a>
           
           <a href="{{ url_for('analytics') }}" class="navbar-item {{ 'active' if request.path == '/analytics' else '' }}">
-            <div class="AnalyticsIcon"></div>
+            <span class="icon-container">
+              <div class="AnalyticsIcon"></div>
+            </span>
             <span class="medium3">Analytics</span>
           </a>
           
           <a href="{{ url_for('requests') }}" class="navbar-item {{ 'active' if request.path == '/requests' else '' }}">
-            <div class="RequestsIcon"></div>
+            <span class="icon-container">
+              <div class="RequestsIcon"></div>
+            </span>
             <span class="medium3">My Requests</span>
           </a>
           
           <a href="{{ url_for('account') }}" class="navbar-item {{ 'active' if request.path == '/account' else '' }}">
-            <div class="ProfileIcon"></div>
+            <span class="icon-container">
+              <div class="ProfileIcon"></div>
+            </span>
             <span class="medium3">My Account</span>
           </a>
     </div>
 
-    <!-- Div for Logout -->
-    <div class="navbar-logout-container">
-        {% if current_user.is_authenticated %}
-            <a class="navbar-logout medium4" href="{{ url_for('logout') }}">Logout</a>
-        {% endif %}
-    </div>
  </nav>
  
  <script>
     const hamburger = document.getElementById('hamburger-btn');
     const menu = document.getElementById('mobile-menu');
+    const overlay = document.getElementById('menu-overlay');
+    const body = document.body;
 
-    hamburger.addEventListener('click', () => {
-        menu.classList.toggle('active');
+    hamburger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleMenu();
     });
+
+    // Smooth toggle function
+    const toggleMenu = () => {
+    menu.classList.toggle('active');
+    overlay.classList.toggle('active');
+    hamburger.classList.toggle('active');
+    body.classList.toggle('no-scroll');
+    
+    // Prevent focus trapping when menu is closed
+    if (!menu.classList.contains('active')) {
+        hamburger.focus();
+    }
+
+    overlay.addEventListener('click', toggleMenu);
+
+    // Close menu when pressing Escape
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && menu.classList.contains('active')) {
+            toggleMenu();
+        }
+    });
+
+    // Close menu when clicking outside
+    document.addEventListener('click', (e) => {
+        if (menu.classList.contains('active') && 
+            !e.target.closest('.navbar-menu') && 
+            !e.target.closest('.hamburger')) {
+            toggleMenu();
+        }
+    });
+  };
 </script>

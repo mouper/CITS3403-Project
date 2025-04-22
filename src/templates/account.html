@@ -4,6 +4,12 @@
 <div class="account-container">
     <h1 class="title2">My Account</h1>
     <p class="medium4">Welcome to your profile page!</p>
+    <!-- Div for Logout -->
+    <div class="navbar-logout-container">
+        {% if current_user.is_authenticated %}
+            <a class="navbar-logout medium4" href="{{ url_for('logout') }}">Logout</a>
+        {% endif %}
+    </div>
     <!-- Page content goes here -->
     <p class="medium4" style="padding-top: 100rem;">Test navbar fixed positioning</p>
 </div>

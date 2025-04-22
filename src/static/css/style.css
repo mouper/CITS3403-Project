@@ -11,8 +11,6 @@ html, body {
     height: 100%;
     background-color: var(--background-shade1);
     color: var(--off-white);
-    margin: 0;
-    padding: 0;
   }  
 
 * {
@@ -57,7 +55,8 @@ html, body {
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 1rem 0;
+    padding: 3rem 5rem;
+    margin-bottom: 1rem;
 }
 
 .hamburger {
@@ -67,48 +66,65 @@ html, body {
 .navbar-menu {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
     width: 100%;
-    padding: 1rem;
+    justify-content: center;
+}
+
+.icon-container{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.4rem;
+    height: 1.4rem;
 }
 
 .navbar-item {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
     text-decoration: none;
     color: var(--off-white);
-    padding: 0.5rem;
-    border-radius: 0.5rem;
-    transition: background-color 0.2s ease;
+    padding: 1.25rem 1.0415rem 1.25rem 4rem;
+    transition: color 0.2s ease;
+    transition: background-color 0.3s ease;
+}
+
+.icon-container > div {
+    background-color: currentColor;
+}
+
+.navbar-item .icon-container {
+    margin-right: 1.1rem;
 }
 
 .navbar-item:hover {
-    background-color: var(--overlay-white);
+    background-color: var(--overlay-primary2);
+    color: var(--off-white) !important;
+    text-decoration: none;
 }
 
 .navbar-item.active {
-    background-color: var(--overlay-primary2);
-}
-
-.navbar-logout-container {
-    margin-top: auto;
-    padding: 1rem;
-    width: 100%;
-    display: flex;
-    justify-content: center;
-}
-
-.navbar-logout {
-    color: #FF5C5C;
+    color: var(--primary-shade1);
+    transition: color 0.3s ease;
     text-decoration: none;
-    padding: 0.5rem 1rem;
-    border-radius: 0.375rem;
-    transition: background-color 0.2s ease;
 }
 
-.navbar-logout:hover {
-    background-color: var(--overlay-white);
+.navbar-logout-container{
+    display: flex;
+    align-items: center;
+    justify-content: end;
+    width: 100%;
+}
+
+/* temporary navbar logout button */
+.navbar-logout{
+    color: var(--off-white) !important;
+    text-decoration: none !important;
+    cursor: pointer;
+}
+
+.navbar-logout:hover{
+    color: var(--primary-shade1) !important;
+    text-decoration: none !important;
 }
 
 /* TYPECARD COMPONENT STYLES */
@@ -342,10 +358,12 @@ html, body {
     margin-bottom: 6rem;
 }
 
+
 /* Mobile Navigation Bar */
 @media (max-width: 768px) {
     .app-container {
         flex-direction: column;
+        position: relative;
     }
     
     .navbar-div {
@@ -353,63 +371,84 @@ html, body {
         align-items: center;
         justify-content: space-between;
         width: 100%;
-        height: auto;
+        height: 6rem;
         position: relative;
         z-index: 1001;
         padding: 0.5rem 1rem;
     }
   
     .navbar-logo {
-        position: absolute;
-        left: 50%;
-        transform: translateX(-50%);
+        position: relative;
+        left: 0;
+        transform: none;
         display: flex;
         align-items: center;
+        padding: 1.5rem 1.5rem;
+        margin-bottom: 0rem;
     }
   
     .hamburger {
         display: flex;
         align-items: center;
-        font-size: 2rem;
         background: none;
         border: none;
         color: var(--off-white);
         cursor: pointer;
         padding: 0.5rem 1rem;
         z-index: 1100;
+        transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .hamburger svg {
+        width: 2rem;
+        height: 2rem;
+        transition: opacity 0.3s ease, transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        position: absolute;
+        right: 2.5rem;
+    }
+    
+    .hamburger .close-icon {
+        opacity: 0;
+        width: 1.8rem;
+        height: 1.8rem;
+        transform: rotate(-90deg);
+    }
+    
+    .hamburger.active .hamburger-icon {
+        opacity: 0;
+        transform: rotate(90deg);
+    }
+    
+    .hamburger.active .close-icon {
+        opacity: 1;
+        transform: rotate(0deg);
     }
   
     .navbar-menu {
-        display: none;
-        position: absolute;
-        top: 100%;
-        left: 0;
-        width: 100%;
+        position: fixed;
+        top: 0;
+        right: -17.438rem; /* Start off-screen */
+        width: 17.438rem; /* Same width as desktop*/
+        height: 100vh;
         background-color: var(--background-shade2);
         flex-direction: column;
-        padding: 1rem;
+        padding: 12rem 0rem 0rem;
         z-index: 1000;
+        transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+        will-change: transform;
+        justify-content: flex-start;
     }
   
     .navbar-menu.active {
-        display: flex;
+        transform: translateX(-100%);
+
     }
-  
-    .navbar-logout-container {
+
+    .navbar-item {
         display: flex;
-        align-items: center;
-        justify-content: flex-end;
-        padding: 0;
-        margin: 0;
-    }
-  
-    .navbar-logout {
-        display: flex;
-        align-items: center;
-        color: #FF5C5C;
-        text-decoration: none;
-        font-size: 1rem;
-        padding: 0.5rem 0;
+        justify-content: flex-start;
+        padding: 1.1rem 1.0415rem 1.1rem 3.7rem;
     }
       
     .app-container:has(.navbar-div) .content {
@@ -417,5 +456,40 @@ html, body {
         padding: 1rem;
         width: 100%;
     }
+
+    /* Overlay with smooth transition */
+    .menu-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.7);
+        z-index: 999;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.4s;
+        will-change: opacity;
+    }
+    
+    .menu-overlay.active {
+        opacity: 1;
+        visibility: visible;
+    }
+    
+    /* Body scroll lock */
+    body.no-scroll {
+        overflow: hidden;
+        position: fixed;
+        width: 100%;
+        height: 100%;
+    }
+
+    .LogoNavbar {
+        display: none;
+    }
+    
+    .LogoNavbarMobile {
+        display: block;
+    }
 }
-  
