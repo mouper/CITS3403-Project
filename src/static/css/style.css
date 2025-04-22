@@ -136,7 +136,7 @@ html, body {
     padding: 3.7rem 0rem 3.7rem 0rem;
     width: 100vw;
     align-items: center;
-    background-color: var(--overlay-white);
+    background-color: transparent;
     box-sizing: border-box;
 }
 
@@ -153,6 +153,7 @@ html, body {
     padding: 1.15rem;
     align-items: center;
     box-sizing: border-box;
+    border: 1.5px solid var(--off-white);
 }
 
 .typecard:hover {
@@ -356,6 +357,95 @@ html, body {
     margin-bottom: 6rem;
 }
 
+.dashboard-btn-container {
+    display: flex;
+    gap: 1.5rem;
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+}
+  
+.NewBtn, .UploadBtn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.75rem;
+    font-size: 1rem;
+    cursor: pointer;
+    box-shadow: 6px 6px 25px #0e0e0e;
+    color: var(--off-white);
+    border: 1.5px solid var(--primary-shade1);
+    background-color: transparent;
+    transition: background-color 0.3s ease;
+}
+  
+.NewBtn:hover,
+.UploadBtn:hover {
+    background-color: var(--overlay-primary2);
+}
+
+.tournament-section {
+    margin-top: 4rem;
+    width: 100%;
+}
+
+.tournament-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding: 0 0.5rem;
+}
+  
+.tournament-header .subheadline {
+    color: var(--primary-shade1);
+}
+
+.FilterComponent {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--off-white);
+    font-size: 1rem;
+}
+
+.friend-search-section {
+    margin-top: 4rem;
+    padding: 2.3rem;
+    background-color: var(--background-shade2);
+    border-radius: 1rem;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+  
+.friend-search-text {
+    margin-bottom: 1.3rem;
+}
+
+.friend-search-text .subheadline {
+    margin-bottom: 0.8rem;
+}
+  
+.friend-search-bar {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+  
+.friend-search-bar input[type="text"] {
+    background-color: var(--background-shade3);
+    border: 1px solid var(--primary-shade1);
+    border-radius: 0.75rem;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    color: var(--off-white);
+    flex: 1;
+    min-width: 15rem;
+}
+  
+.page-header{
+    color: var(--primary-shade1);
+    margin-bottom: 4.5rem;
+}
 
 /* Mobile Navigation Bar */
 @media (max-width: 768px) {
