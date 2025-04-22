@@ -111,7 +111,7 @@ html {
     padding: 3.7rem 0rem 3.7rem 0rem;
     width: 100vw;
     align-items: center;
-    background-color: var(--overlay-white);
+    background-color: transparent;
     box-sizing: border-box;
 }
 
@@ -128,6 +128,7 @@ html {
     padding: 1.15rem;
     align-items: center;
     box-sizing: border-box;
+    border: 1.5px solid var(--off-white);
 }
 
 .typecard:hover {
