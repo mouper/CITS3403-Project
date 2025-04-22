@@ -11,6 +11,17 @@
     mask-repeat: no-repeat;
   }
 
+.LogoLandingNavMobile {
+    width: 8.125rem;
+    height: 2.4375rem;
+    flex-shrink: 0;
+    background-color: #BBB2FF;
+    mask-image: url('../assets/LogoLandingNav.svg');
+    mask-size: contain;
+    mask-position: center;
+    mask-repeat: no-repeat;
+}
+
 .LogoNavbar {
     width: 4.5625rem;
     height: 4.5625rem;
@@ -20,6 +31,19 @@
     mask-size: contain;
     mask-position: center;
     mask-repeat: no-repeat;
+    display: block;
+}
+
+.LogoNavbarMobile {
+    width: 3rem;
+    height: 3rem;
+    flex-shrink: 0;
+    background-color: #BBB2FF;
+    mask-image: url('../assets/LogoNavbar.svg');
+    mask-size: contain;
+    mask-position: center;
+    mask-repeat: no-repeat;
+    display: none;
 }
 
 .DashboardIcon {
@@ -68,8 +92,8 @@
 }
 
 .ProfileIcon {
-    width: 1.27781rem;
-    height: 1.09375rem;
+    width: 1.3rem;
+    height: 1.2rem;
     flex-shrink: 0;
     background-color: #FAFAFA;
     mask-image: url('../assets/ProfileIcon.svg');
