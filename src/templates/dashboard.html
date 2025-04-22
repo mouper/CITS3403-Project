@@ -2,11 +2,11 @@
 
 {% block content %}
 <div class="dashboard-container">
-  <h1 class="title2">TourneyPro Dashboard</h1>
+  <h1 class="title2 page-header">TourneyPro Dashboard</h1>
 
   {% with messages = get_flashed_messages(with_categories=true) %}
   {% if messages %}
-    <div class="flashes">
+    <div class="flashes" style="margin: 2rem;">
       {% for category, message in messages %}
         <div class="alert alert-{{ category }}">{{ message }}</div>
       {% endfor %}
@@ -14,7 +14,7 @@
   {% endif %}
   {% endwith %}
 
-  <p class="medium4">Welcome to your dashboard!</p>
+  <p class="medium4" style="margin-bottom: 3rem;">Welcome to your dashboard!</p>
 
   <!-- Button Container -->
   <div class="dashboard-btn-container">
@@ -35,8 +35,8 @@
 
       <!-- FilterComponent variant -->
       <div class="FilterComponent">
-        <div class="FilterIcon"></div>
         <span>In Progress</span>
+        <div class="FilterIcon"></div>
       </div>
     </div>
 
