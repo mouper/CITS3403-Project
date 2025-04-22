@@ -2,7 +2,7 @@
 
 {% block content %}
 <div class="dashboard-container">
-  <h1 class="title2">My Dashboard</h1>
+  <h1 class="title2">TourneyPro Dashboard</h1>
   {% with messages = get_flashed_messages(with_categories=true) %}
   {% if messages %}
     <div class="flashes">
@@ -17,35 +17,66 @@
   <!-- Page content goes here -->
 
   <!-- Button Container -->
-  <div class="dashboard-btn-container">
-    <button class="NewBtn">
-      <div class="CreateIcon"></div>
-      New Tournament
-    </button>
-    <button class="UploadBtn">
-      <div class="UploadIcon"></div>
-      Upload CSV
-    </button>
-  </div>
-
-  <!-- Filter Section -->
-  <div class="FilterComponent">
-    <div class="FilterIcon"></div>
-    <span>Filter by Game</span>
-  </div>
-
-  <!-- Card Section -->
-  <div class="card-container">
-    <!-- GameCard Placeholder -->
-    <div class="typecard gamecard">
-      <div class="card-image">
-        <img src="/static/assets/GameImage.svg" alt="Game Preview">
-      </div>
-      <div class="card-content">
-        <h2 class="title headline">Game Name</h2>
-        <p class="paragraph regular3">Description of the game or status</p>
-      </div>
+    <div class="dashboard-btn-container">
+      <button class="NewBtn">
+        <div class="CreateIcon"></div>
+        Create New Tournament
+      </button>
+      <button class="UploadBtn">
+        <div class="UploadIcon"></div>
+        Upload Tournament Data
+      </button>
     </div>
+
+  <!-- My Tournaments Section -->
+  <div class="tournament-section">
+    <!-- Section Header -->
+    <div class="tournament-header">
+      <h2 class="subheadline">My Tournaments</h2>
+      <span class="progress-label">In Progress</span>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="FilterComponent">
+      <div class="FilterIcon"></div>
+      <span>Filter by Game</span>
+    </div>
+
+    <!-- Game Cards -->
+    <div class="card-container">
+      <!-- Repeat 3 cards for mockup -->
+      <div class="typecard gamecard">
+        <div class="card-image">
+          <img src="/static/assets/GameImage.svg" alt="Game Preview">
+        </div>
+        <div class="card-content">
+          <h2 class="title headline">Tournament Name</h2>
+          <p class="paragraph regular3">Round num/ total rounds</p>
+          <p class="medium4">Role: Player</p>
+        </div>
+      </div>
+
+      <div class="typecard gamecard">
+        <div class="card-image">
+          <img src="/static/assets/GameImage.svg" alt="Game Preview">
+        </div>
+        <div class="card-content">
+          <h2 class="title headline">Tournament Name</h2>
+          <p class="paragraph regular3">Round num/ total rounds</p>
+          <p class="medium4">Role: Player</p>
+        </div>
+      </div>
+
+      <div class="typecard gamecard">
+        <div class="card-image">
+          <img src="/static/assets/GameImage.svg" alt="Game Preview">
+        </div>
+        <div class="card-content">
+          <h2 class="title headline">Tournament Name</h2>
+          <p class="paragraph regular3">Round num/ total rounds</p>
+          <p class="medium4">Role: Player</p>
+        </div>
+      </div>
   </div>
 </div>
 {% endblock %}
