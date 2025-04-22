@@ -105,14 +105,15 @@
 }
 
 .FilterIcon {
-    width: 0.7625rem;
-    height: 0.7625rem;
+    width: 1.2rem;
+    height: 1.2rem;
     flex-shrink: 0;
     background-color: #FAFAFA;
     mask-image: url('../assets/FilterIcon.svg');
     mask-size: contain;
     mask-position: center;
     mask-repeat: no-repeat;
+    margin-top: 0.2rem;
 }
 
 .FilterIcon.FilterIcon-open {
