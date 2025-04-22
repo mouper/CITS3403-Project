@@ -13,7 +13,9 @@
 </div>
 
 */
-.TextForm input[type="text"] {
+.TextForm input[type="text"],
+.TextForm input[type="email"],
+.TextForm input[type="password"] {
   background-color: var(--background-shade3);
   border: 1px solid var(--primary-shade1);
   border-radius: 0.75rem;
@@ -23,7 +25,21 @@
   font-size: 1rem;
   box-shadow: inset 0 0 0 1px var(--overlay-white);
   color: var(--off-white);
+  transition: all 0.3s ease;
 }
+
+.TextForm label {
+  display: block;
+  margin-bottom: 1rem;
+  color: var(--primary-shade2);
+}
+
+.TextForm input:focus {
+  outline: none;
+  border: 1px solid var(--primary-shade2);
+  box-shadow: 0 0 0 1.5px var(--overlay-primary1);
+}
+
 
 ::placeholder {
   color: var(--primary-shade2);
