@@ -13,6 +13,13 @@
 </div>
 
 */
+.TextForm div{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
 .TextForm input[type="text"],
 .TextForm input[type="email"],
 .TextForm input[type="password"] {
