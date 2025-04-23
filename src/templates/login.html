@@ -1,6 +1,15 @@
 {% extends "base.html" %}
 
 {% block content %}
+    <nav class="landing-nav-container">
+        <div class="landinglogo"> 
+            <div class="LogoLandingNav"></div>
+        </div>
+        <div class="nav-links">
+            <a href="{{ url_for('login') }}" class="login-btn medium2">Login</a>
+            <a href="{{ url_for('signup') }}" class="signup-btn medium2">Sign Up</a>
+        </div>
+    </nav>
     <div class="login-form">
         <h1 class="title2">Login</h1>
         
