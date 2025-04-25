@@ -3,7 +3,42 @@
 {% block content %}
     <div class="requests-container">
         <h1 class="title2">My Requests</h1>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flashes">
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
         <p class="medium4">Welcome to your requests page!</p>
-        <!-- Page content goes here -->
+        
+        <div class="requests-list">
+            <table class="requests-table">
+                <tr>
+                    <th>Tournament</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- replace with dynamic data later -->
+                <tr>
+                    <td>Local Chess Tournamnet</td>
+                    <td>2025-04-25</td>
+                    <td>Pending</td>
+                    <td>
+                        <button class="btn btn-primary">Accept</button>
+                        <button class="btn btn-secondary">Decline</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </div>
+    {% if not requests %}
+    <p class="medium4">No current requests.</p>
+    {% endif %}
+</div>
 {% endblock %}
