@@ -3,13 +3,26 @@
 {% block content %}
 <div class="analytics-container">
     <div class="analytics-header">
-      <h1 class="title2">Analytics</h1>
-      <div class="Dropdown analytics-dropdown">
-        <select id="viewSelector">
-          <option value="player">Player Stats</option>
-          <option value="admin">Admin View</option>
-        </select>
-      </div>
+        <h1 class="title2">Analytics</h1>
+      
+        <div class="dropdown-row">
+          <div id="gameTypeSelectorContainer" class="Dropdown analytics-dropdown">
+            <select id="gameTypeSelector">
+              <option value="pokemon">Pokémon TCG</option>
+              <option value="chess">Chess</option>
+              <option value="magic">Magic: The Gathering</option>
+              <option value="checkers">Checkers</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+      
+          <div class="Dropdown analytics-dropdown">
+            <select id="viewSelector">
+              <option value="player">Player Stats</option>
+              <option value="admin">Admin View</option>
+            </select>
+          </div>
+        </div>
     </div>
   
     <p class="medium4">Welcome to your analytics page!</p>

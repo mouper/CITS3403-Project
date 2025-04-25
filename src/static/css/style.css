@@ -476,7 +476,18 @@ html, body {
     background-position: right 1rem center;
 }
   
-
+.dropdown-row {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+  
+.dropdown-row .Dropdown select {
+    min-width: 12rem;
+    max-width: 16rem;
+    padding: 0.5rem 1rem;
+}
+  
 
 /* Mobile Navigation Bar */
 @media (max-width: 768px) {

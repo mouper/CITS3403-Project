@@ -59,3 +59,15 @@
         }
     });
     
+    const gameTypeSelectorContainer = document.getElementById('gameTypeSelectorContainer');
+
+    if (viewSelector) {
+    viewSelector.addEventListener('change', function () {
+        const isPlayer = this.value === 'player';
+        playerView.style.display = isPlayer ? 'block' : 'none';
+        adminView.style.display = isPlayer ? 'none' : 'block';
+        gameTypeSelectorContainer.style.display = 'block'; // Show in both views
+        // If you only want it in player view:
+        // gameTypeSelectorContainer.style.display = isPlayer ? 'block' : 'none';
+    });
+    }
