@@ -456,6 +456,26 @@ html, body {
     gap: 1.5rem;
 }
 
+/* Analytics Section */
+
+.analytics-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+  
+.analytics-dropdown select {
+    width: auto;
+    min-width: 10rem;
+    max-width: 14rem;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    text-align: left;
+    appearance: none;
+    background-position: right 1rem center;
+}
+  
 
 
 /* Mobile Navigation Bar */

@@ -2,8 +2,24 @@
 
 {% block content %}
 <div class="analytics-container">
-    <h1 class="title2">Analytics</h1>
+    <div class="analytics-header">
+      <h1 class="title2">Analytics</h1>
+      <div class="Dropdown analytics-dropdown">
+        <select id="viewSelector">
+          <option value="player">Player Stats</option>
+          <option value="admin">Admin View</option>
+        </select>
+      </div>
+    </div>
+  
     <p class="medium4">Welcome to your analytics page!</p>
-    <!-- Page content goes here -->
+  
+    <div id="playerView" class="analytics-view">
+      <h2 class="subheadline">Player View</h2>
+    </div>
+  
+    <div id="adminView" class="analytics-view" style="display: none;">
+      <h2 class="subheadline">Admin View</h2>
+    </div>
 </div>
 {% endblock %}

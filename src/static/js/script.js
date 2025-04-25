@@ -39,3 +39,23 @@
         }
     });
     };
+
+    // Analytics Toggle:
+    document.addEventListener("DOMContentLoaded", () => {
+        const viewSelector = document.getElementById('viewSelector');
+        const playerView = document.getElementById('playerView');
+        const adminView = document.getElementById('adminView');
+    
+        if (viewSelector && playerView && adminView) {
+            viewSelector.addEventListener('change', function () {
+                if (this.value === 'player') {
+                    playerView.style.display = 'block';
+                    adminView.style.display = 'none';
+                } else {
+                    playerView.style.display = 'none';
+                    adminView.style.display = 'block';
+                }
+            });
+        }
+    });
+    
