@@ -71,3 +71,32 @@
         // gameTypeSelectorContainer.style.display = isPlayer ? 'block' : 'none';
     });
     }
+
+    window.addEventListener("DOMContentLoaded", () => {
+        const canvas = document.getElementById("winRateChart");
+        if (canvas) {
+          const ctx = canvas.getContext("2d");
+      
+          new Chart(ctx, {
+            type: "pie",
+            data: {
+              labels: ["Wins", "Losses"],
+              datasets: [
+                {
+                  data: [40, 73],
+                  backgroundColor: ["#BBB2FF", "#FAFAFA"],
+                  borderWidth: 0,
+                },
+              ],
+            },
+            options: {
+              plugins: {
+                legend: {
+                  display: false,
+                },
+              },
+            },
+          });
+        }
+      });
+      
