@@ -1,44 +1,45 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <div class="requests-container">
-        <h1 class="title2">My Requests</h1>
-        {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-        <div class="flashes">
-            {% for category, message in messages %}
-            <div class="alert alert-{{ category }}">{{ message }}</div>
-            {% endfor %}
-        </div>
-        {% endif %}
-        {% endwith %}
-        <p class="medium4">Welcome to your requests page!</p>
-        
-        <div class="requests-list">
-            <table class="requests-table">
-                <tr>
-                    <th>Tournament</th>
-                    <th>Date</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- replace with dynamic data later -->
-                <tr>
-                    <td>Local Chess Tournamnet</td>
-                    <td>2025-04-25</td>
-                    <td>Pending</td>
-                    <td>
-                        <button class="btn btn-primary">Accept</button>
-                        <button class="btn btn-secondary">Decline</button>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+<div class="requests-container">
+    <h1 class="title2">My Requests</h1>
+    <p class="subtitle">Incoming</p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flashes">
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
     </div>
-    {% if not requests %}
-    <p class="medium4">No current requests.</p>
+    {% endif %}
+    {% endwith %}
+
+    {% if requests %}
+        {% for request in requests %}
+        <div class="request-card">
+            <div class="request-content">
+                <div class="request-info">
+                    <h2 class="tournament-name">{{ request.tournament_name }}</h2>
+                    <p class="requestor">Requestor: {{ request.requestor_name }}</p>
+                    <p class="competitors">{{ request.accepted }}/{{ request.total }} Competitors Accepted</p>
+                    <div class="game-details">
+                        <span>{{ request.game_name }}</span>
+                        <span>{{ request.type_name }}</span>
+                    </div>
+                    <div class="action-buttons">
+                        <button class="btn btn-secondary">Decline</button>
+                    </div>
+                </div>
+                <div class="request-image-and-accept">
+                    <div class="request-image"></div>
+                    <button class="btn btn-primary">Accept</button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p class="medium4">No current requests.</p>
     {% endif %}
 </div>
 {% endblock %}
