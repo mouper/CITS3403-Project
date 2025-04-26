@@ -522,7 +522,7 @@ html, body {
 .white-text {
     color: var(--off-white);
 }
-
+  
 .top-tournaments-section {
     margin-top: 4rem;
     padding: 2rem;
@@ -530,8 +530,8 @@ html, body {
     border-radius: 1rem;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 }
-  
-.top-tournaments-section {
+
+.recent-tournaments-section {
     margin-top: 4rem;
     padding: 2rem;
     background-color: var(--background-shade2);
