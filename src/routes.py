@@ -1,7 +1,7 @@
 from flask import render_template, request, redirect, url_for, flash
 from flask_login import login_user, logout_user, current_user, login_required
-from src.app import application
-from src.models import User, users
+from app import application
+from models import User, users
 
 @application.route('/')
 def landing():
