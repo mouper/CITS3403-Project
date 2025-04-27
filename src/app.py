@@ -12,4 +12,4 @@ login_manager.login_view = 'login'
 def inject_request():
     return dict(request=request)
 
-import routes
+from src import routes
