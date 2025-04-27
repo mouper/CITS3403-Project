@@ -2,8 +2,179 @@
 
 {% block content %}
 <div class="analytics-container">
-    <h1 class="title2">Analytics</h1>
-    <p class="medium4">Welcome to your analytics page!</p>
-    <!-- Page content goes here -->
+    <div class="analytics-header">
+        <h1 class="title2"><span class = "purple-text">Analytics</span></h1>
+      
+        <div class="dropdown-row">
+          <div id="gameTypeSelectorContainer" class="Dropdown analytics-dropdown">
+            <select id="gameTypeSelector">
+              <option value="pokemon">Pokémon TCG</option>
+              <option value="chess">Chess</option>
+              <option value="magic">Magic: The Gathering</option>
+              <option value="checkers">Checkers</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+      
+          <div class="Dropdown analytics-dropdown">
+            <select id="viewSelector">
+              <option value="player">Player Stats</option>
+              <option value="admin">Admin View</option>
+            </select>
+          </div>
+        </div>
+    </div>
+    <div id="playerView" class="analytics-view">
+      <div class="player-stats-flex">
+        <div class="stats-section pie-chart-section">
+          <canvas id="winRateChart"></canvas>
+        </div>
+        <div class="stats-section win-rate-section">
+          <p class="largeTitle purple-text">35.40%</p>
+          <p class="subheadline">Win Rate</p>
+        </div>
+        <div class="stats-section totals-section">
+          <div class="totals-wrapper">
+            <div class="total-stat">
+                <p class="medium3">Games Won</p>
+                <p class="title2 purple-text">40</p>
+            </div>
+            <div class="total-stat">
+                <p class="medium3">Total Games</p>
+                <p class="title2 white-text">113</p>
+            </div>
+          </div>                 
+        </div>
+      </div>
+      <h2 class="subheadline purple-text">Top Three Tournaments</h2>
+      <div class="statcard-container">
+        <div class="statcard">
+          <div class="statcard-top-row">
+            <p class="subheadline">1st</p>
+            <p class="title2 purple-text">8 WINS</p>
+          </div>
+          <div class="statcard-middle-row">
+            <p class="medium5">80% WR</p>
+            <p class="medium5">OPWR%</p>
+            <p class="medium5">OPOPWR%</p>
+          </div>
+          <p class="medium4 italic tournament-type">Tournament Type</p>
+          <p class="medium4">Tournament Name</p>
+        </div>
+        <div class="statcard">
+          <div class="statcard-top-row">
+            <p class="subheadline">1st</p>
+            <p class="title2 purple-text">10 WINS</p>
+          </div>
+          <div class="statcard-middle-row">
+            <p class="medium5">100% WR</p>
+            <p class="medium5">OPWR%</p>
+            <p class="medium5">OPOPWR%</p>
+          </div>
+          <p class="medium4 italic tournament-type">Tournament Type</p>
+          <p class="medium4">Tournament Name</p>
+        </div>
+        <div class="statcard">
+          <div class="statcard-top-row">
+            <p class="subheadline">1st</p>
+            <p class="title2 purple-text">5 WINS</p>
+          </div>
+          <div class="statcard-middle-row">
+            <p class="medium5">100% WR</p>
+            <p class="medium5">OPWR%</p>
+            <p class="medium5">OPOPWR%</p>
+          </div>
+          <p class="medium4 italic tournament-type">Tournament Type</p>
+          <p class="medium4">Tournament Name</p>
+        </div>
+      </div>
+      <h2 class="subheadline purple-text">Recent Tournaments</h2>
+      <div class="statcard-container">
+        <div class="statcard">
+          <div class="statcard-top-row">
+            <p class="subheadline">3rd</p>
+            <p class="title2 purple-text">4 WINS</p>
+          </div>
+          <div class="statcard-middle-row">
+            <p class="medium5">80% WR</p>
+            <p class="medium5">OPWR%</p>
+            <p class="medium5">OPOPWR%</p>
+          </div>
+          <p class="medium4 italic tournament-type">Tournament Type</p>
+          <p class="medium4">Tournament Name</p>
+        </div>
+        <div class="statcard">
+          <div class="statcard-top-row">
+            <p class="subheadline">1st</p>
+            <p class="title2 purple-text">10 WINS</p>
+          </div>
+          <div class="statcard-middle-row">
+            <p class="medium5">100% WR</p>
+            <p class="medium5">OPWR%</p>
+            <p class="medium5">OPOPWR%</p>
+          </div>
+          <p class="medium4 italic tournament-type">Tournament Type</p>
+          <p class="medium4">Tournament Name</p>
+        </div>
+        <div class="statcard">
+          <div class="statcard-top-row">
+            <p class="subheadline">5th</p>
+            <p class="title2 purple-text">5 WINS</p>
+          </div>
+          <div class="statcard-middle-row">
+            <p class="medium5">63% WR</p>
+            <p class="medium5">OPWR%</p>
+            <p class="medium5">OPOPWR%</p>
+          </div>
+          <p class="medium4 italic tournament-type">Tournament Type</p>
+          <p class="medium4">Tournament Name</p>
+        </div>
+      </div>   
+    </div>
+  
+    <div id="adminView" class="analytics-view" style="display: none;">
+      <h2 class="subheadline purple-text">Recent Tournaments</h2>
+      <div class="statcard-container">
+        <div class="statcard">
+          <div class="statcard-top-row">
+            <p class="subheadline">3rd</p>
+            <p class="title2 purple-text">4 WINS</p>
+          </div>
+          <div class="statcard-middle-row">
+            <p class="medium5">80% WR</p>
+            <p class="medium5">OPWR%</p>
+            <p class="medium5">OPOPWR%</p>
+          </div>
+          <p class="medium4 italic tournament-type">Tournament Type</p>
+          <p class="medium4">Tournament Name</p>
+        </div>
+        <div class="statcard">
+          <div class="statcard-top-row">
+            <p class="subheadline">1st</p>
+            <p class="title2 purple-text">10 WINS</p>
+          </div>
+          <div class="statcard-middle-row">
+            <p class="medium5">100% WR</p>
+            <p class="medium5">OPWR%</p>
+            <p class="medium5">OPOPWR%</p>
+          </div>
+          <p class="medium4 italic tournament-type">Tournament Type</p>
+          <p class="medium4">Tournament Name</p>
+        </div>
+        <div class="statcard">
+          <div class="statcard-top-row">
+            <p class="subheadline">5th</p>
+            <p class="title2 purple-text">5 WINS</p>
+          </div>
+          <div class="statcard-middle-row">
+            <p class="medium5">63% WR</p>
+            <p class="medium5">OPWR%</p>
+            <p class="medium5">OPOPWR%</p>
+          </div>
+          <p class="medium4 italic tournament-type">Tournament Type</p>
+          <p class="medium4">Tournament Name</p>
+        </div>
+      </div>     
+    </div>
 </div>
 {% endblock %}

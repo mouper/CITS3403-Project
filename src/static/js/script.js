@@ -39,3 +39,68 @@
         }
     });
     };
+
+    // Analytics Toggle:
+    document.addEventListener("DOMContentLoaded", () => {
+        const viewSelector = document.getElementById('viewSelector');
+        const playerView = document.getElementById('playerView');
+        const adminView = document.getElementById('adminView');
+    
+        if (viewSelector && playerView && adminView) {
+            viewSelector.addEventListener('change', function () {
+                if (this.value === 'player') {
+                    playerView.style.display = 'block';
+                    adminView.style.display = 'none';
+                } else {
+                    playerView.style.display = 'none';
+                    adminView.style.display = 'block';
+                }
+            });
+        }
+    });
+    
+    // Game type selector
+    const gameTypeSelectorContainer = document.getElementById('gameTypeSelectorContainer');
+
+    if (viewSelector) {
+    viewSelector.addEventListener('change', function () {
+        const isPlayer = this.value === 'player';
+        playerView.style.display = isPlayer ? 'block' : 'none';
+        adminView.style.display = isPlayer ? 'none' : 'block';
+        gameTypeSelectorContainer.style.display = 'block';
+    });
+    }
+
+    // Pie Chart
+    window.addEventListener("DOMContentLoaded", () => {
+      const canvas = document.getElementById("winRateChart");
+      if (canvas) {
+        const ctx = canvas.getContext("2d");
+
+        new Chart(ctx, {
+          type: "pie",
+          data: {
+            labels: ["Wins", "Losses"],
+            datasets: [
+              {
+                data: [40, 73],
+                backgroundColor: ["#BBB2FF", "#D6D6EE"],
+                borderWidth: 2,
+                borderColor: '#121212',
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+              legend: {
+                display: false,
+              },
+            },
+          },
+        });
+      }
+    });
+
+      
