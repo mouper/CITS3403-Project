@@ -62,6 +62,9 @@ If the issue involves building **reusable components or styles**, list them out 
 - components/Navbar.tsx
 - components/Button.tsx
 
+### Reporting a Bug
+Start the issue with 'Bug:'
+- e.g. Bug: Save button broken
 
 ---
 
