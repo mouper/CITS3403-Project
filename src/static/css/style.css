@@ -488,15 +488,13 @@ html, body {
     padding: 0.5rem 1rem;
 }
 
-.player-stats-bar {
+.player-stats-flex {
     display: flex;
-    justify-content: space-between;
+    justify-content: space-around;
     align-items: center;
-    background-color: var(--background-shade2);
-    padding: 2rem;
-    border-radius: 1rem;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-    margin: 2rem 0;
+    margin: 3rem 0;
+    flex-wrap: wrap;
+    gap: 2rem;
 }
   
 .stats-section {
@@ -508,12 +506,16 @@ html, body {
     display: flex;
     justify-content: center;
     align-items: center;
+    flex: 0 0 auto;
 }
-  
+
 .pie-chart-section canvas {
-    max-width: 250px !important;
-    max-height: 250px !important;
-}  
+    width: 100%;
+    max-width: 220px;
+    aspect-ratio: 1 / 1;
+    height: auto;
+    display: block;
+}
   
 .purple-text {
     color: var(--primary-shade1);
@@ -523,28 +525,12 @@ html, body {
     color: var(--off-white);
 }
   
-.top-tournaments-section {
-    margin-top: 4rem;
-    padding: 2rem;
-    background-color: var(--background-shade2);
-    border-radius: 1rem;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-}
-
-.recent-tournaments-section {
-    margin-top: 4rem;
-    padding: 2rem;
-    background-color: var(--background-shade2);
-    border-radius: 1rem;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-}
-  
 .statcard-container {
     display: flex;
     flex-wrap: wrap;
-    gap: 2rem;
+    gap: 3rem;
     justify-content: center;
-    margin-top: 2rem;
+    margin: 2rem 0 4rem 0;
 }
   
 .statcard {
@@ -552,15 +538,20 @@ html, body {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    gap: 0.625rem; /* 10px */
-    width: 311px;
-    padding: 25px 35px;
+    gap: 0.625rem;
+    flex: 1 1 300px;
+    max-width: 330px;
+    min-width: 250px;
+    padding: 20px 35px;
     border-radius: 10px;
     border: 2px solid var(--primary-shade1);
     background-color: var(--background-shade2);
     box-sizing: border-box;
     text-align: center;
+    margin-top: 1rem;
+    margin-bottom: 2rem;
 }
+
   
 .statcard-top-row {
     display: flex;
@@ -580,7 +571,25 @@ html, body {
     margin-top: 0.5rem;
     font-style: italic;
     color: var(--primary-shade1);
-}  
+}
+
+.totals-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+}
+
+.total-stat p:first-child {
+    margin: 0;
+}
+
+.total-stat p:last-child {
+    margin: 0;
+    font-size: 2.5rem;
+    font-weight: 700;
+}
+
 
 /* Mobile Navigation Bar */
 @media (max-width: 768px) {

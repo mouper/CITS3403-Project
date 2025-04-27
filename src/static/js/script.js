@@ -59,6 +59,7 @@
         }
     });
     
+    // Game type selector
     const gameTypeSelectorContainer = document.getElementById('gameTypeSelectorContainer');
 
     if (viewSelector) {
@@ -66,37 +67,40 @@
         const isPlayer = this.value === 'player';
         playerView.style.display = isPlayer ? 'block' : 'none';
         adminView.style.display = isPlayer ? 'none' : 'block';
-        gameTypeSelectorContainer.style.display = 'block'; // Show in both views
-        // If you only want it in player view:
-        // gameTypeSelectorContainer.style.display = isPlayer ? 'block' : 'none';
+        gameTypeSelectorContainer.style.display = 'block';
     });
     }
 
+    // Pie Chart
     window.addEventListener("DOMContentLoaded", () => {
-        const canvas = document.getElementById("winRateChart");
-        if (canvas) {
-          const ctx = canvas.getContext("2d");
-      
-          new Chart(ctx, {
-            type: "pie",
-            data: {
-              labels: ["Wins", "Losses"],
-              datasets: [
-                {
-                  data: [40, 73],
-                  backgroundColor: ["#BBB2FF", "#FAFAFA"],
-                  borderWidth: 0,
-                },
-              ],
-            },
-            options: {
-              plugins: {
-                legend: {
-                  display: false,
-                },
+      const canvas = document.getElementById("winRateChart");
+      if (canvas) {
+        const ctx = canvas.getContext("2d");
+
+        new Chart(ctx, {
+          type: "pie",
+          data: {
+            labels: ["Wins", "Losses"],
+            datasets: [
+              {
+                data: [40, 73],
+                backgroundColor: ["#BBB2FF", "#D6D6EE"],
+                borderWidth: 2,
+                borderColor: '#121212',
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+              legend: {
+                display: false,
               },
             },
-          });
-        }
-      });
+          },
+        });
+      }
+    });
+
       
