@@ -33,7 +33,7 @@
 }
 
 .headline {
-    font-family: Montserrat;
+    font-family: 'Montserrat', sans-serif;
     font-size: 1.625rem;
     font-style: normal;
     font-weight: 500;
@@ -127,4 +127,11 @@
     font-style: italic;
     font-weight: 300;
     line-height: 1.5rem;
+}
+
+.big-percentage {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 4.375rem;
+    font-weight: 700;
+    line-height: normal;
 }
