@@ -2,7 +2,7 @@
 
 {% block content %}
 <div class="dashboard-container">
-  <h1 class="title2 page-header">TourneyPro Dashboard</h1>
+  <h1 class="title2 page-header"> <span>TourneyPro Dashboard</span> </h1>
 
   {% with messages = get_flashed_messages(with_categories=true) %}
   {% if messages %}
@@ -18,10 +18,10 @@
 
   <!-- Button Container -->
   <div class="dashboard-btn-container">
-    <button class="NewBtn">
+    <a href="{{ url_for('new_tournament') }}" target="_blank" class="NewBtn">
       <div class="CreateIcon"></div>
       Create New Tournament
-    </button>
+    </a>
     <button class="UploadBtn">
       <div class="UploadIcon"></div>
       Upload Tournament Data
