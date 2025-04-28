@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="tournament-form-container">
+    <div class="tourneyHeader">
+        <div class="CreateIconLg"></div>
+        <h1 class="title2"> <span>New Tournament</span> </h1>
+    </div>
+
+    <form id="tournamentForm">
+        <div class="row mb-4">
+            <div class="TextForm col-md-4">
+                <label for="tournamentName">Tournament Name</label>
+                <input type="text" id="tournamentName" placeholder="Input text">
+            </div>
+            <div class="Dropdown col-md-4">
+                <label for="tournamentType" class="form-label">Tournament Type</label>
+                <select class="form-select" id="tournamentType" required>
+                    <option value="" selected disabled>Select</option>
+                    <option value="single-elimination">Single Elimination</option>
+                    <option value="double-elimination">Double Elimination</option>
+                    <option value="round-robin">Round Robin</option>
+                    <option value="swiss">Swiss System</option>
+                </select>
+            </div>
+            <div class="Dropdown col-md-4">
+                <label for="game" class="form-label">Game</label>
+                <select class="form-select" id="game" required>
+                    <option value="" selected disabled>Select</option>
+                    <option value="chess">Chess</option>
+                    <option value="tennis">Tennis</option>
+                    <option value="basketball">Basketball</option>
+                    <option value="soccer">Soccer</option>
+                    <option value="esports-lol">League of Legends</option>
+                    <option value="esports-csgo">CS:GO</option>
+                    <option value="esports-valorant">Valorant</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="Dropdown col-md-4">
+                <label for="competitors" class="form-label">Number of Competitors</label>
+                <select class="form-select" id="competitors" required>
+                    <option value="" selected disabled>Select</option>
+                    <option value="4">4</option>
+                    <option value="8">8</option>
+                    <option value="16">16</option>
+                    <option value="32">32</option>
+                </select>
+            </div>
+            <div class="col-md-8">
+                <div class="competitor-details">
+                    <label class="form-label">Competitor Details</label>
+                    <div class="Checkbox mt-2">
+                        <label class="checkbox-option">
+                          <input type="checkbox" class="checkbox-input">
+                          <div class="checkbox-icon">
+                            <div class="unchecked-icon UncheckBoxIcon"></div>
+                            <div class="checked-icon CheckedBoxIcon"></div>
+                          </div>
+                          <span class="checkbox-label medium5">I am participating as a competitor of this tournament.</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                
+                <!-- Player 1 -->
+                <div class="player-section">
+                    <div class="player-info">
+                        <div class="player-header">
+                            <h4>Player 1 (Myself)</h4>
+                            <div class="DropdownIcon"></div>
+                        </div>
+                        <div class="player-details">
+                            <div>Player 1: (Myself)</div>
+                            <div>Account Name</div>
+                            <div class="edit-icon">
+                                <div class="EditIcon"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Player 2 -->
+                    <div class="player-info">
+                        <div class="player-header">
+                            <h4>Player 2 (AB)</h4>
+                            <div class="DropdownIcon"></div>
+                        </div>
+                        <div class="player-details">
+                            <div>Player 2: Amy Brown</div>
+                            <div>amybrown@email.com</div>
+                            <div class="edit-icon">
+                                <div class="EditIcon"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Player 3 -->
+                    <div class="player-info">
+                        <div class="player-header">
+                            <h4>Player 3 (CD)</h4>
+                            <div class="DropdownIcon"></div>
+                        </div>
+                        <div class="player-details">
+                            <div>Player 3: Christopher Davis</div>
+                            <div>DavisC</div>
+                            <div class="edit-icon">
+                                <div class="EditIcon"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Player 4 -->
+                    <div class="player-info">
+                        <div class="player-header">
+                            <h4>Player 4 (EF)</h4>
+                            <div class="DropdownIcon"></div>
+                        </div>
+                        <div class="player-details">
+                            <div>Player 4: Emily Fairway</div>
+                            <div>Emily_FW</div>
+                            <div class="edit-icon">
+                                <div class="EditIcon"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="button-container">
+            <div class="SaveBtn">
+                <button>
+                    <div class="SaveIcon"></div>
+                    Save Tournament Draft
+                </button>
+            </div>
+            <div class="SendJoinBtn">
+                <button>
+                    <div class="SendIcon"></div> 
+                    Send Join Requests
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -377,11 +377,14 @@ html, body {
     border: 1.5px solid var(--primary-shade1);
     background-color: transparent;
     transition: background-color 0.3s ease;
+    text-decoration: none !important;
 }
   
 .NewBtn:hover,
 .UploadBtn:hover {
     background-color: var(--overlay-primary2);
+    text-decoration: none !important;
+    color: var(--off-white) !important;
 }
 
 .tournament-section {
@@ -444,7 +447,7 @@ html, body {
   
 .page-header{
     color: var(--primary-shade1);
-    margin-bottom: 4.5rem;
+    margin-bottom: 2rem;
 }
 
 /* Login and Sign up Page Temporary Styles */
@@ -462,7 +465,6 @@ html, body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1rem;
 }
   
 .analytics-dropdown select {
@@ -480,6 +482,7 @@ html, body {
     display: flex;
     gap: 1rem;
     align-items: center;
+    margin-bottom: 1rem;
 }
   
 .dropdown-row .Dropdown select {
@@ -492,7 +495,7 @@ html, body {
     display: flex;
     justify-content: space-around;
     align-items: center;
-    margin: 3rem 0;
+    margin: 1.5rem 0rem 3.5rem 0rem;
     flex-wrap: wrap;
     gap: 2rem;
 }
@@ -595,6 +598,101 @@ html, body {
     font-weight: 700;
 }
 
+/* New Tournament Page */
+.row {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0 -5px;
+}
+
+.col-md-4 {
+    flex: 0 0 33.333333%;
+    max-width: 33.333333%;
+    padding: 0 20px;
+    box-sizing: border-box;
+}
+
+.col-md-8 {
+    flex: 0 0 66.666667%;
+    max-width: 66.666667%;
+    padding: 0 20px;
+    box-sizing: border-box;
+}
+
+.mb-4 {
+    margin-bottom: 4rem;
+}
+
+.mt-2 {
+    margin-top: 2rem;
+}
+
+.mt-4 {
+    margin-top: 4rem;
+}
+
+.tourneyHeader {
+    display: flex;
+    align-items: center;
+    margin-bottom: 3rem;
+    color: var(--primary-shade1);
+}
+
+.tourneyHeader h1 {
+    margin-left: 1.8rem;
+}
+
+/* Player info */
+.player-section{
+    margin-top: 2rem;
+}
+
+.player-info {
+    border-left: 3px solid var(--primary-shade1);
+    padding-left: 1rem;
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.player-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.player-header h4 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: normal;
+    color: var(--off-white);
+}
+
+.player-header .DropdownIcon {
+    margin-left: 2rem;
+}
+
+.player-details {
+    display: grid;
+    grid-template-columns: 4fr 4fr auto;
+    gap: 1rem;
+    align-items: center;
+    color: var(--primary-shade2);
+}
+
+.edit-icon {
+    cursor: pointer;
+}
+
+/* Button container */
+.button-container {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+}
 
 /* Mobile Navigation Bar */
 @media (max-width: 768px) {
@@ -732,4 +830,18 @@ html, body {
     .LogoNavbarMobile {
         display: block;
     }
+
+    .app-container:has(.navbar-div) .content {
+        margin-top: 6rem;
+        padding: 3rem 4rem 2rem 4rem;
+    }
+
+    .col-md-4, .col-md-8, .col-md-12 {
+        flex: 0 0 100%;
+        max-width: 80%;
+      }
+      
+      .player-details {
+        grid-template-columns: 1fr;
+      }
 }
