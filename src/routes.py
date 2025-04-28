@@ -79,3 +79,9 @@ def requests():
 @login_required
 def account():
     return render_template("account.html", title="My Account")
+
+
+@application.route('/new_tournament')
+@login_required
+def new_tournament():
+    return render_template('new_tournament.html')
