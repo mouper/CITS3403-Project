@@ -98,7 +98,7 @@
 
 */
 .Dropdown select {
-  background-color: var(--background-shade3);
+  background-color: var(--background-shade2);
   border: 1px solid var(--primary-shade1);
   border-radius: 0.75rem;
   padding: 0.75rem 1rem;
@@ -110,6 +110,12 @@
   background-image: url('/static/assets/DropdownIcon.svg'); /* 或用图标类 */
   background-repeat: no-repeat;
   background-position: right 1.2rem center;
+}
+
+.Dropdown label {
+  display: block;
+  margin-bottom: 1rem;
+  color: var(--primary-shade2);
 }
 
 /* 🧍 PlayerTab */
@@ -389,3 +395,12 @@ OR
   transform: scale(1);
 }
 
+.form-label {
+  display: block;
+  margin-bottom: 1rem;
+  color: var(--primary-shade2);
+}
+
+.checkbox-option{
+  padding-top: 1.5rem;
+}
