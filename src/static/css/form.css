@@ -38,7 +38,7 @@
 .TextForm label {
   display: block;
   margin-bottom: 1rem;
-  color: var(--primary-shade2);
+  color: var(--off-white);
 }
 
 .TextForm input:focus {
@@ -115,7 +115,7 @@
 .Dropdown label {
   display: block;
   margin-bottom: 1rem;
-  color: var(--primary-shade2);
+  color: var(--off-white);
 }
 
 /* 🧍 PlayerTab */
@@ -398,7 +398,7 @@ OR
 .form-label {
   display: block;
   margin-bottom: 1rem;
-  color: var(--primary-shade2);
+  color: var(--off-white);
 }
 
 .checkbox-option{
