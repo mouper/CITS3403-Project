@@ -1,9 +1,87 @@
 {% extends "base.html" %}
 
 {% block content %}
+<div class="dashboard-container">
     <div class="requests-container">
-        <h1 class="title2">My Requests</h1>
-        <p class="medium4">Welcome to your requests page!</p>
-        <!-- Page content goes here -->
+        <h1 class="title2 my-requests-title">My Requests</h1>
     </div>
+    <div class="incoming-container">
+        <p class="medium4">Incoming</p>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flashes">
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    {% if requests %}
+        {% for request in requests %}
+        <div class="request-card-container">
+            <div class="request-card">
+                <div class="request-content">
+                    <div class="request-name">
+                        <h2 class="title2">{{ request.tournament_name }}</h2>
+                        <p class="regular3">Requestor: {{ request.requestor_name }}</p>
+                        <div class="info-line">
+                            <p class="caption">{{ request.accepted }}/{{ request.total }} Competitors Accepted</p>
+                            <div class="game-details">
+                                <span class="medium4">{{ request.game_name }}</span>
+                                <span class="medium4">{{ request.type_name }}</span>
+                            </div>
+                        </div>                
+                    </div>
+                    <div class="request-image-and-accept">
+                        <div class="request-image">
+                            <img src="https://via.placeholder.com/150x100" alt="Placeholder Image" />
+                        </div>
+                        <div class="action-buttons">
+                            <div class="Dialog">
+                                <button class="cancel medium4">Decline</button>
+                                <button class="accept medium4">Accept</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <!-- Example card when no requests -->
+        <div class="request-card-container">
+            <div class="request-card">
+                <div class="request-content">
+                    <div class="request-name">
+                        <h2 class="headline">Tournament Name</h2>
+                        <p class="regular3">Requestor: Username1</p>
+            
+                            <div class="info-line">
+                                <p class="caption">X/Y Competitors Accepted</p>
+                                <div class="game-details">
+                                    <span class="medium4">Game Name</span>
+                                    <span class="medium4">Type Name</span>
+                                </div>
+                            </div>
+                        
+                    </div>                    
+                    <div class="request-image-and-accept">
+                        <div class="request-image">
+                            <img src="https://via.placeholder.com/150x100" alt="Placeholder Image" />
+                        </div>
+                    </div>
+                </div>
+                <div class="action-buttons">
+                    <div class="Dialog">
+                        <button class="cancel medium4">Decline</button>
+                        <button class="accept medium4">Accept</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
 {% endblock %}
