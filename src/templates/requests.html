@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
+<div class="dashboard-container">
     <div class="requests-container">
         <h1 class="title2 my-requests-title">My Requests</h1>
     </div>
@@ -71,15 +72,14 @@
                         <div class="request-image">
                             <img src="https://via.placeholder.com/150x100" alt="Placeholder Image" />
                         </div>
-                        <div class="action-buttons">
-                            <div class="Dialog">
-                                <button class="cancel medium4">Decline</button>
-                                <button class="accept medium4">Accept</button>
-                            </div>
-                        </div>
                     </div>
+                </div>
+                <div class="action-buttons">
+                        <button class="cancel medium4">Decline</button>
+                        <button class="accept medium4">Accept</button>
                 </div>
             </div>
         </div>
     {% endif %}
+</div>
 {% endblock %}
