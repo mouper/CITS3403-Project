@@ -1,16 +1,123 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="account-container">
-    <h1 class="title2">My Account</h1>
-    <p class="medium4">Welcome to your profile page!</p>
-    <!-- Div for Logout -->
-    <div class="navbar-logout-container">
-        {% if current_user.is_authenticated %}
-            <a class="navbar-logout medium4" href="{{ url_for('logout') }}">Logout</a>
-        {% endif %}
+<div class="account-page-container">
+  <div class="top-section">
+    <div class="ProfileSection">
+      <div class="profile-top"></div>
+
+      <div class="profile-avatar">
+        <img id="avatarPreview" src="https://via.placeholder.com/150" alt="Avatar">
+        <input type="file" id="avatarUpload" accept="image/*">
+        <button class="edit-avatar-btn"><div class="EditIcon"></div></button>
+      </div>
+
+      <div class="profile-info">
+        <h2 class="title2">{{ current_user.username }}</h2>
+        <div class="AccountTextForm">
+          <input type="email" id="emailInput" placeholder="Enter your email" value="{{ current_user.email }}">
+        </div>
+      </div>
+
+      <div class="profile-bottom">
+        <div class="player-details">
+          <div class="AccountTextForm with-edit">
+            <input type="text" id="firstNameInput" value="John" placeholder="First Name">
+            <button class="edit-icon-btn"><div class="EditIcon"></div></button>
+          </div>
+          <div class="AccountTextForm with-edit">
+            <input type="text" id="lastNameInput" value="Doe" placeholder="Last Name">
+            <button class="edit-icon-btn"><div class="EditIcon"></div></button>
+          </div>
+        </div>
+      </div>
     </div>
-    <!-- Page content goes here -->
-    <p class="medium4" style="padding-top: 100rem;">Test navbar fixed positioning</p>
+
+    <div class="settings-panel">
+      <div class="settings-header">
+        <h2 class="subheadline settings-title">Stats Displayed On My Profile</h2>
+        <div class="Dropdown player-dropdown">
+          <select>
+            <option>Player</option>
+            <option>Admin</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="switch-group">
+        <div class="switch-card">
+          <span class="medium4">Win Rate</span>
+          <label class="switch">
+            <input type="checkbox" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="switch-card">
+          <span class="medium4">Total Wins/Total Played</span>
+          <label class="switch">
+            <input type="checkbox">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="switch-card">
+          <span class="medium4">Last 3 Tournaments</span>
+          <label class="switch">
+            <input type="checkbox">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <!-- ✅ Top 3大卡片版，开关+小按钮合在一起 -->
+        <div class="switch-card top3-card">
+            <div class="top3-row">
+              <span class="medium4">Top 3 Tournaments</span>
+              <label class="switch">
+                <input type="checkbox" checked>
+                <span class="slider"></span>
+              </label>
+              <span class="status-text">Shown</span>
+            </div>
+          
+            <div class="top3-tab-group">
+              <button class="top3-tab">Highest Win Count</button>
+              <button class="top3-tab">Highest Win Rate</button>
+              <button class="top3-tab">Leaderboard Rank</button>
+            </div>
+          
+            <div class="top3-subline">
+              <span class="caption">Select Game Displayed</span>
+              <span class="medium4">Pokemon TCG &nbsp; <i class="fas fa-chevron-right"></i></span>
+            </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-section">
+    <h2 class="title2">Profile Preview:</h2>
+    <div class="preview-card">
+      <div class="preview-top">
+        <div class="preview-avatar">
+          <img src="https://via.placeholder.com/150" alt="Avatar">
+        </div>
+        <div class="preview-info">
+          <h3 class="title2">{{ current_user.username }}</h3>
+          <p class="regular3">58% WR</p>
+        </div>
+      </div>
+
+      <div class="preview-tournaments">
+        {% for tournament in tournaments %}
+        <div class="stat-card">
+          <h4 class="medium2">1st - {{ tournament.wins }} Wins</h4>
+          <p class="caption">Tournament Name</p>
+          <div class="caption">80% WR &nbsp; OPWR% &nbsp; OPOWR%</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock %}
