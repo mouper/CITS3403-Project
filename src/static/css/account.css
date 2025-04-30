@@ -299,3 +299,77 @@
   color: var(--primary-shade2);
   font-style: italic;
 }
+
+.profile-preview-wrapper {
+    width: 100%;
+    border-radius: 1rem;
+    overflow: hidden;
+    box-shadow: 6px 6px 25px #0e0e0e;
+    display: flex;
+    flex-direction: column;
+}
+  
+.preview-upper {
+    background-color: var(--background-shade2);
+    height: 6rem;
+    position: relative;
+}
+  
+.preview-avatar-wrapper {
+    position: absolute;
+    top: 100%;
+    left: 2rem;
+    transform: translateY(-50%);
+    z-index: 2;
+}
+  
+.preview-avatar-img {
+    width: 5rem;
+    height: 5rem;
+    aspect-ratio: 1 / 1;         /* 保证正方形显示 */
+    border-radius: 50%;          /* 圆形头像 */
+    object-fit: cover;           /* 裁剪填满 */
+    background-color: var(--background-shade1);
+    border: 2px solid white;
+    display: block;
+}  
+  
+.preview-lower {
+    background-color: var(--background-shade3);
+    padding: 4rem 2rem 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+  
+.identity-stat-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-left: 7.5rem;
+}
+  
+.identity-stat-line .username {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: var(--off-white);
+}
+  
+.identity-stat-line .winrate {
+    font-size: 1.125rem;
+    font-weight: 500;
+    color: var(--primary-shade1);
+}
+  
+.top3-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+    color: var(--primary-shade2);
+}
+  
+
+  

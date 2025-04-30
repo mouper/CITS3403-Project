@@ -69,55 +69,119 @@
           </label>
         </div>
 
-        <!-- ✅ Top 3大卡片版，开关+小按钮合在一起 -->
         <div class="switch-card top3-card">
-            <div class="top3-row">
-              <span class="medium4">Top 3 Tournaments</span>
-              <label class="switch">
-                <input type="checkbox" checked>
-                <span class="slider"></span>
-              </label>
-              <span class="status-text">Shown</span>
-            </div>
-          
-            <div class="top3-tab-group">
-              <button class="top3-tab">Highest Win Count</button>
-              <button class="top3-tab">Highest Win Rate</button>
-              <button class="top3-tab">Leaderboard Rank</button>
-            </div>
-          
-            <div class="top3-subline">
-              <span class="caption">Select Game Displayed</span>
-              <span class="medium4">Pokemon TCG &nbsp; <i class="fas fa-chevron-right"></i></span>
-            </div>
+          <div class="top3-row">
+            <span class="medium4">Top 3 Tournaments</span>
+            <label class="switch">
+              <input type="checkbox" checked>
+              <span class="slider"></span>
+            </label>
+            <span class="status-text">Shown</span>
+          </div>
+
+          <div class="top3-tab-group">
+            <button class="top3-tab">Highest Win Count</button>
+            <button class="top3-tab">Highest Win Rate</button>
+            <button class="top3-tab">Leaderboard Rank</button>
+          </div>
+
+          <div class="top3-subline">
+            <span class="caption">Select Game Displayed</span>
+            <span class="medium4">Pokemon TCG &nbsp; <i class="fas fa-chevron-right"></i></span>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
+  <!-- ✅ PROFILE PREVIEW -->
   <div class="bottom-section">
     <h2 class="title2">Profile Preview:</h2>
-    <div class="preview-card">
-      <div class="preview-top">
-        <div class="preview-avatar">
-          <img src="https://via.placeholder.com/150" alt="Avatar">
-        </div>
-        <div class="preview-info">
-          <h3 class="title2">{{ current_user.username }}</h3>
-          <p class="regular3">58% WR</p>
+    <div class="profile-preview-wrapper">
+      <div class="preview-upper">
+        <div class="preview-avatar-wrapper">
+          <img src="https://via.placeholder.com/150" alt="Avatar" class="preview-avatar-img">
         </div>
       </div>
 
-      <div class="preview-tournaments">
-        {% for tournament in tournaments %}
-        <div class="stat-card">
-          <h4 class="medium2">1st - {{ tournament.wins }} Wins</h4>
-          <p class="caption">Tournament Name</p>
-          <div class="caption">80% WR &nbsp; OPWR% &nbsp; OPOWR%</div>
+      <div class="preview-lower">
+        <div class="identity-stat-line">
+          <div class="username">{{ current_user.username }}</div>
+          <div class="winrate">58% WR</div>
         </div>
-        {% endfor %}
+
+        <div class="top3-header">
+          <span class="top3-title">TOP 3 TOURNAMENTS: HIGHEST WIN COUNT</span>
+          <span class="top3-game">Pokemon TCG</span>
+        </div>
+
+        <div class="statcard-container" style="display: flex; flex-wrap: nowrap; justify-content: center; gap: 2rem;">
+
+          <!-- 静态预览卡片 1 -->
+          <div class="statcard" style="flex: 0 0 16rem; padding: 1.2rem 1.5rem;">
+            <div class="statcard-top-row">
+              <p class="subheadline">1st</p>
+              <p class="title2 purple-text">8 WINS</p>
+            </div>
+            <div class="statcard-middle-row">
+              <p class="medium5">80% WR</p>
+              <p class="medium5">OPWR%</p>
+              <p class="medium5">OPOPWR%</p>
+            </div>
+            <p class="medium4 italic tournament-type">Tournament Type</p>
+            <p class="medium4">Tournament Name</p>
+          </div>
+        
+          <!-- 静态预览卡片 2 -->
+          <div class="statcard" style="flex: 0 0 16rem; padding: 1.2rem 1.5rem;">
+            <div class="statcard-top-row">
+              <p class="subheadline">2nd</p>
+              <p class="title2 purple-text">6 WINS</p>
+            </div>
+            <div class="statcard-middle-row">
+              <p class="medium5">75% WR</p>
+              <p class="medium5">OPWR%</p>
+              <p class="medium5">OPOPWR%</p>
+            </div>
+            <p class="medium4 italic tournament-type">Tournament Type</p>
+            <p class="medium4">Tournament Name</p>
+          </div>
+        
+          <!-- 静态预览卡片 3 -->
+          <div class="statcard" style="flex: 0 0 16rem; padding: 1.2rem 1.5rem;">
+            <div class="statcard-top-row">
+              <p class="subheadline">3rd</p>
+              <p class="title2 purple-text">5 WINS</p>
+            </div>
+            <div class="statcard-middle-row">
+              <p class="medium5">60% WR</p>
+              <p class="medium5">OPWR%</p>
+              <p class="medium5">OPOPWR%</p>
+            </div>
+            <p class="medium4 italic tournament-type">Tournament Type</p>
+            <p class="medium4">Tournament Name</p>
+          </div>
+        
+          <!-- ✅ 动态卡片渲染区（后端用） -->
+          {% for tournament in tournaments %}
+          <div class="statcard" style="flex: 0 0 16rem; padding: 1.2rem 1.5rem;">
+            <div class="statcard-top-row">
+              <p class="subheadline">1st</p>
+              <p class="title2 purple-text">{{ tournament.wins }} WINS</p>
+            </div>
+            <div class="statcard-middle-row">
+              <p class="medium5">80% WR</p>
+              <p class="medium5">OPWR%</p>
+              <p class="medium5">OPOPWR%</p>
+            </div>
+            <p class="medium4 italic tournament-type">Tournament Type</p>
+            <p class="medium4">Tournament Name</p>
+          </div>
+          {% endfor %}
+        </div>        
       </div>
     </div>
   </div>
 </div>
 {% endblock %}
+
