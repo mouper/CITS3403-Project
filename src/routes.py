@@ -53,8 +53,20 @@ def signup():
         email = request.form.get('email')
 
         with Session(engine) as session:
+            errors = []
+
             if session.query(User).filter_by(username=username).first():
-                flash('Username already exists', 'error')
+                errors.append("Username already exists.")
+
+            if session.query(User).filter_by(email=email).first():
+                errors.append("Email already in use.")
+
+            if not password or password.strip() == "":
+                errors.append("Password cannot be empty.")
+
+            if errors:
+                for error in errors:
+                    flash(error, 'error')
                 return redirect(url_for('signup'))
 
             user = User(username=username, email=email, display_name=username)
