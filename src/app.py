@@ -15,6 +15,7 @@ login_manager.login_view = 'login'
 engine = create_engine("sqlite:///app.db")
 
 # Load the user from the database by ID.
+@login_manager.user_loader
 def load_user(user_id):
     with Session(engine) as session:
         return session.get(User, int(user_id))
