@@ -447,6 +447,122 @@ html, body {
     margin-bottom: 4.5rem;
 }
 
+/* MOBILE STYLES */
+@media (max-width: 768px) {
+    .landing-nav-container {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.5rem;
+    }
+
+    .landinglogo {
+        transform: scale(0.6); 
+        transform-origin: left center;
+    }
+
+    .largeTitle {
+        width: 70%;
+        margin: 0 auto;
+        font-size: 1.5rem;
+        text-align: center;  
+    }
+
+    .nav-links {
+        justify-content: flex-end;
+        flex-wrap: wrap;
+        gap: 1.5rem;
+        display: flex;
+    }
+
+    .nav-links a {
+        font-size: 0.8rem; 
+    }
+
+    .signup-btn {
+        padding: 0.4rem 0.8rem;
+    }
+  
+    .hero {
+        flex-direction: column;
+        text-align: center;
+        padding: 2rem 1.5rem 4rem 1.5rem;
+        min-height: unset;
+    }
+  
+    .hero-content h2 {
+        font-size: 1.75rem;
+        margin-bottom: 5rem;
+    }
+  
+    .hero-content p {
+        font-size: 1rem;
+        margin-bottom: 2rem;
+    }
+  
+    .hero-buttons {
+        flex-direction: row;
+        gap: 0.75rem;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        margin-bottom: 0;
+    }
+
+    .herobtn-base {
+        font-size: 0.75rem;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        box-shadow: 3px 3px 10px #0e0e0e;
+        text-align: center;
+    }
+  
+    .title1 {
+        margin-top: 4rem;
+        font-size: 1.8rem;
+    }
+
+    .regular2 {
+        margin-top: -1rem;
+        margin-bottom: -2rem;
+    }
+    .types-section h2,
+    .types-section p {
+        padding: 2rem 1.5rem 0 1.5rem;
+        text-align: center;
+    }
+  
+    .tournament-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+  
+    .FilterComponent {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+  
+    .dashboard-btn-container {
+        flex-direction: column;
+        align-items: stretch;
+    }
+  
+    .NewBtn,
+    .UploadBtn {
+        width: 100%;
+        justify-content: center;
+    }
+  
+    .friend-search-section {
+        padding: 1.5rem;
+    }
+
+    html, body {
+        overflow-x: hidden;
+    }
+  }
+  
 /* Login and Sign up Page Temporary Styles */
 .login-form, .signup-form {
     display: flex;
@@ -609,12 +725,9 @@ html, body {
         justify-content: space-between;
         width: 100%;
         height: 6rem;
-        position: fixed;
-        top: 0;
-        left: 0;
+        position: relative;
         z-index: 1001;
         padding: 0.5rem 1rem;
-        background-color: var(--background-shade2);
     }
   
     .navbar-logo {
@@ -693,7 +806,7 @@ html, body {
       
     .app-container:has(.navbar-div) .content {
         margin-left: 0;
-        padding: 7rem 1rem 1rem 1rem;
+        padding: 1rem;
         width: 100%;
     }
 
