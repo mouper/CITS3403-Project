@@ -453,7 +453,7 @@ html, body {
         flex-direction: row;
         justify-content: space-between;
         align-items: center;
-        padding: 1.5rem;
+        padding: 1rem;
     }
 
     .landinglogo {
@@ -462,46 +462,51 @@ html, body {
     }
 
     .largeTitle {
-        width: 70%;
+        width: 90%;
         margin: 0 auto;
-        font-size: 1.5rem;
+        font-size: 1.4rem;
         text-align: center;  
     }
 
     .nav-links {
-        justify-content: flex-end;
-        flex-wrap: wrap;
-        gap: 1.5rem;
         display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 0.75rem;
+        flex-wrap: nowrap;
+        width: auto;
+        flex-shrink: 0;
     }
 
     .nav-links a {
-        font-size: 0.8rem; 
+        font-size: 0.7rem;  /* Smaller font size */
+        padding: 0.3rem 0.6rem;  /* Reduced padding */
+        flex-shrink: 1;  /* Allow shrinking */
     }
 
     .signup-btn {
         padding: 0.4rem 0.8rem;
     }
-  
+
     .hero {
         flex-direction: column;
         text-align: center;
-        padding: 2rem 1.5rem 4rem 1.5rem;
+        padding: 2rem 1rem 4rem 1rem;
         min-height: unset;
     }
-  
+
     .hero-content h2 {
-        font-size: 1.75rem;
-        margin-bottom: 5rem;
+        font-size: 1.5rem;
+        margin-bottom: 3rem;
     }
-  
+
     .hero-content p {
         font-size: 1rem;
         margin-bottom: 2rem;
     }
-  
+
     .hero-buttons {
-        flex-direction: row;
+        flex-direction: column;
         gap: 0.75rem;
         align-items: center;
         justify-content: center;
@@ -515,53 +520,135 @@ html, body {
         border-radius: 0.5rem;
         box-shadow: 3px 3px 10px #0e0e0e;
         text-align: center;
+        width: 100%;
+        max-width: 280px;
     }
-  
+
     .title1 {
         margin-top: 4rem;
-        font-size: 1.8rem;
+        font-size: 1.5rem;
     }
 
     .regular2 {
         margin-top: -1rem;
         margin-bottom: -2rem;
+        font-size: 0.95rem;
     }
+
     .types-section h2,
     .types-section p {
-        padding: 2rem 1.5rem 0 1.5rem;
+        padding: 1rem;
         text-align: center;
     }
-  
+
+    .typecards-section {
+        padding: 1rem;
+    }
+
+    .typecards-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    /* Card styles for mobile screens */
+    .typecard {
+        padding: 1rem;
+        font-size: 0.9rem;  /* Reduced font size for card content */
+    }
+
+    /* Card title font size */
+    .typecard .title {
+        font-size: 1rem;  /* Smaller title font */
+    }
+
+    /* Card description font size */
+    .typecard .description {
+        font-size: 0.8rem;  /* Smaller description font */
+    }
+
     .tournament-header {
         flex-direction: column;
         align-items: flex-start;
         gap: 1rem;
     }
-  
+
     .FilterComponent {
         flex-direction: column;
         align-items: flex-start;
     }
-  
+
     .dashboard-btn-container {
         flex-direction: column;
         align-items: stretch;
     }
-  
+
     .NewBtn,
     .UploadBtn {
         width: 100%;
         justify-content: center;
     }
-  
+
     .friend-search-section {
-        padding: 1.5rem;
+        padding: 1rem;
     }
 
     html, body {
         overflow-x: hidden;
     }
-  }
+}
+
+/* iPhone SE-specific optimizations (375px and smaller) */
+@media (max-width: 400px) {
+    .nav-links {
+        gap: 0.5rem;
+    }
+
+    .nav-links a {
+        font-size: 0.5rem;  /* Even smaller font size */
+        padding: 0.3rem 0.4rem;  /* Smaller padding */
+        flex-shrink: 1;
+    }
+
+    .landinglogo {
+        transform: scale(0.4); 
+        transform-origin: left center;
+    }
+
+    .landing-nav-container {
+        padding: 0.75rem;
+    }
+
+    .largeTitle {
+        font-size: 1.2rem;
+    }
+
+    .hero-content h2 {
+        font-size: 1.3rem;
+    }
+
+    .types-section h2 {
+        font-size: 1.3rem;
+    }
+
+    .types-section p {
+        font-size: 0.9rem;
+    }
+
+    /* Card content font size for smaller screens */
+    .typecard {
+        font-size: 0.85rem;  /* Smaller font size for iPhone SE */
+    }
+
+    .typecard .title {
+        font-size: 0.9rem;  /* Smaller title font for iPhone SE */
+    }
+
+    .typecard .description {
+        font-size: 0.7rem;  /* Smaller description font for iPhone SE */
+    }
+}
+
   
 /* Login and Sign up Page Temporary Styles */
 .login-form, .signup-form {
