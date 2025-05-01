@@ -1,7 +1,12 @@
 from flask import render_template, request, redirect, url_for, flash
 from flask_login import login_user, logout_user, current_user, login_required
 from app import application
-from models import User, users
+from models import User
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session
+
+# Set up the SQLite engine.
+engine = create_engine("sqlite:///app.db")
 
 @application.route('/')
 def landing():
@@ -18,15 +23,15 @@ def login():
         username = request.form.get('username')
         password = request.form.get('password')
         
-        user = next((u for u in users.values() if u.username == username), None)
-        
-        if user and user.verify_password(password):
-            login_user(user)
-            flash('Login successful!', 'success')
-            return redirect(url_for('dashboard'))  # Message will show on dashboard
-        else:
-            flash('Invalid username or password', 'error')
-            # No redirect - render template to preserve flash
+        with Session(engine) as session:
+            user = session.query(User).filter_by(username=username).first()
+
+            if user and user.verify_password(password):
+                login_user(user)
+                flash('Login successful!', 'success')
+                return redirect(url_for('dashboard'))
+            else:
+                flash('Invalid username or password', 'error')
     
     return render_template('login.html')  # Remove fresh_visit parameter
 
@@ -45,18 +50,21 @@ def signup():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
-        
-        # Check if username exists
-        if any(u.username == username for u in users.values()):
-            flash('Username already exists', 'error')
-            return redirect(url_for('signup'))
-        
-        # Create new user (temporary - will disappear on server restart)
-        new_id = max(users.keys()) + 1
-        users[new_id] = User(new_id, username, password)
-        
-        flash('Account created! Please login.', 'success')
-        return redirect(url_for('login', fresh=1))
+        email = request.form.get('email')
+
+        with Session(engine) as session:
+            if session.query(User).filter_by(username=username).first():
+                flash('Username already exists', 'error')
+                return redirect(url_for('signup'))
+
+            user = User(username=username, email=email, display_name=username)
+            user.set_password(password)
+            session.add(user)
+            session.commit()
+
+            flash('Account created! Please login.', 'success')
+            return redirect(url_for('login', fresh=1))
+
     
     return render_template('signup.html')
 
