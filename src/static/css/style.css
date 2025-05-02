@@ -597,7 +597,7 @@ html, body {
     }
 }
 
-/* iPhone SE-specific optimizations (375px and smaller) */
+/* 375px and smaller devices */
 @media (max-width: 375px) {
     .landing-nav-container {
         display: flex;
@@ -830,6 +830,97 @@ html, body {
     align-items: center;
     justify-content: center;
     gap: 1.5rem;
+}
+
+/* For small screens (≤375px) */
+@media (max-width: 375px) {
+    .TextForm input[type="text"],
+    .TextForm input[type="email"],
+    .TextForm input[type="password"] {
+      padding: 0.4rem 1.5rem;     /* Smaller padding */
+      font-size: 0.7rem;         /* Smaller input text and placeholder */
+      border-radius: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+  
+    ::placeholder {
+      font-size: 0.5rem;
+    }  
+      
+    .login-form, .signup-form {
+        padding: 4rem 5.5rem;
+        gap: 1rem;
+    }
+    
+    .login-form input,
+    .signup-form input,
+    .SaveBtn button {
+        font-size: 0.5rem;
+        padding: 0.3rem;
+        border-radius: 0.3rem;
+    }
+
+    .title2 {
+        font-size: 0.6rem;
+    }
+
+    .medium4 {
+        font-size: 0.6rem;
+        text-align: center;
+        padding: 0 1rem;
+    }
+}
+
+/* Medium screens (376px–768px) */
+@media (min-width: 376px) and (max-width: 768px) {
+    .TextForm input[type="text"],
+    .TextForm input[type="email"],
+    .TextForm input[type="password"] {
+      padding: 0.4rem 1.5rem;     /* Smaller padding */
+      font-size: 0.7rem;         /* Smaller input text and placeholder */
+      border-radius: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+  
+    ::placeholder {
+      font-size: 0.5rem;
+    }  
+    
+    .login-form, .signup-form {
+        padding: 4rem 6.5rem;
+        gap: 1.25rem;
+    }
+
+    .login-form input,
+    .signup-form input,
+    .SaveBtn button {
+        font-size: 0.5rem;
+        padding: 0.3rem;
+        border-radius: 0.3rem;
+    }
+
+    .title2 {
+        font-size: 0.7rem;
+    }
+
+    .medium4 {
+        font-size: 0.7rem;
+    }
+}
+
+/* Large screens (>768px) */
+@media (min-width: 769px) {
+    .login-form, .signup-form {
+        padding: 3rem;
+    }
+
+    .title2 {
+        font-size: 1.6rem;
+    }
+
+    .medium4 {
+        font-size: 1rem;
+    }
 }
 
 /* Analytics Section */
