@@ -50,3 +50,12 @@ class Tournament(db.Model):
     __table_args__ = (
         db.CheckConstraint(format.in_(['round robin', 'swiss', 'single elimination']), name='format_check'),
     )
+
+class TournamentPlayer(db.Model):
+    __tablename__ = 'tournament_players'
+    id = db.Column(db.Integer, primary_key=True)
+    tournament_id = db.Column(db.Integer, db.ForeignKey('tournaments.id', ondelete='CASCADE'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='SET NULL'))
+    guest_name = db.Column(db.Text)
+    email = db.Column(db.Text)
+    is_confirmed = db.Column(db.Boolean, default=False)
