@@ -969,9 +969,10 @@ html, body {
         line-height: 1.2;
     }
     
+    .medium3 {
         font-size: 0.7rem;
     }
-
+     
     .dashboard-container {
         padding: 1.4rem;
     }
@@ -1137,7 +1138,7 @@ html, body {
         font-size: 0.6rem;
     }
 
-    .medium4 {
+    p.medium4 {
         font-size: 0.5rem !important;
         text-align: center;
         padding: 0 1rem;
