@@ -81,3 +81,14 @@ class Match(db.Model):
     __table_args__ = (
         db.CheckConstraint(status.in_(['scheduled', 'completed', 'forfeit']), name='match_status_check'),
     )
+
+class TournamentResult(db.Model):
+    __tablename__ = 'tournament_results'
+    id = db.Column(db.Integer, primary_key=True)
+    tournament_id = db.Column(db.Integer, db.ForeignKey('tournaments.id', ondelete='CASCADE'), nullable=False)
+    player_id = db.Column(db.Integer, db.ForeignKey('tournament_players.id'), nullable=False)
+    wins = db.Column(db.Integer, default=0)
+    losses = db.Column(db.Integer, default=0)
+    draws = db.Column(db.Integer, default=0)
+    opponent_win_percentage = db.Column(db.Float)
+    opp_opp_win_percentage = db.Column(db.Float)
