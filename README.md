@@ -21,6 +21,7 @@ Initial Set Up:
     python3 -m venv env
     source env/bin/activate
     pip install -r requirements.txt
+    python init_db.py
     flask run
 
 After Set Up Has Been Completed Once:
