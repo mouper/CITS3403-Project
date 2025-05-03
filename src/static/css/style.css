@@ -848,7 +848,7 @@ html, body {
     }  
       
     .login-form, .signup-form {
-        padding: 4rem 5.5rem;
+        padding: 4rem 6rem;
         gap: 1rem;
     }
     
@@ -865,13 +865,26 @@ html, body {
     }
 
     .medium4 {
-        font-size: 0.6rem;
+        font-size: 0.5rem;
         text-align: center;
         padding: 0 1rem;
     }
+
+    .flashes {
+        padding: 0.1rem 0.1rem;
+        margin: 0 !important;
+        font-size: 0.5rem;
+        max-width: 100%;
+    }
+
+    .flashes .alert {
+        font-size: 0.5rem;       
+        padding: 1px 1px;        
+        margin: 0px 0;           
+    }
 }
 
-/* Medium screens (376px–768px) */
+/* Medium screens (376px–767px) */
 @media (min-width: 376px) and (max-width: 768px) {
     .TextForm input[type="text"],
     .TextForm input[type="email"],
@@ -904,22 +917,47 @@ html, body {
     }
 
     .medium4 {
-        font-size: 0.7rem;
+        font-size: 0.6rem;
+    }
+
+    .flashes {
+        padding: 0.1rem 0.1rem;
+        margin: 0 !important;
+        font-size: 0.5rem;
+        max-width: 100%;
+    }
+
+    .flashes .alert {
+        font-size: 0.5rem;       
+        padding: 1px 1px;        
+        margin: 0px 0;           
     }
 }
 
 /* Large screens (>768px) */
-@media (min-width: 769px) {
+@media (min-width: 767px) {
     .login-form, .signup-form {
         padding: 3rem;
     }
 
     .title2 {
-        font-size: 1.6rem;
+        font-size: 1rem;
     }
 
     .medium4 {
         font-size: 1rem;
+    }
+
+    .flashes {
+        padding: 0.1rem 7rem;
+        margin: 0 !important;
+        max-width: 100%;
+    }
+
+    .flashes .alert {
+        font-size: 0.8rem;       
+        padding: 0 3rem;        
+        margin: 0px 0;           
     }
 }
 
