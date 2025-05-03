@@ -32,3 +32,21 @@ class Friend(db.Model):
     __table_args__ = (
         db.CheckConstraint(status.in_(['pending', 'accepted']), name='status_check'),
     )
+
+class Tournament(db.Model):
+    __tablename__ = 'tournaments'
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.Text, nullable=False)
+    game_type = db.Column(db.Text)
+    format = db.Column(db.Text, nullable=False)
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='SET NULL'))
+    is_draft = db.Column(db.Boolean, default=True)
+    round_time_minutes = db.Column(db.Integer)
+    total_rounds = db.Column(db.Integer)
+    include_creator_as_player = db.Column(db.Boolean, default=False)
+    start_time = db.Column(db.DateTime)
+    created_at = db.Column(db.DateTime, server_default=func.now())
+
+    __table_args__ = (
+        db.CheckConstraint(format.in_(['round robin', 'swiss', 'single elimination']), name='format_check'),
+    )
