@@ -26,7 +26,7 @@ html, body {
 .content {
     width: 100%;
     flex: 1;
-    background-color: var(--background-shade1);
+    background-color: var(--background-shade3);
     color: var(--off-white);
 }
 

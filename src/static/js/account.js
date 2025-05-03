@@ -1,55 +1,47 @@
-document.addEventListener('DOMContentLoaded', function () {
-    const switchCards = document.querySelectorAll('.switch-card');
+document.addEventListener('DOMContentLoaded', () => {
+    const switchGroup = document.querySelector('.switch-group');
     const top3Card = document.querySelector('.top3-card');
+    const dropdown = document.querySelector('.player-dropdown select');
 
-    function updateSwitchStatus(card) {
-        const input = card.querySelector('input[type="checkbox"]');
-        const switchLabel = input?.parentElement;
+    // Add toggle status text and bind listener
+    function setupSwitch(card) {
+        const checkbox = card.querySelector('input[type="checkbox"]');
+        const slider = card.querySelector('.slider');
+        if (!checkbox || !slider) return;
 
-        if (!input || !switchLabel) return;
-
-        const existingStatus = card.querySelector('.status-text');
-        if (!existingStatus) {
-            const statusLabel = document.createElement('span');
-            statusLabel.className = 'status-text';
-            statusLabel.textContent = input.checked ? 'Shown' : 'Hidden';
-            switchLabel.after(statusLabel);
+        let status = card.querySelector('.status-text');
+        if (!status) {
+            status = document.createElement('span');
+            status.className = 'status-text';
+            slider.insertAdjacentElement('afterend', status);
         }
+        status.textContent = checkbox.checked ? 'Shown' : 'Hidden';
 
-        input.addEventListener('change', () => {
-            const status = card.querySelector('.status-text');
-            if (status) status.textContent = input.checked ? 'Shown' : 'Hidden';
+        checkbox.addEventListener('change', () => {
+            status.textContent = checkbox.checked ? 'Shown' : 'Hidden';
         });
     }
 
-    switchCards.forEach(updateSwitchStatus);
+    // Setup all switch cards
+    document.querySelectorAll('.switch-card').forEach(setupSwitch);
 
-    function bindTabClicks() {
-        document.querySelectorAll('.top3-tab').forEach(button => {
+    // Setup tab switching for top3 tabs
+    function bindTabClicks(container = document) {
+        container.querySelectorAll('.top3-tab').forEach(button => {
             button.addEventListener('click', () => {
-                document.querySelectorAll('.top3-tab').forEach(btn => btn.classList.remove('active'));
+                container.querySelectorAll('.top3-tab').forEach(btn => btn.classList.remove('active'));
                 button.classList.add('active');
             });
         });
     }
-
     bindTabClicks();
 
-    // Admin/Player Layout Switch
-    const dropdown = document.querySelector('.player-dropdown select');
-    const switchGroup = document.querySelector('.switch-group');
-
+    // Toggle between Player and Admin view
     dropdown.addEventListener('change', () => {
         if (dropdown.value === 'Admin') {
-            // 清空除了 top3-card 以外的所有 switch-card
-            const cards = Array.from(switchGroup.querySelectorAll('.switch-card'));
-            cards.forEach(card => {
-                if (!card.classList.contains('top3-card')) {
-                    card.remove();
-                }
-            });
+            // Remove all switch-cards except top3
+            switchGroup.querySelectorAll('.switch-card:not(.top3-card)').forEach(card => card.remove());
 
-            // 重设 top3-card 为 admin 模式
             top3Card.innerHTML = `
                 <div class="top3-row">
                   <span class="medium4">Recent Tournaments</span>
@@ -57,7 +49,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     <input type="checkbox" checked>
                     <span class="slider"></span>
                   </label>
-                  <span class="status-text">Shown</span>
                 </div>
 
                 <div class="top3-tab-group">
@@ -72,11 +63,25 @@ document.addEventListener('DOMContentLoaded', function () {
                   <span class="medium4">All Games &nbsp; <i class="fas fa-chevron-right"></i></span>
                 </div>
             `;
-
-            updateSwitchStatus(top3Card);
-            bindTabClicks();
+            setupSwitch(top3Card);
+            bindTabClicks(top3Card);
         } else {
-            location.reload(); // 简单恢复为原始 player 模式
+            location.reload(); // revert to player view
         }
     });
+
+    // Editable email field
+    const emailInput = document.getElementById('emailInput');
+    const emailEditBtn = document.getElementById('emailEditBtn');
+
+    if (emailInput && emailEditBtn) {
+        if (!emailInput.value.trim()) {
+            emailInput.value = "username@email.com";
+        }
+
+        emailEditBtn.addEventListener('click', () => {
+            emailInput.removeAttribute('readonly');
+            emailInput.focus();
+        });
+    }
 });

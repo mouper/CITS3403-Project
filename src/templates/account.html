@@ -1,24 +1,23 @@
 {% extends "base.html" %}
 
 {% block content %}
+<h1 class="account-page-heading">My Account</h1>
 <div class="account-page-container">
   <div class="top-section">
     <div class="ProfileSection">
       <div class="profile-top"></div>
-
       <div class="profile-avatar">
         <img id="avatarPreview" src="https://via.placeholder.com/150" alt="Avatar">
         <input type="file" id="avatarUpload" accept="image/*">
         <button class="edit-avatar-btn"><div class="EditIcon"></div></button>
       </div>
-
       <div class="profile-info">
         <h2 class="title2">{{ current_user.username }}</h2>
-        <div class="AccountTextForm">
-          <input type="email" id="emailInput" placeholder="Enter your email" value="{{ current_user.email }}">
+        <div class="email-display-line">
+          <input type="email" id="emailInput" class="email-input" placeholder="Enter your email" value="{{ current_user.email or 'username@email.com' }}" readonly>
+          <button class="edit-icon-btn" id="emailEditBtn"><div class="EditIcon"></div></button>
         </div>
       </div>
-
       <div class="profile-bottom">
         <div class="player-details">
           <div class="AccountTextForm with-edit">
@@ -35,7 +34,7 @@
 
     <div class="settings-panel">
       <div class="settings-header">
-        <h2 class="subheadline settings-title">Stats Displayed On My Profile</h2>
+        <h2 class="subheadline settings-title">Stats Displayed On My Profile:</h2>
         <div class="Dropdown player-dropdown">
           <select>
             <option>Player</option>
@@ -76,7 +75,6 @@
               <input type="checkbox" checked>
               <span class="slider"></span>
             </label>
-            <span class="status-text">Shown</span>
           </div>
 
           <div class="top3-tab-group">
@@ -94,7 +92,7 @@
     </div>
   </div>
 
-  <!-- ✅ PROFILE PREVIEW -->
+  <!-- PROFILE PREVIEW -->
   <div class="bottom-section">
     <h2 class="title2">Profile Preview:</h2>
     <div class="profile-preview-wrapper">
@@ -115,10 +113,9 @@
           <span class="top3-game">Pokemon TCG</span>
         </div>
 
-        <div class="statcard-container" style="display: flex; flex-wrap: nowrap; justify-content: center; gap: 2rem;">
-
-          <!-- 静态预览卡片 1 -->
-          <div class="statcard" style="flex: 0 0 16rem; padding: 1.2rem 1.5rem;">
+        <div class="statcard-container">
+          <!-- Static stat cards -->
+          <div class="statcard">
             <div class="statcard-top-row">
               <p class="subheadline">1st</p>
               <p class="title2 purple-text">8 WINS</p>
@@ -131,9 +128,8 @@
             <p class="medium4 italic tournament-type">Tournament Type</p>
             <p class="medium4">Tournament Name</p>
           </div>
-        
-          <!-- 静态预览卡片 2 -->
-          <div class="statcard" style="flex: 0 0 16rem; padding: 1.2rem 1.5rem;">
+
+          <div class="statcard">
             <div class="statcard-top-row">
               <p class="subheadline">2nd</p>
               <p class="title2 purple-text">6 WINS</p>
@@ -146,9 +142,8 @@
             <p class="medium4 italic tournament-type">Tournament Type</p>
             <p class="medium4">Tournament Name</p>
           </div>
-        
-          <!-- 静态预览卡片 3 -->
-          <div class="statcard" style="flex: 0 0 16rem; padding: 1.2rem 1.5rem;">
+
+          <div class="statcard">
             <div class="statcard-top-row">
               <p class="subheadline">3rd</p>
               <p class="title2 purple-text">5 WINS</p>
@@ -161,10 +156,9 @@
             <p class="medium4 italic tournament-type">Tournament Type</p>
             <p class="medium4">Tournament Name</p>
           </div>
-        
-          <!-- ✅ 动态卡片渲染区（后端用） -->
+
           {% for tournament in tournaments %}
-          <div class="statcard" style="flex: 0 0 16rem; padding: 1.2rem 1.5rem;">
+          <div class="statcard">
             <div class="statcard-top-row">
               <p class="subheadline">1st</p>
               <p class="title2 purple-text">{{ tournament.wins }} WINS</p>
@@ -178,10 +172,53 @@
             <p class="medium4">Tournament Name</p>
           </div>
           {% endfor %}
-        </div>        
-      </div>
+        </div>
+
+        <!-- Last 3 Tournaments Hosted -->
+        <div class="hosted-section">
+          <div class="section-header">
+            <span class="medium4">Last 3 Tournaments Hosted</span>
+            <span class="medium4">Pokemon TCG</span>
+          </div>
+
+          <div class="hosted-card-container">
+            <div class="hosted-card">
+              <div class="placement"><i>1st</i><span><i class="fas fa-crown"></i> Username1</span></div>
+              <div class="placement"><i>2nd</i><span>Username2</span></div>
+              <div class="placement"><i>3rd</i><span class="primary-text">Username3</span></div>
+              <div class="tournament-footer">
+                <span>Tournament Name</span>
+                <a href="#" class="view-link">View</a>
+              </div>
+            </div>
+
+            <div class="hosted-card">
+              <div class="placement"><i>1st</i><span><i class="fas fa-crown"></i> Username4</span></div>
+              <div class="placement"><i>2nd</i><span>Username5</span></div>
+              <div class="placement"><i>3rd</i><span class="primary-text">Username6</span></div>
+              <div class="tournament-footer">
+                <span>Tournament Name</span>
+                <a href="#" class="view-link">View</a>
+              </div>
+            </div>
+
+            <div class="hosted-card">
+              <div class="placement"><i>1st</i><span><i class="fas fa-crown"></i> Username7</span></div>
+              <div class="placement"><i>2nd</i><span>Username8</span></div>
+              <div class="placement"><i>3rd</i><span class="primary-text">Username9</span></div>
+              <div class="tournament-footer">
+                <span>Tournament Name</span>
+                <a href="#" class="view-link">View</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div> <!-- preview-lower -->
     </div>
   </div>
 </div>
 {% endblock %}
+
+
+
 
