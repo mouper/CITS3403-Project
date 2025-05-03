@@ -30,8 +30,9 @@ class Friend(db.Model):
     status = db.Column(db.Text, nullable=False)
 
     __table_args__ = (
-        db.CheckConstraint(status.in_(['pending', 'accepted']), name='status_check'),
+        db.CheckConstraint("status IN ('pending', 'accepted')", name='status_check'),
     )
+
 
 class Tournament(db.Model):
     __tablename__ = 'tournaments'
@@ -48,8 +49,9 @@ class Tournament(db.Model):
     created_at = db.Column(db.DateTime, server_default=func.now())
 
     __table_args__ = (
-        db.CheckConstraint(format.in_(['round robin', 'swiss', 'single elimination']), name='format_check'),
+        db.CheckConstraint("format IN ('round robin', 'swiss', 'single elimination')", name='format_check'),
     )
+
 
 class TournamentPlayer(db.Model):
     __tablename__ = 'tournament_players'
@@ -77,10 +79,11 @@ class Match(db.Model):
     winner_id = db.Column(db.Integer, db.ForeignKey('tournament_players.id'))
     status = db.Column(db.Text, default='scheduled')
     notes = db.Column(db.Text)
-
+    
     __table_args__ = (
-        db.CheckConstraint(status.in_(['scheduled', 'completed', 'forfeit']), name='match_status_check'),
+        db.CheckConstraint("status IN ('scheduled', 'completed', 'forfeit')", name='match_status_check'),
     )
+
 
 class TournamentResult(db.Model):
     __tablename__ = 'tournament_results'
