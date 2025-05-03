@@ -1,11 +1,21 @@
+import os
 from flask import Flask, request
 from flask_login import LoginManager
 from models import User
-from db import db, migrate  # Import our centralized db & migrate objects.
+from db import db, migrate
+from dotenv import load_dotenv
+
+load_dotenv()
+
+basedir = os.path.abspath(os.path.dirname(__file__))
 
 application = Flask(__name__)
-application.config['SECRET_KEY'] = 'your-secret-key-here'
-application.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
+
+application.config['SECRET_KEY'] = os.environ.get("SECRET_KEY") or "your-secret-key-here"
+
+application.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DATABASE_URL") or \
+    "sqlite:///" + os.path.join(basedir, "app.db")
+
 application.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(application)
