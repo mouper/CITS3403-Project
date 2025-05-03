@@ -67,3 +67,17 @@ class Round(db.Model):
     round_number = db.Column(db.Integer, nullable=False)
     started_at = db.Column(db.DateTime)
     completed_at = db.Column(db.DateTime)
+
+class Match(db.Model):
+    __tablename__ = 'matches'
+    id = db.Column(db.Integer, primary_key=True)
+    round_id = db.Column(db.Integer, db.ForeignKey('rounds.id', ondelete='CASCADE'), nullable=False)
+    player1_id = db.Column(db.Integer, db.ForeignKey('tournament_players.id'), nullable=False)
+    player2_id = db.Column(db.Integer, db.ForeignKey('tournament_players.id'), nullable=False)
+    winner_id = db.Column(db.Integer, db.ForeignKey('tournament_players.id'))
+    status = db.Column(db.Text, default='scheduled')
+    notes = db.Column(db.Text)
+
+    __table_args__ = (
+        db.CheckConstraint(status.in_(['scheduled', 'completed', 'forfeit']), name='match_status_check'),
+    )
