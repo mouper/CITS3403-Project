@@ -22,3 +22,13 @@ class User(UserMixin, db.Model):
 
     def __repr__(self):
         return f"<User(id={self.id}, username='{self.username}')>"
+
+class Friend(db.Model):
+    __tablename__ = 'friends'
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), primary_key=True)
+    friend_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), primary_key=True)
+    status = db.Column(db.Text, nullable=False)
+
+    __table_args__ = (
+        db.CheckConstraint(status.in_(['pending', 'accepted']), name='status_check'),
+    )
