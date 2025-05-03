@@ -59,3 +59,11 @@ class TournamentPlayer(db.Model):
     guest_name = db.Column(db.Text)
     email = db.Column(db.Text)
     is_confirmed = db.Column(db.Boolean, default=False)
+
+class Round(db.Model):
+    __tablename__ = 'rounds'
+    id = db.Column(db.Integer, primary_key=True)
+    tournament_id = db.Column(db.Integer, db.ForeignKey('tournaments.id', ondelete='CASCADE'), nullable=False)
+    round_number = db.Column(db.Integer, nullable=False)
+    started_at = db.Column(db.DateTime)
+    completed_at = db.Column(db.DateTime)
