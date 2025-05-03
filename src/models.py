@@ -92,3 +92,13 @@ class TournamentResult(db.Model):
     draws = db.Column(db.Integer, default=0)
     opponent_win_percentage = db.Column(db.Float)
     opp_opp_win_percentage = db.Column(db.Float)
+
+class UserStat(db.Model):
+    __tablename__ = 'user_stats'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    game_type = db.Column(db.Text)
+    games_played = db.Column(db.Integer, default=0)
+    games_won = db.Column(db.Integer, default=0)
+    games_lost = db.Column(db.Integer, default=0)
+    win_percentage = db.Column(db.Float)
