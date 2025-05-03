@@ -1,24 +1,23 @@
-from flask import Flask, request, session
+from flask import Flask, request
 from flask_login import LoginManager
-from sqlalchemy import create_engine
-from sqlalchemy.orm import Session
 from models import User
+from db import db, migrate  # Import our centralized db & migrate objects.
 
 application = Flask(__name__)
-application.config['SECRET_KEY'] = 'your-secret-key-here'  # For session security
+application.config['SECRET_KEY'] = 'your-secret-key-here'
+application.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
+application.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+db.init_app(application)
+migrate.init_app(application, db)
 
 login_manager = LoginManager()
 login_manager.init_app(application)
 login_manager.login_view = 'login'
 
-# Set up SQLite engine.
-engine = create_engine("sqlite:///app.db")
-
-# Load the user from the database by ID.
 @login_manager.user_loader
 def load_user(user_id):
-    with Session(engine) as session:
-        return session.get(User, int(user_id))
+    return db.session.get(User, int(user_id))
 
 @application.context_processor
 def inject_request():
