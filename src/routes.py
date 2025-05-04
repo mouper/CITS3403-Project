@@ -1,7 +1,7 @@
 from flask import render_template, request, redirect, url_for, flash
 from flask_login import login_user, logout_user, current_user, login_required
 from app import application
-from models import User
+from models import User, UserStat
 from db import db  # Use the centralized db object from db.py
 
 @application.route('/')
@@ -105,27 +105,25 @@ def upload_tournament_data():
         data = json.load(uploaded_file)
         print("Parsed tournament data:", data)  # 🐛 Debug print for now
 
-        # Extract values
+        # Use the JSON fields as-is
         user_id = data["user_id"]
         game_type = data["game_type"]
         games_played = data["games_played"]
         games_won = data["games_won"]
         games_lost = data["games_lost"]
-        win_percentage = round((games_won / games_played) * 100, 2) if games_played > 0 else 0.0
+        win_percentage = data["win_percentage"]
 
-        # Try to find an existing UserStat for this user + game type
+        # Check for existing record
         stat = db.session.query(UserStat).filter_by(user_id=user_id, game_type=game_type).first()
 
         if stat:
-            # Update existing record
+            # Update the record
             stat.games_played += games_played
             stat.games_won += games_won
             stat.games_lost += games_lost
-            total_played = stat.games_played
-            total_wins = stat.games_won
-            stat.win_percentage = round((total_wins / total_played) * 100, 2) if total_played > 0 else 0.0
+            stat.win_percentage = win_percentage
         else:
-            # Create new record
+            # Insert new record
             new_stat = UserStat(
                 user_id=user_id,
                 game_type=game_type,
