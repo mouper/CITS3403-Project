@@ -6,147 +6,102 @@
         <div class="CreateIconLg"></div>
         <h1 class="title2"> <span>New Tournament</span> </h1>
     </div>
-
-    <form id="tournamentForm">
-        <div class="row mb-4">
-            <div class="TextForm col-md-4">
-                <label for="tournamentName">Tournament Name</label>
-                <input type="text" id="tournamentName" placeholder="Input text">
-            </div>
-            <div class="Dropdown col-md-4">
-                <label for="tournamentType" class="form-label">Tournament Type</label>
-                <select class="form-select" id="tournamentType" required>
-                    <option value="" selected disabled>Select</option>
-                    <option value="single-elimination">Single Elimination</option>
-                    <option value="double-elimination">Double Elimination</option>
-                    <option value="round-robin">Round Robin</option>
-                    <option value="swiss">Swiss System</option>
-                </select>
-            </div>
-            <div class="Dropdown col-md-4">
-                <label for="game" class="form-label">Game</label>
-                <select class="form-select" id="game" required>
-                    <option value="" selected disabled>Select</option>
-                    <option value="chess">Chess</option>
-                    <option value="tennis">Tennis</option>
-                    <option value="basketball">Basketball</option>
-                    <option value="soccer">Soccer</option>
-                    <option value="esports-lol">League of Legends</option>
-                    <option value="esports-csgo">CS:GO</option>
-                    <option value="esports-valorant">Valorant</option>
-                </select>
-            </div>
+    <div class="form-row">
+        <div class="form-group">
+        <label class="form-label">Tournament Name</label>
+        <div class="TextForm">
+            <input type="text" id="tournamentName" placeholder="Enter tournament name">
         </div>
-
-        <div class="row mb-4">
-            <div class="Dropdown col-md-4">
-                <label for="competitors" class="form-label">Number of Competitors</label>
-                <select class="form-select" id="competitors" required>
-                    <option value="" selected disabled>Select</option>
-                    <option value="4">4</option>
-                    <option value="8">8</option>
-                    <option value="16">16</option>
-                    <option value="32">32</option>
-                </select>
-            </div>
-            <div class="col-md-8">
-                <div class="competitor-details">
-                    <label class="form-label">Competitor Details</label>
-                    <div class="Checkbox mt-2">
-                        <label class="checkbox-option">
-                          <input type="checkbox" class="checkbox-input">
-                          <div class="checkbox-icon">
-                            <div class="unchecked-icon UncheckBoxIcon"></div>
-                            <div class="checked-icon CheckedBoxIcon"></div>
-                          </div>
-                          <span class="checkbox-label medium5">I am participating as a competitor of this tournament.</span>
-                        </label>
-                    </div>
-                </div>
-            </div>
         </div>
-
-        <div class="row">
-            <div class="col-md-12">
-                
-                <!-- Player 1 -->
-                <div class="player-section">
-                    <div class="player-info">
-                        <div class="player-header">
-                            <h4>Player 1 (Myself)</h4>
-                            <div class="DropdownIcon"></div>
-                        </div>
-                        <div class="player-details">
-                            <div>Player 1: (Myself)</div>
-                            <div>Account Name</div>
-                            <div class="edit-icon">
-                                <div class="EditIcon"></div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Player 2 -->
-                    <div class="player-info">
-                        <div class="player-header">
-                            <h4>Player 2 (AB)</h4>
-                            <div class="DropdownIcon"></div>
-                        </div>
-                        <div class="player-details">
-                            <div>Player 2: Amy Brown</div>
-                            <div>amybrown@email.com</div>
-                            <div class="edit-icon">
-                                <div class="EditIcon"></div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Player 3 -->
-                    <div class="player-info">
-                        <div class="player-header">
-                            <h4>Player 3 (CD)</h4>
-                            <div class="DropdownIcon"></div>
-                        </div>
-                        <div class="player-details">
-                            <div>Player 3: Christopher Davis</div>
-                            <div>DavisC</div>
-                            <div class="edit-icon">
-                                <div class="EditIcon"></div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Player 4 -->
-                    <div class="player-info">
-                        <div class="player-header">
-                            <h4>Player 4 (EF)</h4>
-                            <div class="DropdownIcon"></div>
-                        </div>
-                        <div class="player-details">
-                            <div>Player 4: Emily Fairway</div>
-                            <div>Emily_FW</div>
-                            <div class="edit-icon">
-                                <div class="EditIcon"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="form-group">
+        <label class="form-label">Tournament Type</label>
+        <div class="Dropdown">
+            <select id="tournamentType">
+            <option value="" disabled selected>Select</option>
+            <option value="round robin">Round Robin</option>
+            <option value="swiss">Swiss System</option>
+            <option value="single elimination">Single Elimination</option>
+            </select>
         </div>
-
-        <div class="button-container">
-            <div class="SaveBtn">
-                <button>
-                    <div class="SaveIcon"></div>
-                    Save Tournament Draft
-                </button>
-            </div>
-            <div class="SendJoinBtn">
-                <button>
-                    <div class="SendIcon"></div> 
-                    Send Join Requests
-                </button>
-            </div>
         </div>
-    </form>
+        <div class="form-group">
+        <label class="form-label">Game</label>
+        <div class="Dropdown">
+          <select id="gameType">
+            <option value="" disabled selected>Select</option>
+            <option value="pokemon">Pokemon TCG</option>
+            <option value="magic">Magic: The Gathering</option>
+            <option value="chess">Chess</option>
+            <option value="yugioh">Yu Gi Oh</option>
+            <option value="onepiece">One Piece Card Game</option>
+            <option value="digimon">Digimon Card Game</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        </div>
+    </div>
+
+    <div class="form-row">
+        <div class="form-group">
+        <label class="form-label">Number of Competitors</label>
+        <div class="Dropdown">
+            <select id="competitorCount">
+            <option value="" disabled selected>Select</option>
+            <option value="2">2</option>
+            <option value="4">4</option>
+            <option value="8">8</option>
+            <option value="16">16</option>
+            </select>
+        </div>
+        </div>
+        <div class="form-group">
+        <label class="form-label">Competitor Details</label>
+        <div class="Checkbox">
+            <label class="checkbox-option">
+            <input type="checkbox" id="isCompetitor" class="checkbox-input">
+            <div class="checkbox-icon">
+                <div class="unchecked-icon UncheckBoxIcon"></div>
+                <div class="checked-icon CheckedBoxIcon"></div>
+            </div>
+            <span class="checkbox-label">I am participating as a competitor of this tournament.</span>
+            </label>
+        </div>
+        </div>
+    </div>
+
+    <!-- Player tabs section - hidden by default -->
+    <div class="players-container" id="playersContainer">
+        <div class="tabs-container">
+        <div class="player-tabs" id="playerTabs">
+            <!-- Player tabs will be generated here -->
+        </div>
+        
+        <div class="player-content" id="playerContent">
+            <!-- Player sections will be generated here -->
+        </div>
+        </div>
+    </div>
+
+    <div class="action-buttons">
+        <div class="DiscardBtn" id="discardTournament">
+        <div class="DiscardIcon"></div>
+        <span>Discard Tournament</span>
+        </div>
+        
+        <div class="SaveBtn">
+        <button id="saveTournament">
+            <div class="SaveIcon"></div>
+            Save Tournament Draft
+        </button>
+        </div>
+    </div>
 </div>
+
+<script>
+  // Pass Flask variables to JavaScript
+  window.currentUserId = "{{ current_user.id }}";
+  window.currentUserFirstName = '{{ current_user.display_name.split()[0] if current_user.display_name and " " in current_user.display_name else current_user.display_name }}';
+  window.currentUserLastName = '{{ current_user.display_name.split()[1] if current_user.display_name and " " in current_user.display_name else "" }}';
+  window.currentUserEmail = '{{ current_user.email }}';
+</script>
 {% endblock %}
