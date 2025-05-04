@@ -28,12 +28,28 @@
       {% if stats %}
         <div class="player-stats-flex">
           {% for stat in stats %}
-            <div class="stats-section">
-              <h2 class="subheadline purple-text">{{ stat.game_type|capitalize }} Stats</h2>
-              <p class="medium4">Games Played: {{ stat.games_played }}</p>
-              <p class="medium4">Games Won: {{ stat.games_won }}</p>
-              <p class="medium4">Games Lost: {{ stat.games_lost }}</p>
-              <p class="medium4">Win Percentage: {{ stat.win_percentage }}%</p>
+            <div class="game-stat-section game-stat" data-game="{{ stat.game_type }}">
+              <div class="player-stats-flex">
+                <div class="stats-section pie-chart-section">
+                  <canvas id="chart-{{ stat.id }}"></canvas>
+                </div>
+                <div class="stats-section win-rate-section">
+                  <p class="largeTitle purple-text">{{ stat.win_percentage }}%</p>
+                  <p class="subheadline">Win Rate</p>
+                </div>
+                <div class="stats-section totals-section">
+                  <div class="totals-wrapper">
+                    <div class="total-stat">
+                      <p class="medium3">Games Won</p>
+                      <p class="title2 purple-text">{{ stat.games_won }}</p>
+                    </div>
+                    <div class="total-stat">
+                      <p class="medium3">Total Games</p>
+                      <p class="title2 white-text">{{ stat.games_played }}</p>
+                    </div>
+                  </div>                 
+                </div>
+              </div>
             </div>
           {% endfor %}
         </div>

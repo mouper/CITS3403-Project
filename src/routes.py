@@ -3,6 +3,7 @@ from flask_login import login_user, logout_user, current_user, login_required
 from app import application
 from models import User, UserStat
 from db import db  # Use the centralized db object from db.py
+import json
 
 @application.route('/')
 def landing():
