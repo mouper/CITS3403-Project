@@ -22,10 +22,15 @@
       <div class="CreateIcon"></div>
       Create New Tournament
     </button>
-    <button class="UploadBtn">
-      <div class="UploadIcon"></div>
-      Upload Tournament Data
-    </button>
+
+    <!-- Upload Tournament Data Form -->
+    <form action="{{ url_for('upload_tournament_data') }}" method="POST" enctype="multipart/form-data" style="display: inline;">
+      <label for="fileUpload" class="UploadBtn">
+        <div class="UploadIcon"></div>
+        Upload Tournament Data
+      </label>
+      <input type="file" id="fileUpload" name="file" accept=".json" required style="display: none;" onchange="this.form.submit()">
+    </form>
   </div>
 
   <!-- My Tournaments Section -->
