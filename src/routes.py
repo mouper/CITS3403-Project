@@ -1,8 +1,9 @@
 from flask import render_template, request, redirect, url_for, flash
 from flask_login import login_user, logout_user, current_user, login_required
 from app import application
-from models import User
+from models import User, UserStat
 from db import db  # Use the centralized db object from db.py
+import json
 
 @application.route('/')
 def landing():
@@ -80,7 +81,8 @@ def dashboard():
 @application.route('/analytics')
 @login_required
 def analytics():
-    return render_template("analytics.html", title="Analytics")
+    user_stats = db.session.query(UserStat).filter_by(user_id=current_user.id).all()
+    return render_template("analytics.html", title="Analytics", stats=user_stats)
 
 @application.route('/requests')
 @login_required
@@ -91,3 +93,62 @@ def requests():
 @login_required
 def account():
     return render_template("account.html", title="My Account")
+
+@application.route('/upload_tournament_data', methods=['POST'])
+@login_required
+def upload_tournament_data():
+    uploaded_file = request.files.get('file')
+
+    if not uploaded_file or not uploaded_file.filename.endswith('.json'):
+        flash("Please upload a valid .json file.", "error")
+        return redirect(url_for('dashboard'))
+
+    try:
+        data = json.load(uploaded_file)
+        print("Parsed tournament data:", data)  # 🐛 Debug print for now
+
+        # Use the JSON fields as-is
+        user_id = data["user_id"]
+        game_type = data["game_type"]
+        games_played = data["games_played"]
+        games_won = data["games_won"]
+        games_lost = data["games_lost"]
+        win_percentage = data["win_percentage"]
+
+        # Check for existing record
+        stat = db.session.query(UserStat).filter_by(user_id=user_id, game_type=game_type).first()
+
+        if stat:
+            # Calculate new totals first
+            total_games_played = stat.games_played + games_played
+            total_games_won = stat.games_won + games_won
+            total_games_lost = stat.games_lost + games_lost
+
+            # Update fields
+            stat.games_played = total_games_played
+            stat.games_won = total_games_won
+            stat.games_lost = total_games_lost
+
+            # Recalculate win %
+            stat.win_percentage = round((total_games_won / total_games_played) * 100, 2) if total_games_played > 0 else 0.0
+
+        else:
+            # Insert new record
+            new_stat = UserStat(
+                user_id=user_id,
+                game_type=game_type,
+                games_played=games_played,
+                games_won=games_won,
+                games_lost=games_lost,
+                win_percentage=round((games_won / games_played) * 100, 2) if games_played > 0 else 0.0
+            )
+            db.session.add(new_stat)
+
+        db.session.commit()
+
+        flash("Tournament data uploaded successfully!", "success")
+    except Exception as e:
+        print("Error processing file:", e)
+        flash("Failed to process the uploaded file.", "error")
+
+    return redirect(url_for('dashboard'))

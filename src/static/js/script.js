@@ -47,6 +47,35 @@
         const adminView = document.getElementById('adminView');
     
         if (viewSelector && playerView && adminView) {
+
+          const gameTypeSelector = document.getElementById("gameTypeSelector");
+
+          if (gameTypeSelector) {
+              gameTypeSelector.addEventListener("change", () => {
+                  const selectedGame = gameTypeSelector.value;
+                  const statSections = document.querySelectorAll(".game-stat");
+      
+                  statSections.forEach((section) => {
+                      if (section.dataset.game === selectedGame) {
+                          section.style.display = "block";
+                          const canvas = section.querySelector("canvas");
+                          if (canvas && !canvas.dataset.rendered) {
+                              const wins = parseInt(section.querySelector(".total-stat:nth-child(1) .title2").textContent);
+                              const games = parseInt(section.querySelector(".total-stat:nth-child(2) .title2").textContent);
+                              const losses = games - wins;
+                              renderPieChart(canvas.id, wins, losses);
+                              canvas.dataset.rendered = true;
+                          }
+                      } else {
+                          section.style.display = "none";
+                      }
+                  });
+              });
+      
+              // Run filter once on page load to show default
+              gameTypeSelector.dispatchEvent(new Event("change"));
+          }
+      
             viewSelector.addEventListener('change', function () {
                 if (this.value === 'player') {
                     playerView.style.display = 'block';
@@ -102,5 +131,34 @@
         });
       }
     });
+
+    function renderPieChart(canvasId, wins, losses) {
+      const ctx = document.getElementById(canvasId).getContext("2d");
+  
+      new Chart(ctx, {
+        type: "pie",
+        data: {
+          labels: ["Wins", "Losses"],
+          datasets: [
+            {
+              data: [wins, losses],
+              backgroundColor: ["#BBB2FF", "#D6D6EE"],
+              borderWidth: 2,
+              borderColor: '#121212',
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+            legend: {
+              display: false,
+            },
+          },
+        },
+      });
+    } 
+  
 
       
