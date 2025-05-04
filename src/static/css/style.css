@@ -599,99 +599,137 @@ html, body {
 }
 
 /* New Tournament Page */
-.row {
-    display: flex;
-    flex-wrap: wrap;
-    margin: 0 -5px;
-}
-
-.col-md-4 {
-    flex: 0 0 33.333333%;
-    max-width: 33.333333%;
-    padding: 0 20px;
-    box-sizing: border-box;
-}
-
-.col-md-8 {
-    flex: 0 0 66.666667%;
-    max-width: 66.666667%;
-    padding: 0 20px;
-    box-sizing: border-box;
-}
-
-.mb-4 {
-    margin-bottom: 4rem;
-}
-
-.mt-2 {
-    margin-top: 2rem;
-}
-
-.mt-4 {
-    margin-top: 4rem;
-}
-
 .tourneyHeader {
     display: flex;
     align-items: center;
     margin-bottom: 3rem;
     color: var(--primary-shade1);
+    gap: 1.5rem;
 }
-
-.tourneyHeader h1 {
-    margin-left: 1.8rem;
-}
-
-/* Player info */
-.player-section{
+/* Player Tabs Section */
+.players-container {
+    display: none;
     margin-top: 2rem;
+    border-top: 1px solid var(--overlay-white);
+    padding-top: 2rem;
 }
 
-.player-info {
-    border-left: 3px solid var(--primary-shade1);
-    padding-left: 1rem;
-    margin-bottom: 1.25rem;
+.tabs-container {
     display: flex;
+    gap: 2rem;
     align-items: center;
-    justify-content: space-between;
 }
 
-.player-header {
+.player-tabs {
+    width: 18rem;
+    overflow: hidden;
+}
+
+.player-tab {
+    margin: 1rem 0 1rem 0;
+    padding: 16px 20px;
+    border-top-right-radius: 5px;
+    border-bottom-right-radius: 5px;
     display: flex;
+    width: 100%;
     justify-content: space-between;
+    background-color: var(--background-shade3);
     align-items: center;
-    margin-bottom: 1rem;
-}
-
-.player-header h4 {
-    margin: 0;
-    font-size: 1.1rem;
-    font-weight: normal;
-    color: var(--off-white);
-}
-
-.player-header .DropdownIcon {
-    margin-left: 2rem;
-}
-
-.player-details {
-    display: grid;
-    grid-template-columns: 4fr 4fr auto;
-    gap: 1rem;
-    align-items: center;
-    color: var(--primary-shade2);
-}
-
-.edit-icon {
     cursor: pointer;
+    border-left: 3px solid transparent;
+    transition: all 0.2s ease;
 }
 
-/* Button container */
-.button-container {
+.player-tab.active {
+    background-color: var(--background-shade2);
+    border-left-color: var(--primary-shade1);
+}
+
+.player-tab:hover:not(.active) {
+    background-color: var(--overlay-shade1);
+}
+
+/* Player Content */
+.player-content {
+    flex: 1;
+    margin: 1rem 0 1rem 0;
+    padding: 1.5rem 1.8rem 2rem 1.8rem ;
+    background-color: var(--background-shade2);
+    border-radius: 8px;
+    min-height: 10rem;
+}
+
+.player-section {
+    display: none;
+}
+
+.player-section.is-visible {
+    display: block;
+}
+
+.player-details-header {
     display: flex;
-    justify-content: flex-end;
-    gap: 1rem;
-    margin-top: 2rem;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--overlay-white);
+}
+
+.player-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+/* Save and Discard Button Styles */
+.action-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 40px;
+}
+
+/* For the individual player discard button */
+.player-discard {
+    background: none;
+    border: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--primary-shade2);
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.player-discard:hover {
+    color: var(--primary-shade1);
+}
+
+/* Radio Selection */
+.RadioSelection {
+    margin-top: 1.5rem;
+}
+
+.RadioSelection-group {
+    display: flex;
+    gap: 30px;
+    margin: 0.8rem 0 1.4rem 0;
+}
+
+.form-row {
+    display: flex;
+    gap: 3rem;
+    margin-bottom: 3rem;
+    flex-wrap: wrap;
+}
+
+.form-group {
+    flex: 1;
+    min-width: 260px;
+    }
+
+.form-label {
+    display: block;
 }
 
 /* Mobile Navigation Bar */
