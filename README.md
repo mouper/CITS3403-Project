@@ -21,8 +21,15 @@ Initial Set Up:
     python3 -m venv env
     source env/bin/activate
     pip install -r requirements.txt
-    python init_db.py
-    flask run
+
+    # Set up the database with Flask-Migrate
+    flask --app app db init        # Only needed the first time (if 'migrations/' doesn't exist)
+    flask --app app db migrate -m "Initial migration"
+    flask --app app db upgrade
+
+Running the Website (Each Time You Start Work):
+    source env/bin/activate
+    flask --app app run
 
 After Set Up Has Been Completed Once:
     source env/bin/activate
@@ -30,6 +37,10 @@ After Set Up Has Been Completed Once:
 
 If you want to leave the environment:
     deactivate
+
+If you want to update db tables:
+    flask --app app db migrate -m "Describe your changes"
+    flask --app app db upgrade
 ```
 Site can now be viewed from [http://127.0.0.1:5000](http://127.0.0.1:5000)
 

@@ -1,46 +1,107 @@
 from flask_login import UserMixin
-#from app import login_manager
 from werkzeug.security import generate_password_hash, check_password_hash
-from sqlalchemy import Column, Integer, Text, Boolean, DateTime
-from sqlalchemy.orm import declarative_base
+from db import db
 from sqlalchemy.sql import func
 
-Base = declarative_base()
-
-class User(UserMixin, Base):
+class User(UserMixin, db.Model):
     __tablename__ = 'users'
 
-    id = Column(Integer, primary_key=True)
-    username = Column(Text, unique=True, nullable=False)
-    email = Column(Text, unique=True, nullable=False)
-    display_name = Column(Text)
-    password_hash = Column(Text, nullable=False)
-    stats_visibility = Column(Boolean, default=False)
-    created_at = Column(DateTime, server_default=func.now())
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.Text, unique=True, nullable=False)
+    email = db.Column(db.Text, unique=True, nullable=False)
+    display_name = db.Column(db.Text)
+    password_hash = db.Column(db.Text, nullable=False)
+    stats_visibility = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, server_default=func.now())
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
     def verify_password(self, password):
         return check_password_hash(self.password_hash, password)
-    
+
     def __repr__(self):
         return f"<User(id={self.id}, username='{self.username}')>"
 
-#    def __init__(self, id, username, password):
-#        self.id = id
-#        self.username = username
-#        self.password_hash = generate_password_hash(password)  # Auto-hashes passwords
-#
-#    def verify_password(self, password):
-#        return check_password_hash(self.password_hash, password)
+class Friend(db.Model):
+    __tablename__ = 'friends'
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), primary_key=True)
+    friend_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), primary_key=True)
+    status = db.Column(db.Text, nullable=False)
 
-# Temporary dev users - test1/test1 will work
-#users = {
-#    1: User(1, 'test1', 'test1'),  # Hashed version will be created
-#    2: User(2, 'admin', 'admin')   # Optional second test user
-#}
+    __table_args__ = (
+        db.CheckConstraint("status IN ('pending', 'accepted')", name='status_check'),
+    )
 
-#@login_manager.user_loader
-#def load_user(user_id):
-#    return users.get(int(user_id))
+
+class Tournament(db.Model):
+    __tablename__ = 'tournaments'
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.Text, nullable=False)
+    game_type = db.Column(db.Text)
+    format = db.Column(db.Text, nullable=False)
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='SET NULL'))
+    is_draft = db.Column(db.Boolean, default=True)
+    round_time_minutes = db.Column(db.Integer)
+    total_rounds = db.Column(db.Integer)
+    include_creator_as_player = db.Column(db.Boolean, default=False)
+    start_time = db.Column(db.DateTime)
+    created_at = db.Column(db.DateTime, server_default=func.now())
+
+    __table_args__ = (
+        db.CheckConstraint("format IN ('round robin', 'swiss', 'single elimination')", name='format_check'),
+    )
+
+
+class TournamentPlayer(db.Model):
+    __tablename__ = 'tournament_players'
+    id = db.Column(db.Integer, primary_key=True)
+    tournament_id = db.Column(db.Integer, db.ForeignKey('tournaments.id', ondelete='CASCADE'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='SET NULL'))
+    guest_name = db.Column(db.Text)
+    email = db.Column(db.Text)
+    is_confirmed = db.Column(db.Boolean, default=False)
+
+class Round(db.Model):
+    __tablename__ = 'rounds'
+    id = db.Column(db.Integer, primary_key=True)
+    tournament_id = db.Column(db.Integer, db.ForeignKey('tournaments.id', ondelete='CASCADE'), nullable=False)
+    round_number = db.Column(db.Integer, nullable=False)
+    started_at = db.Column(db.DateTime)
+    completed_at = db.Column(db.DateTime)
+
+class Match(db.Model):
+    __tablename__ = 'matches'
+    id = db.Column(db.Integer, primary_key=True)
+    round_id = db.Column(db.Integer, db.ForeignKey('rounds.id', ondelete='CASCADE'), nullable=False)
+    player1_id = db.Column(db.Integer, db.ForeignKey('tournament_players.id'), nullable=False)
+    player2_id = db.Column(db.Integer, db.ForeignKey('tournament_players.id'), nullable=False)
+    winner_id = db.Column(db.Integer, db.ForeignKey('tournament_players.id'))
+    status = db.Column(db.Text, default='scheduled')
+    notes = db.Column(db.Text)
+    
+    __table_args__ = (
+        db.CheckConstraint("status IN ('scheduled', 'completed', 'forfeit')", name='match_status_check'),
+    )
+
+
+class TournamentResult(db.Model):
+    __tablename__ = 'tournament_results'
+    id = db.Column(db.Integer, primary_key=True)
+    tournament_id = db.Column(db.Integer, db.ForeignKey('tournaments.id', ondelete='CASCADE'), nullable=False)
+    player_id = db.Column(db.Integer, db.ForeignKey('tournament_players.id'), nullable=False)
+    wins = db.Column(db.Integer, default=0)
+    losses = db.Column(db.Integer, default=0)
+    draws = db.Column(db.Integer, default=0)
+    opponent_win_percentage = db.Column(db.Float)
+    opp_opp_win_percentage = db.Column(db.Float)
+
+class UserStat(db.Model):
+    __tablename__ = 'user_stats'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    game_type = db.Column(db.Text)
+    games_played = db.Column(db.Integer, default=0)
+    games_won = db.Column(db.Integer, default=0)
+    games_lost = db.Column(db.Integer, default=0)
+    win_percentage = db.Column(db.Float)
