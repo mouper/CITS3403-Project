@@ -27,7 +27,6 @@
   border: 1px solid var(--primary-shade1);
   border-radius: 0.75rem;
   padding: 0.75rem 1rem;
-  margin-bottom: 1rem;
   width: 100%;
   font-size: 1rem;
   box-shadow: inset 0 0 0 1px var(--overlay-white);
@@ -37,8 +36,6 @@
 
 .TextForm label {
   display: block;
-  margin-bottom: 1rem;
-  color: var(--off-white);
 }
 
 .TextForm input:focus {
@@ -102,7 +99,6 @@
   border: 1px solid var(--primary-shade1);
   border-radius: 0.75rem;
   padding: 0.75rem 1rem;
-  margin-bottom: 1rem;
   color: var(--off-white);
   width: 100%;
   box-shadow: inset 0 0 0 1px var(--overlay-white);
@@ -114,8 +110,6 @@
 
 .Dropdown label {
   display: block;
-  margin-bottom: 1rem;
-  color: var(--off-white);
 }
 
 /* 🧍 PlayerTab */
@@ -337,6 +331,12 @@ OR
 </div>
 
 */
+.Checkbox {
+  height: 3.1rem;
+  display: flex;
+  align-items: center;
+}
+
 .Checkbox label {
   display: flex;
   align-items: center;
@@ -398,8 +398,4 @@ OR
   display: block;
   margin-bottom: 1rem;
   color: var(--off-white);
-}
-
-.checkbox-option{
-  padding-top: 1.5rem;
 }
