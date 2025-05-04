@@ -119,11 +119,19 @@ def upload_tournament_data():
         stat = db.session.query(UserStat).filter_by(user_id=user_id, game_type=game_type).first()
 
         if stat:
-            # Update the record
-            stat.games_played += games_played
-            stat.games_won += games_won
-            stat.games_lost += games_lost
-            stat.win_percentage = win_percentage
+            # Calculate new totals first
+            total_games_played = stat.games_played + games_played
+            total_games_won = stat.games_won + games_won
+            total_games_lost = stat.games_lost + games_lost
+
+            # Update fields
+            stat.games_played = total_games_played
+            stat.games_won = total_games_won
+            stat.games_lost = total_games_lost
+
+            # Recalculate win %
+            stat.win_percentage = round((total_games_won / total_games_played) * 100, 2) if total_games_played > 0 else 0.0
+
         else:
             # Insert new record
             new_stat = UserStat(
@@ -132,7 +140,7 @@ def upload_tournament_data():
                 games_played=games_played,
                 games_won=games_won,
                 games_lost=games_lost,
-                win_percentage=win_percentage
+                win_percentage=round((games_won / games_played) * 100, 2) if games_played > 0 else 0.0
             )
             db.session.add(new_stat)
 
