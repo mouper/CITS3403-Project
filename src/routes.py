@@ -80,7 +80,8 @@ def dashboard():
 @application.route('/analytics')
 @login_required
 def analytics():
-    return render_template("analytics.html", title="Analytics")
+    user_stats = db.session.query(UserStat).filter_by(user_id=current_user.id).all()
+    return render_template("analytics.html", title="Analytics", stats=user_stats)
 
 @application.route('/requests')
 @login_required
