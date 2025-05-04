@@ -653,7 +653,7 @@ html, body {
 .player-content {
     flex: 1;
     margin: 1rem 0 1rem 0;
-    padding: 1.5rem 1.8rem 2rem 1.8rem ;
+    padding: 2rem 2.2rem 2.5rem 2.2rem ;
     background-color: var(--background-shade2);
     border-radius: 8px;
     min-height: 10rem;
