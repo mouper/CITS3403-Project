@@ -25,27 +25,22 @@
         </div>
     </div>
     <div id="playerView" class="analytics-view">
-      <div class="player-stats-flex">
-        <div class="stats-section pie-chart-section">
-          <canvas id="winRateChart"></canvas>
-        </div>
-        <div class="stats-section win-rate-section">
-          <p class="largeTitle purple-text">35.40%</p>
-          <p class="subheadline">Win Rate</p>
-        </div>
-        <div class="stats-section totals-section">
-          <div class="totals-wrapper">
-            <div class="total-stat">
-                <p class="medium3">Games Won</p>
-                <p class="title2 purple-text">40</p>
+      {% if stats %}
+        <div class="player-stats-flex">
+          {% for stat in stats %}
+            <div class="stats-section">
+              <h2 class="subheadline purple-text">{{ stat.game_type|capitalize }} Stats</h2>
+              <p class="medium4">Games Played: {{ stat.games_played }}</p>
+              <p class="medium4">Games Won: {{ stat.games_won }}</p>
+              <p class="medium4">Games Lost: {{ stat.games_lost }}</p>
+              <p class="medium4">Win Percentage: {{ stat.win_percentage }}%</p>
             </div>
-            <div class="total-stat">
-                <p class="medium3">Total Games</p>
-                <p class="title2 white-text">113</p>
-            </div>
-          </div>                 
+          {% endfor %}
         </div>
-      </div>
+      {% else %}
+        <p class="medium4">No stats available yet. Upload tournament data to get started!</p>
+      {% endif %}
+
       <h2 class="subheadline purple-text">Top Three Tournaments</h2>
       <div class="statcard-container">
         <div class="statcard">
