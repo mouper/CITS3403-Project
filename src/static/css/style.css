@@ -598,6 +598,10 @@ html, body {
     font-weight: 700;
 }
 
+.game-stat-section{
+    width: 80%;
+}
+
 /* New Tournament Page */
 .tourneyHeader {
     display: flex;
