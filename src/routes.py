@@ -43,6 +43,8 @@ def signup():
         return redirect(url_for('dashboard'))
 
     if request.method == 'POST':
+        first_name = request.form.get('first_name')
+        last_name = request.form.get('last_name')
         username = request.form.get('username')
         password = request.form.get('password')
         email = request.form.get('email')
@@ -58,12 +60,21 @@ def signup():
         if not password or password.strip() == "":
             errors.append("Password cannot be empty.")
 
+        if not first_name or not last_name:
+            errors.append("First and last name are required.")
+
         if errors:
             for error in errors:
                 flash(error, 'error')
             return redirect(url_for('signup'))
 
-        user = User(username=username, email=email, display_name=username)
+        user = User(
+            username=username,
+            email=email,
+            display_name=username,
+            first_name=first_name,
+            last_name=last_name
+        )
         user.set_password(password)
         db.session.add(user)
         db.session.commit()
