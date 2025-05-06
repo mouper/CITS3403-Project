@@ -377,11 +377,14 @@ html, body {
     border: 1.5px solid var(--primary-shade1);
     background-color: transparent;
     transition: background-color 0.3s ease;
+    text-decoration: none !important;
 }
   
 .NewBtn:hover,
 .UploadBtn:hover {
     background-color: var(--overlay-primary2);
+    text-decoration: none !important;
+    color: var(--off-white) !important;
 }
 
 .tournament-section {
@@ -444,7 +447,7 @@ html, body {
   
 .page-header{
     color: var(--primary-shade1);
-    margin-bottom: 4.5rem;
+    margin-bottom: 2rem;
 }
 
 /* Login and Sign up Page Temporary Styles */
@@ -462,7 +465,6 @@ html, body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1rem;
 }
   
 .analytics-dropdown select {
@@ -480,6 +482,7 @@ html, body {
     display: flex;
     gap: 1rem;
     align-items: center;
+    margin-bottom: 1rem;
 }
   
 .dropdown-row .Dropdown select {
@@ -492,7 +495,7 @@ html, body {
     display: flex;
     justify-content: space-around;
     align-items: center;
-    margin: 3rem 0;
+    margin: 1.5rem 0rem 3.5rem 0rem;
     flex-wrap: wrap;
     gap: 2rem;
 }
@@ -595,6 +598,143 @@ html, body {
     font-weight: 700;
 }
 
+.game-stat-section{
+    width: 80%;
+}
+
+/* New Tournament Page */
+.tourneyHeader {
+    display: flex;
+    align-items: center;
+    margin-bottom: 3rem;
+    color: var(--primary-shade1);
+    gap: 1.5rem;
+}
+/* Player Tabs Section */
+.players-container {
+    display: none;
+    margin-top: 2rem;
+    border-top: 1px solid var(--overlay-white);
+    padding-top: 2rem;
+}
+
+.tabs-container {
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+}
+
+.player-tabs {
+    width: 18rem;
+    overflow: hidden;
+}
+
+.player-tab {
+    margin: 1rem 0 1rem 0;
+    padding: 16px 20px;
+    border-top-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    background-color: var(--background-shade3);
+    align-items: center;
+    cursor: pointer;
+    border-left: 3px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.player-tab.active {
+    background-color: var(--background-shade2);
+    border-left-color: var(--primary-shade1);
+}
+
+.player-tab:hover:not(.active) {
+    background-color: var(--overlay-shade1);
+}
+
+/* Player Content */
+.player-content {
+    flex: 1;
+    margin: 1rem 0 1rem 0;
+    padding: 2rem 2.2rem 2.5rem 2.2rem ;
+    background-color: var(--background-shade2);
+    border-radius: 8px;
+    min-height: 10rem;
+}
+
+.player-section {
+    display: none;
+}
+
+.player-section.is-visible {
+    display: block;
+}
+
+.player-details-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--overlay-white);
+}
+
+.player-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+/* Save and Discard Button Styles */
+.action-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 40px;
+}
+
+/* For the individual player discard button */
+.player-discard {
+    background: none;
+    border: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--primary-shade2);
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.player-discard:hover {
+    color: var(--primary-shade1);
+}
+
+/* Radio Selection */
+.RadioSelection {
+    margin-top: 1.5rem;
+}
+
+.RadioSelection-group {
+    display: flex;
+    gap: 30px;
+    margin: 0.8rem 0 1.4rem 0;
+}
+
+.form-row {
+    display: flex;
+    gap: 3rem;
+    margin-bottom: 3rem;
+    flex-wrap: wrap;
+}
+
+.form-group {
+    flex: 1;
+    min-width: 260px;
+    }
+
+.form-label {
+    display: block;
+}
 
 /* Mobile Navigation Bar */
 @media (max-width: 768px) {
@@ -731,7 +871,21 @@ html, body {
     
     .LogoNavbarMobile {
         display: block;
-    } 
+    }
+
+    .app-container:has(.navbar-div) .content {
+        margin-top: 6rem;
+        padding: 3rem 4rem 2rem 4rem;
+    }
+
+    .col-md-4, .col-md-8, .col-md-12 {
+        flex: 0 0 100%;
+        max-width: 80%;
+      }
+      
+      .player-details {
+        grid-template-columns: 1fr;
+      }
 }
 .my-requests-title {
     color: var(--primary-shade1);

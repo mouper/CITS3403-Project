@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="tournament-form-container">
+    <div class="tourneyHeader">
+        <div class="CreateIconLg"></div>
+        <h1 class="title2"> <span>New Tournament</span> </h1>
+    </div>
+    <div class="form-row">
+        <div class="form-group">
+        <label class="form-label">Tournament Name</label>
+        <div class="TextForm">
+            <input type="text" id="tournamentName" placeholder="Enter tournament name">
+        </div>
+        </div>
+        <div class="form-group">
+        <label class="form-label">Tournament Type</label>
+        <div class="Dropdown">
+            <select id="tournamentType">
+            <option value="" disabled selected>Select</option>
+            <option value="round robin">Round Robin</option>
+            <option value="swiss">Swiss System</option>
+            <option value="single elimination">Single Elimination</option>
+            </select>
+        </div>
+        </div>
+        <div class="form-group">
+        <label class="form-label">Game</label>
+        <div class="Dropdown">
+          <select id="gameType">
+            <option value="" disabled selected>Select</option>
+            <option value="pokemon">Pokemon TCG</option>
+            <option value="magic">Magic: The Gathering</option>
+            <option value="chess">Chess</option>
+            <option value="yugioh">Yu Gi Oh</option>
+            <option value="onepiece">One Piece Card Game</option>
+            <option value="digimon">Digimon Card Game</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        </div>
+    </div>
+
+    <div class="form-row">
+        <div class="form-group">
+        <label class="form-label">Number of Competitors</label>
+        <div class="Dropdown">
+            <select id="competitorCount">
+            <option value="" disabled selected>Select</option>
+            <option value="2">2</option>
+            <option value="4">4</option>
+            <option value="8">8</option>
+            <option value="16">16</option>
+            </select>
+        </div>
+        </div>
+        <div class="form-group">
+        <label class="form-label">Competitor Details</label>
+        <div class="Checkbox">
+            <label class="checkbox-option">
+            <input type="checkbox" id="isCompetitor" class="checkbox-input">
+            <div class="checkbox-icon">
+                <div class="unchecked-icon UncheckBoxIcon"></div>
+                <div class="checked-icon CheckedBoxIcon"></div>
+            </div>
+            <span class="checkbox-label">I am participating as a competitor of this tournament.</span>
+            </label>
+        </div>
+        </div>
+    </div>
+
+    <!-- Player tabs section - hidden by default -->
+    <div class="players-container" id="playersContainer">
+        <div class="tabs-container">
+        <div class="player-tabs" id="playerTabs">
+            <!-- Player tabs will be generated here -->
+        </div>
+        
+        <div class="player-content" id="playerContent">
+            <!-- Player sections will be generated here -->
+        </div>
+        </div>
+    </div>
+
+    <div class="action-buttons">
+        <div class="DiscardBtn" id="discardTournament">
+        <div class="DiscardIcon"></div>
+        <span>Discard Tournament</span>
+        </div>
+        
+        <div class="SaveBtn">
+        <button id="saveTournament">
+            <div class="SaveIcon"></div>
+            Save Tournament Draft
+        </button>
+        </div>
+    </div>
+</div>
+
+<script>
+  // Pass Flask variables to JavaScript
+  window.currentUserId = "{{ current_user.id }}";
+  window.currentUserFirstName = '{{ current_user.display_name.split()[0] if current_user.display_name and " " in current_user.display_name else current_user.display_name }}';
+  window.currentUserLastName = '{{ current_user.display_name.split()[1] if current_user.display_name and " " in current_user.display_name else "" }}';
+  window.currentUserEmail = '{{ current_user.email }}';
+</script>
+{% endblock %}
