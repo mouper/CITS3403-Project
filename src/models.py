@@ -46,7 +46,8 @@ class Tournament(db.Model):
     game_type = db.Column(db.Text)
     format = db.Column(db.Text, nullable=False)
     created_by = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='SET NULL'))
-    is_draft = db.Column(db.Boolean, default=True)
+    status = db.Column(db.Text, nullable=False, default='draft')
+    num_players = db.Column(db.Integer, default=0)
     round_time_minutes = db.Column(db.Integer)
     total_rounds = db.Column(db.Integer)
     include_creator_as_player = db.Column(db.Boolean, default=False)
@@ -72,8 +73,11 @@ class Round(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     tournament_id = db.Column(db.Integer, db.ForeignKey('tournaments.id', ondelete='CASCADE'), nullable=False)
     round_number = db.Column(db.Integer, nullable=False)
-    started_at = db.Column(db.DateTime)
-    completed_at = db.Column(db.DateTime)
+    status = db.Column(db.Text, nullable=False, default='in progress')
+
+    __table_args__ = (
+        db.CheckConstraint("status IN ('in progress', 'completed')", name='round_status_check'),
+    )
 
 class Match(db.Model):
     __tablename__ = 'matches'
@@ -82,13 +86,12 @@ class Match(db.Model):
     player1_id = db.Column(db.Integer, db.ForeignKey('tournament_players.id'), nullable=False)
     player2_id = db.Column(db.Integer, db.ForeignKey('tournament_players.id'), nullable=False)
     winner_id = db.Column(db.Integer, db.ForeignKey('tournament_players.id'))
-    status = db.Column(db.Text, default='scheduled')
+    status = db.Column(db.Text, default='in progress')
     notes = db.Column(db.Text)
     
     __table_args__ = (
-        db.CheckConstraint("status IN ('scheduled', 'completed', 'forfeit')", name='match_status_check'),
+        db.CheckConstraint("status IN ('in progress', 'completed')", name='match_status_check'),
     )
-
 
 class TournamentResult(db.Model):
     __tablename__ = 'tournament_results'
@@ -97,7 +100,6 @@ class TournamentResult(db.Model):
     player_id = db.Column(db.Integer, db.ForeignKey('tournament_players.id'), nullable=False)
     wins = db.Column(db.Integer, default=0)
     losses = db.Column(db.Integer, default=0)
-    draws = db.Column(db.Integer, default=0)
     opponent_win_percentage = db.Column(db.Float)
     opp_opp_win_percentage = db.Column(db.Float)
 
