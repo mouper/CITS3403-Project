@@ -9,9 +9,14 @@ class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.Text, unique=True, nullable=False)
     email = db.Column(db.Text, unique=True, nullable=False)
+    first_name = db.Column(db.Text, nullable=False)
+    last_name = db.Column(db.Text, nullable=False)
     display_name = db.Column(db.Text)
     password_hash = db.Column(db.Text, nullable=False)
-    stats_visibility = db.Column(db.Boolean, default=False)
+    show_win_rate = db.Column(db.Boolean, default=False)
+    show_total_wins_played = db.Column(db.Boolean, default=False)
+    show_last_three = db.Column(db.Boolean, default=False)
+    show_best_three = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, server_default=func.now())
 
     def set_password(self, password):
