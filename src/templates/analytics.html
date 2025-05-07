@@ -2,8 +2,225 @@
 
 {% block content %}
 <div class="analytics-container">
-    <h1 class="title2">Analytics</h1>
-    <p class="medium4">Welcome to your analytics page!</p>
-    <!-- Page content goes here -->
+    <div class="analytics-header">
+        <h1 class="title2 page-header"><span class = "purple-text">Analytics</span></h1>
+      
+        <div class="dropdown-row">
+          <div id="gameTypeSelectorContainer" class="Dropdown analytics-dropdown">
+            <select id="gameTypeSelector">
+              <option value="pokemon">Pokémon TCG</option>
+              <option value="chess">Chess</option>
+              <option value="magic">Magic: The Gathering</option>
+              <option value="checkers">Checkers</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+      
+          <div class="Dropdown analytics-dropdown">
+            <select id="viewSelector">
+              <option value="player">Player Stats</option>
+              <option value="admin">Admin View</option>
+            </select>
+          </div>
+        </div>
+    </div>
+    <div id="playerView" class="analytics-view">
+      {% if stats %}
+        <div class="player-stats-flex">
+          {% for stat in stats %}
+            <div class="game-stat-section game-stat" data-game="{{ stat.game_type }}">
+              <div class="player-stats-flex">
+                <div class="stats-section pie-chart-section">
+                  <canvas id="chart-{{ stat.id }}"></canvas>
+                </div>
+                <div class="stats-section win-rate-section">
+                  <p class="largeTitle purple-text">{{ stat.win_percentage }}%</p>
+                  <p class="subheadline">Win Rate</p>
+                </div>
+                <div class="stats-section totals-section">
+                  <div class="totals-wrapper">
+                    <div class="total-stat">
+                      <p class="medium3">Games Won</p>
+                      <p class="title2 purple-text">{{ stat.games_won }}</p>
+                    </div>
+                    <div class="total-stat">
+                      <p class="medium3">Total Games</p>
+                      <p class="title2 white-text">{{ stat.games_played }}</p>
+                    </div>
+                  </div>                 
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="medium4">No stats available yet. Upload tournament data to get started!</p>
+      {% endif %}
+
+      <h2 class="subheadline purple-text">Top Three Tournaments</h2>
+      <div class="statcard-container">
+        <div class="statcard">
+          <div class="statcard-top-row">
+            <p class="subheadline">1st</p>
+            <p class="title2 purple-text">8 WINS</p>
+          </div>
+          <div class="statcard-middle-row">
+            <p class="medium5">80% WR</p>
+            <p class="medium5">OPWR%</p>
+            <p class="medium5">OPOPWR%</p>
+          </div>
+          <p class="medium4 italic tournament-type">Tournament Type</p>
+          <p class="medium4">Tournament Name</p>
+        </div>
+        <div class="statcard">
+          <div class="statcard-top-row">
+            <p class="subheadline">1st</p>
+            <p class="title2 purple-text">10 WINS</p>
+          </div>
+          <div class="statcard-middle-row">
+            <p class="medium5">100% WR</p>
+            <p class="medium5">OPWR%</p>
+            <p class="medium5">OPOPWR%</p>
+          </div>
+          <p class="medium4 italic tournament-type">Tournament Type</p>
+          <p class="medium4">Tournament Name</p>
+        </div>
+        <div class="statcard">
+          <div class="statcard-top-row">
+            <p class="subheadline">1st</p>
+            <p class="title2 purple-text">5 WINS</p>
+          </div>
+          <div class="statcard-middle-row">
+            <p class="medium5">100% WR</p>
+            <p class="medium5">OPWR%</p>
+            <p class="medium5">OPOPWR%</p>
+          </div>
+          <p class="medium4 italic tournament-type">Tournament Type</p>
+          <p class="medium4">Tournament Name</p>
+        </div>
+      </div>
+      <h2 class="subheadline purple-text">Recent Tournaments</h2>
+      <div class="statcard-container">
+        <div class="statcard">
+          <div class="statcard-top-row">
+            <p class="subheadline">3rd</p>
+            <p class="title2 purple-text">4 WINS</p>
+          </div>
+          <div class="statcard-middle-row">
+            <p class="medium5">80% WR</p>
+            <p class="medium5">OPWR%</p>
+            <p class="medium5">OPOPWR%</p>
+          </div>
+          <p class="medium4 italic tournament-type">Tournament Type</p>
+          <p class="medium4">Tournament Name</p>
+        </div>
+        <div class="statcard">
+          <div class="statcard-top-row">
+            <p class="subheadline">1st</p>
+            <p class="title2 purple-text">10 WINS</p>
+          </div>
+          <div class="statcard-middle-row">
+            <p class="medium5">100% WR</p>
+            <p class="medium5">OPWR%</p>
+            <p class="medium5">OPOPWR%</p>
+          </div>
+          <p class="medium4 italic tournament-type">Tournament Type</p>
+          <p class="medium4">Tournament Name</p>
+        </div>
+        <div class="statcard">
+          <div class="statcard-top-row">
+            <p class="subheadline">5th</p>
+            <p class="title2 purple-text">5 WINS</p>
+          </div>
+          <div class="statcard-middle-row">
+            <p class="medium5">63% WR</p>
+            <p class="medium5">OPWR%</p>
+            <p class="medium5">OPOPWR%</p>
+          </div>
+          <p class="medium4 italic tournament-type">Tournament Type</p>
+          <p class="medium4">Tournament Name</p>
+        </div>
+      </div>   
+    </div>
+  
+    <div id="adminView" class="analytics-view" style="display: none;">
+      <h2 class="subheadline purple-text">Recent Tournaments</h2>
+      <div class="statcard-container">
+        <!-- First card -->
+        <div class="statcard">
+          <div class="statcard-top-row">
+            <p class="subheadline">1st</p>
+            <div class="username-container">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="15" viewBox="0 0 20 15" fill="none">
+                <path d="M18.5 3.6L14.5769 7.5L10 1L5.42308 7.5L1.5 3.6V12.05C1.5 12.5672 1.70666 13.0632 2.07452 13.4289C2.44238 13.7946 2.94131 14 3.46154 14H16.5385C17.0587 14 17.5576 13.7946 17.9255 13.4289C18.2933 13.0632 18.5 12.5672 18.5 12.05V3.6Z" stroke="#BBB2FF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <p class="medium2 white-text">Username1</p>
+            </div>
+          </div>          
+          <div class="statcard-middle-row">
+            <p class="subheadline">2nd</p>
+            <p class="medium2 white-text">Username2</p>
+          </div>
+          <div class="statcard-bottom-row">
+            <p class="subheadline">3rd</p>
+            <p class="medium2 purple-text">Username3</p>
+          </div>
+          <div class="tournament-footer">
+            <span class="regular3">Tournament Name</span>
+            <a href="#" class="caption">View</a>
+          </div>
+        </div>
+    
+        <!-- Second card -->
+        <div class="statcard">
+          <div class="statcard-top-row">
+            <p class="subheadline">1st</p>
+            <div class="username-container">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="15" viewBox="0 0 20 15" fill="none">
+                <path d="M18.5 3.6L14.5769 7.5L10 1L5.42308 7.5L1.5 3.6V12.05C1.5 12.5672 1.70666 13.0632 2.07452 13.4289C2.44238 13.7946 2.94131 14 3.46154 14H16.5385C17.0587 14 17.5576 13.7946 17.9255 13.4289C18.2933 13.0632 18.5 12.5672 18.5 12.05V3.6Z" stroke="#BBB2FF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <p class="medium2 white-text">Username1</p>
+            </div>
+          </div>          
+          <div class="statcard-middle-row">
+            <p class="subheadline">2nd</p>
+            <p class="medium2 white-text">Username2</p>
+          </div>
+          <div class="statcard-bottom-row">
+            <p class="subheadline">3rd</p>
+            <p class="medium2 purple-text">Username3</p>
+          </div>
+          <div class="tournament-footer">
+            <span class="regular3">Tournament Name</span>
+            <a href="#" class="caption">View</a>
+          </div>
+        </div>
+    
+        <!-- Third card -->
+        <div class="statcard">
+          <div class="statcard-top-row">
+            <p class="subheadline">1st</p>
+            <div class="username-container">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="15" viewBox="0 0 20 15" fill="none">
+                <path d="M18.5 3.6L14.5769 7.5L10 1L5.42308 7.5L1.5 3.6V12.05C1.5 12.5672 1.70666 13.0632 2.07452 13.4289C2.44238 13.7946 2.94131 14 3.46154 14H16.5385C17.0587 14 17.5576 13.7946 17.9255 13.4289C18.2933 13.0632 18.5 12.5672 18.5 12.05V3.6Z" stroke="#BBB2FF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <p class="medium2 white-text">Username1</p>
+            </div>
+          </div>          
+          <div class="statcard-middle-row">
+            <p class="subheadline">2nd</p>
+            <p class="medium2 white-text">Username2</p>
+          </div>
+          <div class="statcard-bottom-row">
+            <p class="subheadline">3rd</p>
+            <p class="medium2 purple-text">Username3</p>
+          </div>
+          <div class="tournament-footer">
+            <span class="regular3">Tournament Name</span>
+            <a href="#" class="caption">View</a>
+          </div>
+        </div>
+      </div>
+    </div>
 </div>
 {% endblock %}

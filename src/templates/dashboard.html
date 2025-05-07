@@ -2,7 +2,7 @@
 
 {% block content %}
 <div class="dashboard-container">
-  <h1 class="title2 page-header">TourneyPro Dashboard</h1>
+  <h1 class="title2 page-header"> <span>TourneyPro Dashboard</span> </h1>
 
   {% with messages = get_flashed_messages(with_categories=true) %}
   {% if messages %}
@@ -18,14 +18,19 @@
 
   <!-- Button Container -->
   <div class="dashboard-btn-container">
-    <button class="NewBtn">
+    <a href="{{ url_for('new_tournament') }}" target="_blank" class="NewBtn">
       <div class="CreateIcon"></div>
       Create New Tournament
-    </button>
-    <button class="UploadBtn">
-      <div class="UploadIcon"></div>
-      Upload Tournament Data
-    </button>
+    </a>
+
+    <!-- Upload Tournament Data Form -->
+    <form action="{{ url_for('upload_tournament_data') }}" method="POST" enctype="multipart/form-data" style="display: inline;">
+      <label for="fileUpload" class="UploadBtn">
+        <div class="UploadIcon"></div>
+        Upload Tournament Data
+      </label>
+      <input type="file" id="fileUpload" name="file" accept=".json" required style="display: none;" onchange="this.form.submit()">
+    </form>
   </div>
 
   <!-- My Tournaments Section -->

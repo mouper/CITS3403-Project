@@ -5,7 +5,7 @@ Group project for CITS3403 - Agile Web Development
 | ----------- | ----------- | ----------- |
 | Keandria Ong | 23365164 | mouper |
 | Jessie Gunawan | 24125314 | jessiecg |
-| Kunning Shao | 23825311 | Kunning Shao |
+| Kunning Shao | 23825311 | KunningShao |
 | Aidan Hutchison | 23722738  | Lion-Rampant  |
 
 
@@ -21,14 +21,25 @@ Initial Set Up:
     python3 -m venv env
     source env/bin/activate
     pip install -r requirements.txt
-    flask run
 
-After Set Up Has Been Completed Once:
+    # Setting up the database
+    flask --app app db upgrade
+
+    # Running the site
+    flask --app app run
+
+Running the Website (after set up has been completed once):
     source env/bin/activate
-    flask run
+    flask --app app run
 
 If you want to leave the environment:
     deactivate
+
+If you want to update db tables:
+    flask --app app db migrate -m "Describe your changes"
+    flask --app app db upgrade
+
+Note: Please ensure that if any changes have occured to the db tables after you have already completed the setup, please delete all listed folders in the .gitignore file before redoing the initial setup steps.
 ```
 Site can now be viewed from [http://127.0.0.1:5000](http://127.0.0.1:5000)
 
@@ -62,6 +73,9 @@ If the issue involves building **reusable components or styles**, list them out 
 - components/Navbar.tsx
 - components/Button.tsx
 
+### Reporting a Bug
+Start the issue with 'Bug:'
+- e.g. Bug: Save button broken
 
 ---
 
