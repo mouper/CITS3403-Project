@@ -323,7 +323,7 @@ function initTournamentForm() {
     
     // Email error message
     const emailError = document.createElement('div');
-    emailError.className = 'field-error regular4 display-none mt-1';
+    emailError.className = 'field-error regular4 display-none';
     emailError.id = `emailError${playerId}`;
     
     emailGroup.appendChild(emailInput);
