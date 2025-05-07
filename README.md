@@ -29,6 +29,10 @@ Initial Set Up:
     flask --app app run
 
 Running the Website (after set up has been completed once):
+    # If you are not already in the src folder
+    cd src 
+
+    # In src folder:
     source env/bin/activate
     flask --app app run
 
@@ -39,7 +43,7 @@ If you want to update db tables:
     flask --app app db migrate -m "Describe your changes"
     flask --app app db upgrade
 
-Note: Please ensure that if any changes have occured to the db tables after you have already completed the setup, please delete all listed folders in the .gitignore file before redoing the initial setup steps.
+Note: Please ensure that if any changes have occured to the db tables after you have already completed the setup, please delete all listed folders/ files in the .gitignore file before redoing the initial setup steps.
 ```
 Site can now be viewed from [http://127.0.0.1:5000](http://127.0.0.1:5000)
 
