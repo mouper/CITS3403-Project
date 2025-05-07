@@ -1,9 +1,11 @@
 from flask import render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_user, logout_user, current_user, login_required
-from app import application
-from models import User, UserStat, Tournament, TournamentPlayer
+from src.app import application
+from models import db, User, Tournament, UserStat, TournamentResult
 from db import db  # Use the centralized db object from db.py
+from sqlalchemy import func
 import json
+from datetime import datetime
 
 @application.route('/')
 def landing():
@@ -103,8 +105,57 @@ def requests():
 @application.route('/account')
 @login_required
 def account():
-    return render_template("account.html", title="My Account")
+    # 查询该用户所有比赛结果及对应比赛
+    all_results = (
+        db.session.query(TournamentResult, Tournament)
+        .join(Tournament, TournamentResult.tournament_id == Tournament.id)
+        .filter(TournamentResult.player_id == current_user.id)
+        .all()
+    )
 
+    # 将比赛结果按 game_type 分组，并按 wins 排序
+    from collections import defaultdict
+    grouped_results = defaultdict(list)
+
+    for result, tournament in all_results:
+        grouped_results[tournament.game_type].append((result, tournament))
+
+    for game_type in grouped_results:
+        grouped_results[game_type].sort(key=lambda x: x[0].wins, reverse=True)
+
+    # routes.py -> /account 视图中添加这段
+    last_3_results = sorted(all_results, key=lambda x: x[1].created_at, reverse=True)[:3]
+
+    # 生成游戏类型列表供下拉菜单使用
+    game_types = list(grouped_results.keys())
+
+    # 获取统计数据
+    user_stats = db.session.query(UserStat).filter_by(user_id=current_user.id).all()
+
+    total_stats = (
+        db.session.query(
+            func.sum(TournamentResult.wins),
+            func.sum(TournamentResult.losses)
+        )
+        .filter(TournamentResult.player_id == current_user.id)
+        .first()
+    )
+
+    total_wins = total_stats[0] or 0
+    total_losses = total_stats[1] or 0
+    total_games = total_wins + total_losses
+    total_winrate = round(total_wins / total_games * 100, 1) if total_games > 0 else 0.0
+
+    return render_template(
+        "account.html",
+        title="My Account",
+        results=all_results,  # 如果 html 用不到就可以删掉
+        grouped_results=grouped_results,
+        user_stats=user_stats,
+        total_winrate=total_winrate,
+        game_types=game_types,
+        last_3_results=last_3_results  
+    )
 
 @application.route('/new_tournament')
 @login_required
@@ -209,50 +260,68 @@ def upload_tournament_data():
 
     try:
         data = json.load(uploaded_file)
-        print("Parsed tournament data:", data)  # 🐛 Debug print for now
 
-        # Use the JSON fields as-is
-        user_id = data["user_id"]
-        game_type = data["game_type"]
-        games_played = data["games_played"]
-        games_won = data["games_won"]
-        games_lost = data["games_lost"]
-        win_percentage = data["win_percentage"]
+        # ✅ 支持两种格式：单个 tournament 或多个 tournaments
+        tournaments = data.get("tournaments", [data])
 
-        # Check for existing record
-        stat = db.session.query(UserStat).filter_by(user_id=user_id, game_type=game_type).first()
+        for entry in tournaments:
+            game_type = entry["game_type"]
+            games_played = entry["games_played"]
+            games_won = entry["games_won"]
+            games_lost = entry["games_lost"]
+            opponent_win_percentage = entry.get("opponent_win_percentage", 0.0)
+            opp_opp_win_percentage = entry.get("opp_opp_win_percentage", 0.0)
+            win_percentage = round((games_won / games_played) * 100, 2) if games_played > 0 else 0.0
 
-        if stat:
-            # Calculate new totals first
-            total_games_played = stat.games_played + games_played
-            total_games_won = stat.games_won + games_won
-            total_games_lost = stat.games_lost + games_lost
+            # ✅ Step 1: Update or Insert UserStat
+            stat = db.session.query(UserStat).filter_by(user_id=current_user.id, game_type=game_type).first()
 
-            # Update fields
-            stat.games_played = total_games_played
-            stat.games_won = total_games_won
-            stat.games_lost = total_games_lost
+            if stat:
+                stat.games_played += games_played
+                stat.games_won += games_won
+                stat.games_lost += games_lost
+                stat.win_percentage = round((stat.games_won / stat.games_played) * 100, 2) if stat.games_played > 0 else 0.0
+            else:
+                stat = UserStat(
+                    user_id=current_user.id,
+                    game_type=game_type,
+                    games_played=games_played,
+                    games_won=games_won,
+                    games_lost=games_lost,
+                    win_percentage=win_percentage
+                )
+                db.session.add(stat)
 
-            # Recalculate win %
-            stat.win_percentage = round((total_games_won / total_games_played) * 100, 2) if total_games_played > 0 else 0.0
-
-        else:
-            # Insert new record
-            new_stat = UserStat(
-                user_id=user_id,
+            # ✅ Step 2: Insert Tournament
+            tournament = Tournament(
+                title=entry["title"],
+                format=entry["format"],
                 game_type=game_type,
-                games_played=games_played,
-                games_won=games_won,
-                games_lost=games_lost,
-                win_percentage=round((games_won / games_played) * 100, 2) if games_played > 0 else 0.0
+                status=entry["status"],
+                num_players=entry["num_players"],
+                created_by=current_user.id,
+                created_at=datetime.utcnow()
             )
-            db.session.add(new_stat)
+            db.session.add(tournament)
+            db.session.flush()  # Get tournament.id
+
+            # ✅ Step 3: Insert TournamentResult
+            result = TournamentResult(
+                tournament_id=tournament.id,
+                player_id=current_user.id,
+                wins=games_won,
+                losses=games_lost,
+                opponent_win_percentage=opponent_win_percentage,
+                opp_opp_win_percentage=opp_opp_win_percentage
+            )
+            db.session.add(result)
 
         db.session.commit()
+        flash("Tournaments uploaded successfully!", "success")
 
-        flash("Tournament data uploaded successfully!", "success")
     except Exception as e:
-        print("Error processing file:", e)
-        flash("Failed to process the uploaded file.", "error")
+        db.session.rollback()
+        print("Upload error:", e)
+        flash("Upload failed!", "error")
 
     return redirect(url_for('dashboard'))
