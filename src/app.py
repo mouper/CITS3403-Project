@@ -1,6 +1,6 @@
 import os
 from flask import Flask, request
-from flask_login import LoginManager
+from flask_login import LoginManager, current_user, logout_user
 from models import User
 from db import db, migrate
 from dotenv import load_dotenv
@@ -20,6 +20,11 @@ application.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(application)
 migrate.init_app(application, db)
+
+@application.before_request
+def logout_if_user_missing():
+    if current_user.is_authenticated and db.session.get(User, current_user.id) is None:
+        logout_user()
 
 login_manager = LoginManager()
 login_manager.init_app(application)
