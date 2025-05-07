@@ -98,6 +98,7 @@ class TournamentResult(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     tournament_id = db.Column(db.Integer, db.ForeignKey('tournaments.id', ondelete='CASCADE'), nullable=False)
     player_id = db.Column(db.Integer, db.ForeignKey('tournament_players.id'), nullable=False)
+    game_type = db.Column(db.Text, nullable=False)
     wins = db.Column(db.Integer, default=0)
     losses = db.Column(db.Integer, default=0)
     opponent_win_percentage = db.Column(db.Float)
