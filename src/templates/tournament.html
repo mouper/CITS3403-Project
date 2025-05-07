@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block content %}
+    <div class="tournament-container">
+        <h1 class="title2 page-header"> <span>{{ tournament.title }}</span> </h1>
+        
+        <div class="tournament-info">
+            <div><strong>Game:</strong> {{ tournament.game_type }}</div>
+            <div><strong>Format:</strong> {{ tournament.format }}</div>
+            <div><strong>Status:</strong> {{ tournament.status }}</div>
+            {% if tournament.start_time %}
+            <div><strong>Started:</strong> {{ tournament.start_time.strftime('%Y-%m-%d %H:%M') }}</div>
+            {% endif %}
+            <div><strong>Players:</strong> {{ tournament.num_players }}</div>
+            <div><strong>Rounds:</strong> {{ tournament.total_rounds }}</div>
+        </div>
+        
+        <h2>Players</h2>
+        <div class="players-grid">
+            {% for player in players %}
+            <div class="player-card">
+                <h3>
+                    {% if player.user_id %}
+                        {{ player.guest_name or player.user.username }}
+                    {% else %}
+                        {{ player.guest_name }}
+                    {% endif %}
+                </h3>
+                {% if player.email %}
+                <p>{{ player.email }}</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        
+        <h2>Rounds</h2>
+        <div class="rounds-container">
+            {% for round in rounds %}
+            <div class="round">
+                <h3>Round {{ round.round_number }}</h3>
+                <div class="matches">
+                    {% for match_data in round_matches[round.round_number] %}
+                    <div class="match">
+                        {% if match_data.is_bye %}
+                            <p>{{ match_data.player1.guest_name }} received a bye</p>
+                        {% else %}
+                            <p>{{ match_data.player1.guest_name }} vs {{ match_data.player2.guest_name }}</p>
+                        {% endif %}
+                        <p class="match-status">{{ match_data.match.status }}</p>
+                        {% if match_data.winner %}
+                            <p>Winner: {{ match_data.winner.guest_name }}</p>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}
