@@ -12,4 +12,7 @@
     --overlay-primary2: rgba(187, 178, 255, 0.5);
     --overlay-shade1: rgba(0, 0, 0, 0.2);
     --overlay-shade2: rgba(18, 18, 18, 0.4);
+
+    --error-font: #FF4D4D;
+    --error-background: rgba(255, 77, 77, 0.1);
   }  

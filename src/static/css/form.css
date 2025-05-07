@@ -399,3 +399,18 @@ OR
   margin-bottom: 1rem;
   color: var(--off-white);
 }
+
+/* Error Messages */
+.field-error {
+  color: var(--error-font);
+  margin-top: 2rem;
+}
+
+.error-container {
+  background-color: var(--error-background);
+  color: var(--error-font);
+  border-radius: 0.75rem;
+  padding: 1rem 1.5rem;
+  display: none;
+  margin-top: 1rem;
+}

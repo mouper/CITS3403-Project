@@ -120,24 +120,95 @@ def save_tournament():
         
         # Validate player usernames before making any database changes
         invalid_usernames = []
+        email_with_accounts = []
+        duplicate_usernames = []
+        duplicate_emails = []
+        
+        # Track used usernames and emails for duplicate detection
+        used_usernames = {}
+        used_emails = {}
+        
         for i, player_data in enumerate(data.get('players', [])):
-            # Check if this player entry specifies a TourneyPro username
-            if 'username' in player_data and player_data['username'] and not (
-                # Skip validation for player 1 when it's the current user
-                i == 0 and data.get('include_creator_as_player', False) and 
-                player_data.get('user_id') == current_user.id
-            ):
-                # Verify username exists in the database
-                existing_user = db.session.query(User).filter_by(username=player_data['username']).first()
-                if not existing_user:
-                    invalid_usernames.append(player_data['username'])
+            # Check for duplicate usernames within the tournament
+            if 'username' in player_data and player_data['username']:
+                username = player_data['username'].lower()
+                if username in used_usernames:
+                    duplicate_usernames.append(player_data['username'])
+                else:
+                    used_usernames[username] = True
+                    
+                    # Skip validation for player 1 when it's the current user
+                    if not (i == 0 and data.get('include_creator_as_player', False) and 
+                           player_data.get('user_id') == current_user.id):
+                        # Verify username exists in the database
+                        existing_user = db.session.query(User).filter_by(username=player_data['username']).first()
+                        if not existing_user:
+                            invalid_usernames.append(player_data['username'])
+            
+            # Check for duplicate emails within the tournament
+            if player_data.get('email') and player_data['email'].strip() != '':
+                email = player_data['email'].lower()
+                if email in used_emails:
+                    duplicate_emails.append(player_data['email'])
+                else:
+                    used_emails[email] = True
+                    
+                    # Check if email is linked to TourneyPro account but "No" was selected
+                    if (not player_data.get('has_tourney_pro_account', True)):
+                        existing_user = db.session.query(User).filter_by(email=player_data['email']).first()
+                        if existing_user:
+                            email_with_accounts.append(player_data['email'])
+        
+        # If any duplicate usernames were found, return an error
+        if duplicate_usernames:
+            error_messages = []
+            for username in duplicate_usernames:
+                error_messages.append(f"Username '{username}' is used multiple times in this tournament")
+                
+            return jsonify({
+                'success': False,
+                'message': "Duplicate username(s) detected in tournament",
+                'duplicate_usernames': duplicate_usernames,
+                'detailed_errors': error_messages
+            }), 400
+            
+        # If any duplicate emails were found, return an error
+        if duplicate_emails:
+            error_messages = []
+            for email in duplicate_emails:
+                error_messages.append(f"Email '{email}' is used multiple times in this tournament")
+                
+            return jsonify({
+                'success': False,
+                'message': "Duplicate email(s) detected in tournament",
+                'duplicate_emails': duplicate_emails,
+                'detailed_errors': error_messages
+            }), 400
         
         # If any invalid usernames were found, return an error
         if invalid_usernames:
+            error_messages = []
+            for username in invalid_usernames:
+                error_messages.append(f"User '{username}' does not exist")
+                
             return jsonify({
                 'success': False,
-                'message': f"Invalid TourneyPro username(s): {', '.join(invalid_usernames)}",
-                'invalid_usernames': invalid_usernames
+                'message': "Invalid TourneyPro username(s) detected",
+                'invalid_usernames': invalid_usernames,
+                'detailed_errors': error_messages
+            }), 400
+        
+        # If any emails are linked to accounts but "No" was selected, return an error
+        if email_with_accounts:
+            error_messages = []
+            for email in email_with_accounts:
+                error_messages.append(f"A TourneyPro Account has been created using the email address '{email}'")
+                
+            return jsonify({
+                'success': False,
+                'message': "Emails linked to existing accounts detected",
+                'emails_with_accounts': email_with_accounts,
+                'detailed_errors': error_messages
             }), 400
             
         # Create new tournament
@@ -146,7 +217,7 @@ def save_tournament():
             format=data['format'],
             game_type=data['game_type'],
             created_by=current_user.id,
-            is_draft=data['is_draft'],
+            status=data['is_draft'],
             include_creator_as_player=data['include_creator_as_player']
         )
         
@@ -166,16 +237,23 @@ def save_tournament():
             # If user_id is provided, use it
             if 'user_id' in player_data and player_data['user_id']:
                 new_player.user_id = player_data['user_id']
+                # Ensure guest_name format is consistent with first_name/last_name fields
+                if player_data['user_id'] == current_user.id:
+                    new_player.guest_name = f"{current_user.first_name} {current_user.last_name}".strip()
             # If username is provided, try to match by username
             elif 'username' in player_data and player_data['username']:
                 existing_user = db.session.query(User).filter_by(username=player_data['username']).first()
                 if existing_user:
                     new_player.user_id = existing_user.id
+                    # Update guest_name to use proper first_name/last_name format
+                    new_player.guest_name = f"{existing_user.first_name} {existing_user.last_name}".strip()
             # Try to match user by email if provided
             elif player_data.get('email'):
                 existing_user = db.session.query(User).filter_by(email=player_data['email']).first()
                 if existing_user:
                     new_player.user_id = existing_user.id
+                    # Update guest_name to use proper first_name/last_name format
+                    new_player.guest_name = f"{existing_user.first_name} {existing_user.last_name}".strip()
             
             db.session.add(new_player)
         

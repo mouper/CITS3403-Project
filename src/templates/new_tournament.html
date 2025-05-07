@@ -100,8 +100,9 @@
 <script>
   // Pass Flask variables to JavaScript
   window.currentUserId = "{{ current_user.id }}";
-  window.currentUserFirstName = '{{ current_user.display_name.split()[0] if current_user.display_name and " " in current_user.display_name else current_user.display_name }}';
-  window.currentUserLastName = '{{ current_user.display_name.split()[1] if current_user.display_name and " " in current_user.display_name else "" }}';
+  window.currentUserFirstName = '{{ current_user.first_name }}';
+  window.currentUserLastName = '{{ current_user.last_name }}';
   window.currentUserEmail = '{{ current_user.email }}';
+  window.currentUserUsername = '{{ current_user.username }}';
 </script>
 {% endblock %}
