@@ -132,6 +132,16 @@ def account():
     # 获取统计数据
     user_stats = db.session.query(UserStat).filter_by(user_id=current_user.id).all()
 
+    # 按 winrate 排序 (wins / total)
+    grouped_by_winrate = {}
+    for game_type, entries in grouped_results.items():
+        sorted_entries = sorted(
+            entries,
+            key=lambda x: (x[0].wins / (x[0].wins + x[0].losses)) if (x[0].wins + x[0].losses) > 0 else 0,
+            reverse=True
+        )
+        grouped_by_winrate[game_type] = sorted_entries
+
     total_stats = (
         db.session.query(
             func.sum(TournamentResult.wins),
@@ -151,10 +161,11 @@ def account():
         title="My Account",
         results=all_results,  # 如果 html 用不到就可以删掉
         grouped_results=grouped_results,
+        grouped_by_winrate=grouped_by_winrate,  
         user_stats=user_stats,
         total_winrate=total_winrate,
         game_types=game_types,
-        last_3_results=last_3_results  
+        last_3_results=last_3_results
     )
 
 @application.route('/new_tournament')

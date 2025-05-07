@@ -9,7 +9,8 @@ document.addEventListener('DOMContentLoaded', () => {
         'Total Wins/Total Played': 'totalcount',
         'Last 3 Tournaments': 'last3',
         'Top 3 Tournaments': 'top3',
-        'Recent Tournaments': 'top3'
+        'Recent Tournaments': 'top3',
+        'Recent Tournaments Hosted': 'hosted'
     };
 
     function setupSwitch(card) {
@@ -49,6 +50,15 @@ document.addEventListener('DOMContentLoaded', () => {
             button.addEventListener('click', () => {
                 container.querySelectorAll('.top3-tab').forEach(btn => btn.classList.remove('active'));
                 button.classList.add('active');
+
+                const selectedType = button.textContent.includes('Win Rate') ? 'winrate' : 'wins';
+                const selectedGame = document.getElementById('gameTypeSelect')?.value;
+
+                document.querySelectorAll('.top3-section').forEach(section => {
+                    const matchesType = section.dataset.type === selectedType;
+                    const matchesGame = section.dataset.gameType === selectedGame;
+                    section.style.display = (matchesType && matchesGame) ? 'block' : 'none';
+                });
             });
         });
     }
@@ -56,35 +66,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Toggle between Player and Admin view
     dropdown.addEventListener('change', () => {
-        if (dropdown.value === 'Admin') {
-            // Remove all switch-cards except top3
-            switchGroup.querySelectorAll('.switch-card:not(.top3-card)').forEach(card => card.remove());
+        const isAdmin = dropdown.value === 'Admin';
 
+        // 隐藏除 top3 外所有 switch 卡片
+        document.querySelectorAll('.switch-card:not(.top3-card)').forEach(card => {
+            card.style.display = isAdmin ? 'none' : 'flex';
+        });
+
+        if (isAdmin) {
+            // 设置 admin 的卡片内容
             top3Card.innerHTML = `
                 <div class="top3-row">
-                  <span class="medium4">Recent Tournaments</span>
+                  <span class="medium4">Recent Tournaments Hosted</span>
                   <label class="switch">
                     <input type="checkbox" checked>
                     <span class="slider"></span>
                   </label>
                 </div>
-
-                <div class="top3-tab-group">
-                  <button class="top3-tab">Show All</button>
-                  <button class="top3-tab">Show 3</button>
-                  <button class="top3-tab">Show 5</button>
-                  <button class="top3-tab">Show 10</button>
-                </div>
-
-                <div class="top3-subline">
-                  <span class="caption">Select Game Displayed</span>
-                  <span class="medium4">All Games &nbsp; <i class="fas fa-chevron-right"></i></span>
-                </div>
             `;
             setupSwitch(top3Card);
-            bindTabClicks(top3Card);
+
+            // 显示 Admin 专属板块，隐藏 Player 模式的显示内容
+            document.querySelector('.hosted-preview-section')?.style?.setProperty('display', 'block');
+            document.querySelector('[data-section="last3"]')?.style?.setProperty('display', 'none');
+            document.querySelector('[data-section="top3"]')?.style?.setProperty('display', 'none');
         } else {
-            location.reload(); // revert to player view
+            location.reload(); // 切回 Player 模式时直接刷新还原
         }
     });
 
@@ -94,16 +101,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (gameTypeSelect) {
         function updateVisibleGameType(selectedType) {
-            top3Sections.forEach(section => {
-                if (section.dataset.gameType === selectedType) {
-                    section.style.display = 'block';
-                } else {
-                    section.style.display = 'none';
-                }
+            const activeTab = document.querySelector('.top3-tab.active');
+            const selectedTypeTab = activeTab?.textContent.includes('Win Rate') ? 'winrate' : 'wins';
+
+            document.querySelectorAll('.top3-section').forEach(section => {
+                const matchesType = section.dataset.type === selectedTypeTab;
+                const matchesGame = section.dataset.gameType === selectedType;
+                section.style.display = (matchesType && matchesGame) ? 'block' : 'none';
             });
         }
 
-        // 初始化时只显示当前选中的游戏类型
         updateVisibleGameType(gameTypeSelect.value);
 
         gameTypeSelect.addEventListener('change', () => {
@@ -125,4 +132,10 @@ document.addEventListener('DOMContentLoaded', () => {
             emailInput.focus();
         });
     }
+
+    // 默认激活第一个 tab（最高胜场）
+    const defaultTab = document.querySelector('.top3-tab:first-child');
+    if (defaultTab) defaultTab.click();
 });
+
+
