@@ -728,13 +728,67 @@ html, body {
 }
 
 .form-group {
-    flex: 1;
+    flex: 2;
     min-width: 260px;
-    }
+}
+
+.form-sml {
+    flex: 1;
+    min-width: 100px;
+}
 
 .form-label {
     display: block;
 }
+
+.player-summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .player-number {
+    color: #8778ee;
+    font-size: 18px;
+    font-weight: bold;
+    width: 140px;
+  }
+  
+  .player-name {
+    flex-grow: 1;
+    margin-left: 16px;
+  }
+  
+  .player-account {
+    flex-grow: 1;
+    text-align: center;
+  }
+  
+  .edit-button {
+    cursor: pointer;
+    margin-left: 16px;
+  }
+  
+  .EditIcon svg {
+    width: 24px;
+    height: 24px;
+    stroke: currentColor;
+  }
+  
+  .disabled-player-section {
+    opacity: 0.8;
+    pointer-events: auto;
+  }
+
+  .disabled-player-section input,
+  .disabled-player-section select {
+    background-color: rgba(255, 255, 255, 0.1);
+    cursor: not-allowed;
+  }
+
 /* Admin View Specific Styles */
 #adminView .statcard-container {
     display: flex;

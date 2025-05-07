@@ -8,22 +8,44 @@
     </div>
     <div class="form-row">
         <div class="form-group">
-        <label class="form-label">Tournament Name</label>
-        <div class="TextForm">
-            <input type="text" id="tournamentName" placeholder="Enter tournament name">
+            <label class="form-label">Tournament Name</label>
+            <div class="TextForm">
+                <input type="text" id="tournamentName" placeholder="Enter tournament name">
+            </div>
         </div>
+        <div class="form-sml">
+            <div class="Dropdown">
+                <label for="roundTimeLimit" class="form-label">Round Time Limit</label>
+                <select id="roundTimeLimit">
+                    <option value="" disabled selected>Select</option>
+                    <option value="10">10 minutes</option>
+                    <option value="15">15 minutes</option>
+                    <option value="20">20 minutes</option>
+                    <option value="25">25 minutes</option>
+                    <option value="30">30 minutes</option>
+                    <option value="35">35 minutes</option>
+                    <option value="40">40 minutes</option>
+                    <option value="45">45 minutes</option>
+                    <option value="50">50 minutes</option>
+                    <option value="55">55 minutes</option>
+                    <option value="60">60 minutes</option>
+                </select>
+            </div>
         </div>
+    </div>
+
+    <div class="form-row">
         <div class="form-group">
-        <label class="form-label">Tournament Type</label>
-        <div class="Dropdown">
-            <select id="tournamentType">
-            <option value="" disabled selected>Select</option>
-            <option value="round robin">Round Robin</option>
-            <option value="swiss">Swiss System</option>
-            <option value="single elimination">Single Elimination</option>
-            </select>
-        </div>
-        </div>
+            <label class="form-label">Tournament Type</label>
+            <div class="Dropdown">
+                <select id="tournamentType">
+                <option value="" disabled selected>Select</option>
+                <option value="round robin">Round Robin</option>
+                <option value="swiss">Swiss System</option>
+                <option value="single elimination">Single Elimination</option>
+                </select>
+            </div>
+            </div>
         <div class="form-group">
         <label class="form-label">Game</label>
         <div class="Dropdown">
@@ -43,29 +65,36 @@
 
     <div class="form-row">
         <div class="form-group">
-        <label class="form-label">Number of Competitors</label>
-        <div class="Dropdown">
-            <select id="competitorCount">
-            <option value="" disabled selected>Select</option>
-            <option value="2">2</option>
-            <option value="4">4</option>
-            <option value="8">8</option>
-            <option value="16">16</option>
-            </select>
-        </div>
+            <label class="form-label">Number of Competitors</label>
+            <div class="Dropdown">
+                <select id="competitorCount">
+                <option value="" disabled selected>Select</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="9">9</option>
+                <option value="10">10</option>
+                <option value="11">11</option>
+                <option value="12">12</option>
+                </select>
+            </div>
         </div>
         <div class="form-group">
-        <label class="form-label">Competitor Details</label>
-        <div class="Checkbox">
-            <label class="checkbox-option">
-            <input type="checkbox" id="isCompetitor" class="checkbox-input">
-            <div class="checkbox-icon">
-                <div class="unchecked-icon UncheckBoxIcon"></div>
-                <div class="checked-icon CheckedBoxIcon"></div>
+            <label class="form-label">Competitor Details</label>
+            <div class="Checkbox">
+                <label class="checkbox-option">
+                <input type="checkbox" id="isCompetitor" class="checkbox-input">
+                <div class="checkbox-icon">
+                    <div class="unchecked-icon UncheckBoxIcon"></div>
+                    <div class="checked-icon CheckedBoxIcon"></div>
+                </div>
+                <span class="checkbox-label">I am participating as a competitor of this tournament.</span>
+                </label>
             </div>
-            <span class="checkbox-label">I am participating as a competitor of this tournament.</span>
-            </label>
-        </div>
         </div>
     </div>
 
@@ -93,6 +122,13 @@
             <div class="SaveIcon"></div>
             Save Tournament Draft
         </button>
+        </div>
+
+        <div class="SendJoinBtn hidden">
+            <button id="startTournament">
+                <div class="CreateIcon"></div>
+                Start Tournament
+            </button>
         </div>
     </div>
 </div>

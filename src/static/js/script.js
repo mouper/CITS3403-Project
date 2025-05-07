@@ -13,6 +13,11 @@ function initTournamentForm() {
   const discardTournamentBtn = document.getElementById('discardTournament');
   const saveTournamentBtn = document.getElementById('saveTournament');
   const isCompetitorCheckbox = document.getElementById('isCompetitor');
+  const startTournamentBtn = document.getElementById('startTournament');
+  
+  let confirmDetailsTab = null;
+  let confirmDetailsSection = null;
+  let allPlayersFilledOut = false;
   
   // Check if we're on the tournament form page
   if (!competitorCountSelect) return;
@@ -52,7 +57,66 @@ function initTournamentForm() {
   isCompetitorCheckbox.addEventListener('change', handleIsCompetitorChange);
   saveTournamentBtn.addEventListener('click', handleSaveTournament);
 
+  // Add event listener for the Start Tournament button
+  if (startTournamentBtn) {
+    startTournamentBtn.addEventListener('click', handleStartTournament);
+  }
+
+  // Fix the global event listeners function to ensure form updates
+  function addGlobalChangeListeners() {
+    // This will check if we can show the Confirm Details tab whenever any input changes
+    document.querySelectorAll('input, select').forEach(element => {
+      element.addEventListener('change', function() {
+        const playerCount = parseInt(competitorCountSelect.value);
+        if (!isNaN(playerCount) && playerCount > 0) {
+          checkAndCreateConfirmDetailsTab();
+        }
+      });
+    });
+  }
+
   // Functions
+
+  // Call this when creating player sections
+  function addFormListeners() {
+    addEmailValidationListeners();
+    addGlobalChangeListeners();
+  }
+
+    // Ensure email fields get validation on change
+    function addEmailValidationListeners() {
+      // Find all email inputs
+      const emailInputs = document.querySelectorAll('input[type="email"]');
+      
+      emailInputs.forEach(emailInput => {
+        const playerId = emailInput.id.replace('email', '');
+        const emailError = document.getElementById(`emailError${playerId}`);
+        
+        emailInput.addEventListener('blur', function() {
+          const email = this.value.trim();
+          if (email !== '') {
+            const errorMsg = validate_email_address(email);
+            if (errorMsg && emailError) {
+              emailError.textContent = errorMsg;
+              emailError.style.display = 'block';
+            } else if (emailError) {
+              emailError.style.display = 'none';
+            }
+          } else if (emailError) {
+            emailError.style.display = 'none';
+          }
+        });
+      });
+    }
+
+  function validate_email_address(email) {
+    // Enhanced Basic Format Check with no spaces allowed
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return "Invalid email format.";
+    }
+    return null; // No error
+  }
+
   function handleCompetitorCountChange() {
     // Clear any previous errors
     clearError();
@@ -84,6 +148,9 @@ function initTournamentForm() {
       // Hide player container if custom or no selection
       playersContainer.style.display = 'none';
     }
+
+    // Check if we should show the Confirm Details tab
+    checkAndCreateConfirmDetailsTab();
   }
 
   function createPlayerTab(playerId) {
@@ -392,6 +459,8 @@ function initTournamentForm() {
       document.getElementById(`usernameGroup${playerId}`).style.display = 'none';
       document.getElementById(`formGrid${playerId}`).style.display = 'none';
     });
+
+    addFormListeners();
   }
 
   function activatePlayer(playerId) {
@@ -418,6 +487,264 @@ function initTournamentForm() {
       // Update dropdown icon
       const selectedIcon = selectedTab.querySelector('.DropdownIcon');
       if (selectedIcon) selectedIcon.classList.add('DropdownIcon-open');
+    }
+  }
+
+  function checkAllPlayersFilledOut(playerCount) {
+    let allFilled = true;
+    
+    for (let i = 1; i <= playerCount; i++) {
+      const hasTourneyProAccount = document.getElementById(`tourneyProYes${i}`).checked;
+      const needsGuestInfo = document.getElementById(`tourneyProNo${i}`).checked;
+      
+      // Check if player type has been selected
+      if (!hasTourneyProAccount && !needsGuestInfo) {
+        allFilled = false;
+        break;
+      }
+      
+      // Check required fields based on account type
+      if (hasTourneyProAccount) {
+        const username = document.getElementById(`username${i}`).value;
+        if (!username || username.trim() === '') {
+          allFilled = false;
+          break;
+        }
+      } else if (needsGuestInfo) {
+        const firstName = document.getElementById(`firstName${i}`).value;
+        const lastName = document.getElementById(`lastName${i}`).value;
+        const email = document.getElementById(`email${i}`).value;
+        
+        if (!firstName || firstName.trim() === '' || !lastName || lastName.trim() === '') {
+          allFilled = false;
+          break;
+        }
+        
+        // Email validation (optional field)
+        if (email && email.trim() !== '') {
+          const emailError = validate_email_address(email);
+          if (emailError) {
+            allFilled = false;
+            break;
+          }
+        }
+      }
+    }
+    
+    return allFilled;
+  }
+
+  // Add this function to create the Confirm Details tab and section
+  function createConfirmDetailsTab(playerCount) {
+    // Create confirm details tab
+    confirmDetailsTab = document.createElement('div');
+    confirmDetailsTab.className = 'player-tab';
+    confirmDetailsTab.dataset.player = 'confirm';
+    
+    const label = document.createElement('span');
+    label.textContent = 'Confirm Details';
+    
+    const chevron = document.createElement('div');
+    chevron.className = 'DropdownIcon';
+    
+    confirmDetailsTab.appendChild(label);
+    confirmDetailsTab.appendChild(chevron);
+    playerTabs.appendChild(confirmDetailsTab);
+    
+    // Create confirm details section
+    confirmDetailsSection = document.createElement('div');
+    confirmDetailsSection.className = 'player-section';
+    confirmDetailsSection.dataset.player = 'confirm';
+    
+    // Add header
+    const header = document.createElement('div');
+    header.className = 'player-details-header';
+    
+    const title = document.createElement('h3');
+    title.textContent = 'Confirm Details';
+    title.style.margin = '0';
+    
+    header.appendChild(title);
+    confirmDetailsSection.appendChild(header);
+    
+    // Create summary content
+    const summaryContent = document.createElement('div');
+    summaryContent.className = 'player-section-content summary-content';
+    
+    // Add summary for each player
+    for (let i = 1; i <= playerCount; i++) {
+      const playerRow = createPlayerSummaryRow(i);
+      summaryContent.appendChild(playerRow);
+    }
+    
+    confirmDetailsSection.appendChild(summaryContent);
+    playerContent.appendChild(confirmDetailsSection);
+    
+    // Add event listener to tab
+    confirmDetailsTab.addEventListener('click', () => activatePlayer('confirm'));
+    
+    // Show the Start Tournament button now that we can confirm details
+    document.querySelector('.SendJoinBtn').classList.remove('hidden');
+  }
+
+  // Add this function to create a player summary row
+  function createPlayerSummaryRow(playerId) {
+    const row = document.createElement('div');
+    row.className = 'player-summary-row';
+    row.style.display = 'flex';
+    row.style.justifyContent = 'space-between';
+    row.style.alignItems = 'center';
+    row.style.marginBottom = '16px';
+    row.style.paddingBottom = '16px';
+    row.style.borderBottom = '1px solid rgba(255, 255, 255, 0.1)';
+    
+    // Player number column
+    const playerNumber = document.createElement('div');
+    playerNumber.className = 'player-number';
+    playerNumber.style.color = '#8778ee';
+    playerNumber.style.fontSize = '18px';
+    playerNumber.style.fontWeight = 'bold';
+    playerNumber.style.width = '140px';
+    
+    // Check if player 1 is current user
+    if (playerId === 1 && isCompetitorCheckbox.checked) {
+      playerNumber.textContent = `Player ${playerId}:`;
+      
+      // Add (Myself) tag
+      const myselfTag = document.createElement('span');
+      myselfTag.textContent = " (Myself)";
+      playerNumber.appendChild(myselfTag);
+    } else {
+      playerNumber.textContent = `Player ${playerId}:`;
+    }
+    
+    // Player name column
+    const playerName = document.createElement('div');
+    playerName.className = 'player-name';
+    playerName.style.flexGrow = '1';
+    playerName.style.marginLeft = '16px';
+    
+    // Player username/account column
+    const playerAccount = document.createElement('div');
+    playerAccount.className = 'player-account';
+    playerAccount.style.flexGrow = '1';
+    playerAccount.style.textAlign = 'center';
+    
+    // Edit button column
+    const editButton = document.createElement('div');
+    editButton.className = 'edit-button';
+    editButton.style.cursor = 'pointer';
+    editButton.style.marginLeft = '16px';
+    
+    const editIcon = document.createElement('div');
+    editIcon.className = 'EditIcon';
+    editIcon.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" 
+      stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`;
+    
+    editButton.appendChild(editIcon);
+    
+    // Add event listener to edit button to navigate to the player's tab
+    editButton.addEventListener('click', () => activatePlayer(playerId));
+    
+    // Assemble the row
+    row.appendChild(playerNumber);
+    row.appendChild(playerName);
+    row.appendChild(playerAccount);
+    row.appendChild(editButton);
+    
+    // Update function to populate player details
+    function updatePlayerDetails() {
+      // Clear previous content
+      playerName.textContent = '';
+      playerAccount.textContent = '';
+      
+      const hasTourneyProAccount = document.getElementById(`tourneyProYes${playerId}`).checked;
+      const needsGuestInfo = document.getElementById(`tourneyProNo${playerId}`).checked;
+      
+      if (hasTourneyProAccount) {
+        const username = document.getElementById(`username${playerId}`).value;
+        
+        // If player 1 is the current user
+        if (playerId === 1 && isCompetitorCheckbox.checked) {
+          playerName.textContent = `${currentUser.firstName} ${currentUser.lastName}`.trim();
+        } else {
+          playerName.textContent = username;
+        }
+        
+        playerAccount.textContent = username;
+      } 
+      else if (needsGuestInfo) {
+        const firstName = document.getElementById(`firstName${playerId}`).value;
+        const lastName = document.getElementById(`lastName${playerId}`).value;
+        const email = document.getElementById(`email${playerId}`).value;
+        
+        playerName.textContent = `${firstName} ${lastName}`.trim();
+        playerAccount.textContent = email;
+      }
+      else {
+        playerName.textContent = "Not configured";
+        playerAccount.textContent = "N/A";
+      }
+    }
+    
+    // Initial update
+    updatePlayerDetails();
+    
+    // Add event listeners to update the summary when player details change
+    const inputIds = [
+      `username${playerId}`, 
+      `firstName${playerId}`, 
+      `lastName${playerId}`, 
+      `email${playerId}`,
+      `tourneyProYes${playerId}`,
+      `tourneyProNo${playerId}`
+    ];
+    
+    inputIds.forEach(id => {
+      const element = document.getElementById(id);
+      if (element) {
+        element.addEventListener('change', updatePlayerDetails);
+        element.addEventListener('input', updatePlayerDetails);
+      }
+    });
+    
+    return row;
+  }
+
+  // Add this function to check if we should show the Confirm Details tab
+  function checkAndCreateConfirmDetailsTab() {
+    const playerCount = parseInt(competitorCountSelect.value);
+    
+    if (!isNaN(playerCount) && playerCount > 0) { 
+      allPlayersFilledOut = checkAllPlayersFilledOut(playerCount);
+      
+      // If all players are filled out but confirm tab doesn't exist yet
+      if (allPlayersFilledOut && !confirmDetailsTab) {
+        createConfirmDetailsTab(playerCount);
+        
+        // Show the Start Tournament button when confirm tab is created
+        const startTournamentBtnContainer = document.querySelector('.SendJoinBtn');
+        if (startTournamentBtnContainer) {
+          startTournamentBtnContainer.classList.remove('hidden');
+        }
+      }
+      
+      // If we already have a confirm tab, update the player details
+      if (confirmDetailsTab && confirmDetailsSection) {
+        // Clear existing summary content
+        const summaryContent = confirmDetailsSection.querySelector('.summary-content');
+        if (summaryContent) {
+          summaryContent.innerHTML = '';
+          
+          // Recreate player summary rows
+          for (let i = 1; i <= playerCount; i++) {
+            const playerRow = createPlayerSummaryRow(i);
+            summaryContent.appendChild(playerRow);
+          }
+        }
+      }
     }
   }
 
@@ -453,6 +780,7 @@ function initTournamentForm() {
         resetPlayerOneToDefault();
       }
     }
+    checkAndCreateConfirmDetailsTab();
   }
 
   function updatePlayerOneAsMyself() {
@@ -598,6 +926,135 @@ function initTournamentForm() {
     }
   }
 
+  // Extract common tournament data collection and validation into a separate function
+  function collectAndValidateTournamentData() {
+    // Collect tournament data
+    const tournamentData = {
+      title: document.getElementById('tournamentName').value,
+      format: document.getElementById('tournamentType').value,
+      game_type: document.getElementById('gameType').value,
+      include_creator_as_player: isCompetitorCheckbox.checked,
+      created_by: currentUser.id,
+      round_time_minutes: parseInt(document.getElementById('roundTimeLimit').value)
+    };
+
+    // Validate core tournament data
+    if (!tournamentData.title || tournamentData.title.trim() === '') {
+      showError('Please enter a tournament name');
+      return null;
+    }
+
+    if (!tournamentData.round_time_minutes || isNaN(tournamentData.round_time_minutes)) {
+      showError('Please select a round time limit');
+      return null;
+    }
+    
+    if (!tournamentData.format || tournamentData.format === '') {
+      showError('Please select a tournament type');
+      return null;
+    }
+
+    if (!tournamentData.game_type || tournamentData.game_type === '') {
+      showError('Please select a game type');
+      return null;
+    }
+    
+    // Get number of players
+    const playerCount = parseInt(competitorCountSelect.value);
+    if (isNaN(playerCount) || playerCount < 2) {
+      showError('Please select a valid number of competitors');
+      return null;
+    }
+    
+    // Validate player data
+    const playerData = validatePlayerData(playerCount);
+    if (!playerData) {
+      return null; // Validation failed, errors already shown
+    }
+    
+    // Add validated player data to tournament data
+    tournamentData.players = playerData;
+    
+    return tournamentData;
+  }
+
+  // Extract common error handling into a separate function
+  function handleTournamentError(error, buttonElement, defaultButtonText, playerCount) {
+    console.error('Error:', error);
+    
+    // Reset button state
+    buttonElement.disabled = false;
+    buttonElement.textContent = defaultButtonText;
+    
+    // Check if we have a response with data
+    if (error.data) {
+        // Handle invalid usernames
+        if (error.data.invalid_usernames) {
+            error.data.invalid_usernames.forEach(username => {
+                // Find which player has this username
+                for (let i = 1; i <= playerCount; i++) {
+                    const playerUsername = document.getElementById(`username${i}`)?.value;
+                    if (playerUsername === username) {
+                        const usernameError = document.getElementById(`usernameError${i}`);
+                        if (usernameError) {
+                            usernameError.textContent = `User '${username}' does not exist`;
+                            usernameError.style.display = 'block';
+                            activatePlayer(i);
+                        }
+                        break;
+                    }
+                }
+            });
+            showError('One or more TourneyPro usernames are invalid. Please correct them and try again.');
+        } 
+        // Handle emails with existing accounts
+        else if (error.data.emails_with_accounts) {
+            error.data.emails_with_accounts.forEach(email => {
+                // Find which player has this email
+                for (let i = 1; i <= playerCount; i++) {
+                    const playerEmail = document.getElementById(`email${i}`)?.value;
+                    if (playerEmail === email) {
+                        const emailError = document.getElementById(`emailError${i}`);
+                        if (emailError) {
+                            emailError.textContent = `A TourneyPro Account exists for '${email}'`;
+                            emailError.style.display = 'block';
+                            activatePlayer(i);
+                        }
+                        break;
+                    }
+                }
+            });
+            showError('One or more emails are linked to existing accounts. Please correct them and try again.');
+        }
+        // Handle duplicate usernames/emails
+        else if (error.data.duplicate_usernames || error.data.duplicate_emails) {
+            let errorMsg = '';
+            if (error.data.duplicate_usernames) {
+                errorMsg += 'Duplicate usernames detected. ';
+            }
+            if (error.data.duplicate_emails) {
+                errorMsg += 'Duplicate emails detected. ';
+            }
+            showError(errorMsg + 'Please correct them and try again.');
+        }
+        // Handle generic error messages
+        else if (error.data.message) {
+            showError(error.data.message);
+        }
+        // Handle detailed errors array if present
+        else if (error.data.detailed_errors) {
+            showError(error.data.detailed_errors.join('\n'));
+        }
+        else {
+            showError('Failed to process tournament. Please try again.');
+        }
+    } 
+    // Handle network errors or other exceptions
+    else {
+        showError('Failed to process tournament. Please try again.');
+    }
+  }
+  // Modify validatePlayerData to include email validation
   function validatePlayerData(playerCount) {
     let validPlayers = true;
     let playerData = [];
@@ -690,13 +1147,31 @@ function initTournamentForm() {
           continue;
         }
         
-        // Check for duplicate email in the tournament
-        if (email && email.trim() !== '') {
+        if (email && email.trim() === '') {
+          showError(`Please enter an email for Player ${i}`);
+          validPlayers = false;
+          continue;
+        }
+
+        // Validate email
+        else {
+          const emailError = validate_email_address(email);
+          if (emailError) {
+            const emailErrorEl = document.getElementById(`emailError${i}`);
+            if (emailErrorEl) {
+              emailErrorEl.textContent = emailError;
+              emailErrorEl.style.display = 'block';
+            }
+            validPlayers = false;
+            continue;
+          }
+          
+          // Check for duplicate email in the tournament
           if (usedEmails.includes(email.toLowerCase())) {
-            const emailError = document.getElementById(`emailError${i}`);
-            if (emailError) {
-              emailError.textContent = `Email '${email}' is already used in this tournament`;
-              emailError.style.display = 'block';
+            const emailErrorEl = document.getElementById(`emailError${i}`);
+            if (emailErrorEl) {
+              emailErrorEl.textContent = `Email '${email}' is already used in this tournament`;
+              emailErrorEl.style.display = 'block';
               activatePlayer(i);
             }
             validPlayers = false;
@@ -715,43 +1190,15 @@ function initTournamentForm() {
     return validPlayers ? playerData : null;
   }
 
+  // Replace handleSaveTournament with simplified version that uses common functions
   function handleSaveTournament() {
-    // Collect tournament data
-    const tournamentData = {
-      title: document.getElementById('tournamentName').value,
-      format: document.getElementById('tournamentType').value,
-      game_type: document.getElementById('gameType').value,
-      include_creator_as_player: isCompetitorCheckbox.checked,
-      is_draft: true,  // Always save as draft initially
-      created_by: currentUser.id
-    };
-    
-    // Validate core tournament data
-    if (!tournamentData.title || tournamentData.title.trim() === '') {
-      showError('Please enter a tournament name');
-      return;
+    const tournamentData = collectAndValidateTournamentData();
+    if (!tournamentData) {
+      return; // Validation failed
     }
     
-    if (!tournamentData.format || tournamentData.format === '') {
-      showError('Please select a tournament type');
-      return;
-    }
-    
-    // Get number of players
-    const playerCount = parseInt(competitorCountSelect.value);
-    if (isNaN(playerCount) || playerCount < 2) {
-      showError('Please select a valid number of competitors');
-      return;
-    }
-    
-    // Validate player data
-    const playerData = validatePlayerData(playerCount);
-    if (!playerData) {
-      return; // Validation failed, errors already shown
-    }
-    
-    // Add validated player data to tournament data
-    tournamentData.players = playerData;
+    // Set as draft
+    tournamentData.is_draft = true;
     
     // Show loading state
     saveTournamentBtn.disabled = true;
@@ -778,73 +1225,66 @@ function initTournamentForm() {
     })
     .then(data => {
       if (data.success) {
+        // Show success message without redirecting
         alert('Tournament saved successfully!');
-        window.location.href = '/dashboard';  // Redirect to dashboard
+        // Reset button state
+        saveTournamentBtn.disabled = false;
+        saveTournamentBtn.textContent = 'Save Tournament Draft';
+      } else {
+        showError('Error: ' + data.message);
+        // Reset button state on error
+        saveTournamentBtn.disabled = false;
+        saveTournamentBtn.textContent = 'Save Tournament Draft';
+      }
+    })
+    .catch(error => {
+      handleTournamentError(error, saveTournamentBtn, 'Save Tournament Draft', parseInt(competitorCountSelect.value));
+    });
+  }
+
+  // Replace handleStartTournament with simplified version that uses common functions
+  function handleStartTournament() {
+    const tournamentData = collectAndValidateTournamentData();
+    if (!tournamentData) {
+      return; // Validation failed
+    }
+    
+    // Set as not draft
+    tournamentData.is_draft = false;
+    
+    // Show loading state
+    startTournamentBtn.disabled = true;
+    startTournamentBtn.textContent = 'Starting...';
+    
+    // Send data to server
+    fetch('/start_tournament', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(tournamentData),
+    })
+    .then(response => {
+      return response.json().then(data => {
+        if (!response.ok) {
+          throw {
+            status: response.status,
+            data: data
+          };
+        }
+        return data;
+      });
+    })
+    .then(data => {
+      if (data.success) {
+        // Redirect to the tournament view page
+        window.location.href = `/tournament/${data.tournament_id}`;
       } else {
         showError('Error: ' + data.message);
       }
     })
     .catch(error => {
-      console.error('Error:', error);
-      
-      // Reset button state
-      saveTournamentBtn.disabled = false;
-      saveTournamentBtn.textContent = 'Save Tournament';
-      
-      // Display specific error messages based on server response
-      if (error.data) {
-        if (error.data.invalid_usernames) {
-          // Display username errors
-          error.data.invalid_usernames.forEach(username => {
-            const playerIndex = playerData.findIndex(player => player.username === username);
-            if (playerIndex !== -1) {
-              const playerNumber = playerIndex + 1;
-              const usernameError = document.getElementById(`usernameError${playerNumber}`);
-              if (usernameError) {
-                usernameError.textContent = `User '${username}' does not exist`;
-                usernameError.style.display = 'block';
-                
-                // Activate the player tab with the error
-                activatePlayer(playerNumber);
-              }
-            }
-          });
-          
-          showError('One or more TourneyPro usernames are invalid. Please correct them and try again.');
-        } 
-        else if (error.data.emails_with_accounts) {
-          // Display email errors
-          error.data.emails_with_accounts.forEach(email => {
-            // Find which player has this email
-            for (let i = 1; i <= playerCount; i++) {
-              const playerEmail = document.getElementById(`email${i}`).value;
-              if (playerEmail === email) {
-                const emailError = document.getElementById(`emailError${i}`);
-                if (emailError) {
-                  emailError.textContent = `A TourneyPro Account has been created using the email address '${email}'`;
-                  emailError.style.display = 'block';
-                  
-                  // Activate the player tab with the error
-                  activatePlayer(i);
-                }
-                break;
-              }
-            }
-          });
-          
-          showError('One or more emails are already linked to TourneyPro accounts. Please correct them and try again.');
-        }
-        else {
-          showError(error.data.message || 'Failed to save tournament. Please try again.');
-        }
-      } else {
-        showError('Failed to save tournament. Please try again.');
-      }
-    })
-    .finally(() => {
-      // Reset button state
-      saveTournamentBtn.disabled = false;
-      saveTournamentBtn.textContent = 'Save Tournament';
+      handleTournamentError(error, startTournamentBtn, 'Start Tournament', parseInt(competitorCountSelect.value));
     });
   }
 }
