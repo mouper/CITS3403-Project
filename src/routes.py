@@ -82,10 +82,8 @@ def dashboard():
 @application.route('/analytics')
 @login_required
 def analytics():
-    # 1) user‐level stats
     user_stats = db.session.query(UserStat).filter_by(user_id=current_user.id).all()
 
-    # 2) fetch last 5 tournaments
     recent = (
         db.session.query(Tournament)
         .filter_by(created_by=current_user.id)
@@ -94,7 +92,6 @@ def analytics():
         .all()
     )
 
-    # 3) serialize + filter
     recent_tournaments = []
     for tourney in recent:
         rows = (
@@ -117,11 +114,9 @@ def analytics():
                 'opp_owp':    round(result.opp_opp_win_percentage  * 100, 2)
             })
 
-        # **Skip** tournaments with fewer than 3 players/results
         if len(standings) < 3:
             continue
 
-        # sort & append
         standings.sort(key=lambda x: x['wins'], reverse=True)
         recent_tournaments.append({
             'id':                   tourney.id,
