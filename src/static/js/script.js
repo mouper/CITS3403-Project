@@ -646,7 +646,7 @@ function initAnalytics() {
         const info  = document.querySelectorAll('.modal-info .info-item .regular4');
         info[0].textContent = tourney.format;
         info[1].textContent = tourney.game_type;
-        info[2].textContent = tourney.round_time_minutes + 'Minutes';
+        info[2].textContent = tourney.round_time_minutes + ' Minutes';
         document.querySelector('.modal-date .regular4').textContent = tourney.date;
 
         const tbody = document.querySelector('.table-wrapper tbody');
