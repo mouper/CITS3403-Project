@@ -901,7 +901,7 @@ html, body {
 /*Standings Modal Styles*/
 .modal-backdrop {
     position: fixed;
-    top: -0.0625rem;
+    top: 0;
     left: 17.4375rem;
     width: 100%;
     height: 100%;
@@ -913,8 +913,14 @@ html, body {
 }
 
 .standings-modal {
-    padding-top: 15rem;
-    padding-left: 10rem;
+    position: absolute;
+    top: 50%;
+    left: 45%;
+    transform: translate(-50%, -50%);
+    width: min(90vw, 65rem);   /* won’t exceed 60rem, but will shrink on small screens */
+    max-height: 90vh;          /* won’t exceed 90% of viewport height */
+    overflow: auto;            /* scroll if content overflows */
+    box-sizing: border-box;
 }
   
 .modal-content {
