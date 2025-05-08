@@ -818,6 +818,15 @@ html, body {
     line-height: normal;
 }
 
+#adminLimitSelector {
+    padding: 0.1rem;
+    min-width: 8ch;
+}
+
+.admin-limit-selector-container {
+    padding-top: 1rem;
+}
+
 /* Third place row */
 #adminView .statcard-bottom-row {
     display: flex;

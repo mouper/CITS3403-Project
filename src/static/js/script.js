@@ -596,6 +596,7 @@ function initAnalytics() {
   const playerView        = document.getElementById('playerView');
   const adminView         = document.getElementById('adminView');
   const gameTypeSelector  = document.getElementById('gameTypeSelector');
+  const limitSelector     = document.getElementById('adminLimitSelector');
 
   if (!viewSelector) return;
 
@@ -666,6 +667,14 @@ function initAnalytics() {
         document.getElementById('modalBackdrop').style.display = 'block';
       });
     });
+  if (limitSelector) {
+    limitSelector.addEventListener('change', function() {
+      const params = new URLSearchParams(window.location.search);
+      params.set('limit', this.value);
+      params.set('view',  viewSelector.value);   // preserve current tab
+      window.location.search = params.toString();
+    });
+  }
 }
 
 // =============================================
@@ -736,4 +745,22 @@ document.addEventListener('DOMContentLoaded', function() {
   if (closeButton) {
     closeButton.addEventListener('click', closeModal);
   }
+  const params    = new URLSearchParams(window.location.search);
+  const viewParam = params.get('view');
+  const limParam  = params.get('limit');
+  if (viewParam) {
+    const vs = document.getElementById('viewSelector');
+    vs.value = viewParam;
+    vs.dispatchEvent(new Event('change'));
+  }
+  if (limParam) {
+    const ls = document.getElementById('adminLimitSelector');
+    if (ls) ls.value = limParam;
+  }
+  
+  // finally, show the right panel
+  viewSelector.dispatchEvent(new Event('change'));
+  requestAnimationFrame(() => {
+    initAnalytics();
+  });
 });

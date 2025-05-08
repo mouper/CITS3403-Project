@@ -145,13 +145,28 @@
   
     <div id="adminView" class="analytics-view" style="display: none;">
       <h2 class="subheadline purple-text">Recent Tournaments</h2>
+      <div class="admin-limit-selector-container">
+        <select id="adminLimitSelector">
+          {% for opt in [3,5,10,20] %}
+            <option value="{{ opt }}" {% if opt == limit %}selected{% endif %}>
+              Recent {{ opt }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
       <div class="statcard-container" id="adminStatcards">
         {% include 'components/admincards.html' %}
       </div>
       <script>
         window.recentTournaments = {{ recent_tournaments|tojson }};
+        document.getElementById('adminLimitSelector').addEventListener('change', function() {
+          const params = new URLSearchParams(window.location.search);
+          params.set('limit', this.value);
+          window.location.search = params.toString();
+        });
       </script>
-    </div>       
+    </div>
+       
     <div id="modalBackdrop" class="modal-backdrop" style="display: none;">
       <div class="standings-modal">
         <div class="modal-content">

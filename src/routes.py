@@ -84,13 +84,14 @@ def dashboard():
 def analytics():
     user_stats = db.session.query(UserStat).filter_by(user_id=current_user.id).all()
 
+    limit = int(request.args.get('limit', 5))
     recent = (
-        db.session.query(Tournament)
-        .filter_by(created_by=current_user.id)
-        .order_by(Tournament.created_at.desc())
-        .limit(5)
-        .all()
-    )
+    db.session.query(Tournament)
+      .filter_by(created_by=current_user.id)
+      .order_by(Tournament.created_at.desc())
+      .limit(limit)
+      .all()
+)
 
     recent_tournaments = []
     for tourney in recent:
@@ -130,9 +131,9 @@ def analytics():
 
     return render_template(
         'analytics.html',
-        title='Analytics',
         stats=user_stats,
-        recent_tournaments=recent_tournaments
+        recent_tournaments=recent_tournaments,
+        limit=limit
     )
 
     
