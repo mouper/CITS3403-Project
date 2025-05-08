@@ -877,6 +877,218 @@ html, body {
     align-items: baseline;
 }
 
+/*Standings Modal Styles*/
+.modal-backdrop {
+    position: fixed;
+    top: -0.0625rem;
+    left: 17.4375rem;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.70);
+    z-index: 1000;
+}
+
+.standings-modal {
+    padding-top: 12rem;
+    padding-left: 10rem;
+}
+  
+.modal-content {
+    display: flex;
+    padding: 2rem 2.5rem;
+    flex-direction: column;
+    gap: 1.5rem;
+    border-radius: 0.625rem;
+    border: 2px solid var(--Primary-Shade-1, #BBB2FF);
+    background: var(--Background-Shade1, #121212);
+    max-width: 60rem;
+    width: 90%;
+    z-index: 1000;
+    position: relative;
+    margin: 0;
+
+}
+  
+.modal-header-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.25rem;
+    width: 100%;
+}
+  
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    align-self: stretch;
+}
+  
+.modal-info-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.625rem;
+    width: 100%;
+}
+  
+.modal-info .caption {
+    color: var(--Primary-Shade-1, #BBB2FF);
+    text-shadow: 6px 6px 25px #0E0E0E;
+    font-size: 0.875rem;
+    font-style: italic;
+    font-weight: 300;
+    line-height: 1.5rem;
+}
+
+.modal-info .regular4 {
+    color: var(--Primary-Shade2, #D6D6EE);
+    text-shadow: 6px 6px 25px #0E0E0E;
+    font-size: 0.875rem;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+}
+
+.modal-info .info-item {
+    display: flex;
+    align-items: center;
+    gap: 0.9375rem;
+}
+
+.modal-info {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 4.9375rem;
+}
+  
+.modal-date {
+    color: var(--Primary-Shade2, #D6D6EE);
+    text-shadow: 6px 6px 25px #0E0E0E;
+    font-size: 0.875rem;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+}
+  
+/* Table Styles */
+.table-container {
+    width: 100%;
+    margin-top: 0.8rem;
+}
+  
+.table-label {
+    display: flex;
+    flex-direction: row;
+    gap: 0.25rem;
+    margin-bottom: 0.9rem;
+    justify-content: space-between;
+}
+  
+.table-heading {
+    color: var(--Primary-Shade2, #D6D6EE);
+    font-size: 1.25rem;
+    font-style: normal;
+    font-weight: 500;
+    line-height: normal;
+}
+  
+.table-caption {
+    color: var(--Primary-Shade2, #D6D6EE);
+    text-align: center;
+    font-size: 0.875rem;
+    font-style: italic;
+    font-weight: 300;
+    line-height: 1.5rem; 
+}
+  
+.table-wrapper {
+    width: 100%;
+    border-radius: 0.5rem;
+    border: 1px solid var(--Overlay-Primary2, rgba(187, 178, 255, 0.50));
+    overflow: hidden;
+}
+  
+.app-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+  
+.app-table thead {
+    background: var(--Background-Shade3, #0E0E0E);
+}
+  
+.app-table tbody {
+    background-color: transparent;
+}
+
+.app-table tbody tr:nth-child(odd) {
+    background: var(--Background-Shade2, #1E1E1E);
+}
+
+.app-table tbody tr:nth-child(even) {
+    background: var(--Background-Shade1, #121212);
+}
+  
+.app-table th {
+    color: #FFFFFF;
+    font-weight: 500;
+    padding: 1rem;
+    text-align: center;
+    border-bottom: 1px solid var(--Overlay-Primary2, rgba(187, 178, 255, 0.50));
+    border-right: 1px solid var(--Overlay-Primary2, rgba(187, 178, 255, 0.50));
+}
+
+.app-table th:last-child {
+    border-right: none;
+}
+  
+.app-table td {
+    color: #FFFFFF;
+    padding: 0.75rem 1rem;
+    text-align: center;
+    border-bottom: 1px solid var(--Overlay-Primary2, rgba(187, 178, 255, 0.50));
+    border-right: 1px solid var(--Overlay-Primary2, rgba(187, 178, 255, 0.50));
+}
+
+.app-table td:last-child {
+    border-right: none;
+}
+  
+.app-table tr:last-child td {
+    border-bottom: none;
+}
+
+/* Set fixed column widths that better match the design */
+.app-table th:nth-child(1), 
+.app-table td:nth-child(1) {
+    width: 15%;
+}
+
+.app-table th:nth-child(2), 
+.app-table td:nth-child(2) {
+    width: 20%;
+}
+
+.app-table th:nth-child(3), 
+.app-table td:nth-child(3) {
+    width: 20%;
+}
+
+.app-table th:nth-child(4), 
+.app-table td:nth-child(4) {
+    width: 20%;
+}
+
+.app-table th:nth-child(5), 
+.app-table td:nth-child(5) {
+    width: 25%;
+}
+  
 /* Mobile Navigation Bar */
 @media (max-width: 768px) {
     .app-container {

@@ -671,6 +671,13 @@ function renderPieChart(canvasId, wins, losses) {
   });
 }
 
+function closeModal() {
+  const modalBackdrop = document.getElementById('modalBackdrop');
+  if (modalBackdrop) {
+    modalBackdrop.style.display = 'none';
+  }
+}
+
 // =============================================
 // MAIN INITIALIZATION
 // =============================================
@@ -685,5 +692,19 @@ document.addEventListener('DOMContentLoaded', function() {
   const winRateChart = document.getElementById('winRateChart');
   if (winRateChart) {
     renderPieChart('winRateChart', 40, 73);
+  }
+
+  // Add event listeners to statcard captions
+  document.querySelectorAll('.statcard .caption').forEach(link => {
+    link.addEventListener('click', function(event) {
+      event.preventDefault();
+      document.getElementById('modalBackdrop').style.display = 'block';
+    });
+  });
+
+  // Add event listener to close button if you prefer to use event listeners instead of inline onclick
+  const closeButton = document.querySelector('.close-button');
+  if (closeButton) {
+    closeButton.addEventListener('click', closeModal);
   }
 });
