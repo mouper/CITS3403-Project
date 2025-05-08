@@ -18,6 +18,7 @@ class User(UserMixin, db.Model):
     show_last_three = db.Column(db.Boolean, default=False)
     show_best_three = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, server_default=func.now())
+    avatar_path = db.Column(db.String(120))
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
