@@ -145,107 +145,85 @@
   
     <div id="adminView" class="analytics-view" style="display: none;">
       <h2 class="subheadline purple-text">Recent Tournaments</h2>
-      <div class="statcard-container">
-          {% include 'components/admincards.html' %}
+      <div class="statcard-container" id="adminStatcards">
+        {% include 'components/admincards.html' %}
+      </div>
+      <script>
+        window.recentTournaments = {{ recent_tournaments|tojson }};
+      </script>
+    </div>       
+    <div id="modalBackdrop" class="modal-backdrop" style="display: none;">
+      <div class="standings-modal">
+        <div class="modal-content">
+          <div class="modal-header-container">
+            <div class="modal-header">
+              <h2 id="modalTitle" class="medium1">Tournament Name</h2>
+              <button class="close-button" onclick="closeModal()" aria-label="Close">
+                <svg xmlns="http://www.w3.org/2000/svg" width="21" height="20" viewBox="0 0 21 20" fill="none">
+                  <path d="M20 0.5L1 19.5M20 19.5L1 0.5" stroke="white" stroke-linecap="round"/>
+                </svg>
+              </button>
+            </div>
+            <div class="modal-info-container">
+              <div class="modal-info">
+                <div class="info-item">
+                  <p class="caption">Type:</p>
+                  <p class="regular4">Round Robin</p>
+                </div>
+                <div class="info-item">
+                  <p class="caption">Game:</p>
+                  <p class="regular4">Pokémon TCG</p>
+                </div>
+                <div class="info-item">
+                  <p class="caption">Round Time Limit:</p>
+                  <p class="regular4">30 Minutes</p>
+                </div>
+              </div>
+              <div class="modal-date">
+                <div class="info-item">
+                  <p class="regular4">07/05/2025</p>
+                </div>
+              </div>
+            </div>
+            <div class="table-container">
+              <div class="table-label">
+                <h3 class="medium2 table-heading">STANDINGS:</h3>
+                <p class="caption table-caption">OWP = Opponents Win Percentage</p>
+              </div>
+              <div class="table-wrapper">
+                <table class="app-table">
+                  <thead>
+                    <tr>
+                      <th>Rank</th>
+                      <th>Player</th>
+                      <th>W/L/T</th>
+                      <th>OWP</th>
+                      <th>Opponent's OWP</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>1</td>
+                      <td>ABC</td>
+                      <td>1/0/0</td>
+                      <td>100%</td>
+                      <td>75%</td>
+                    </tr>
+                    <tr>
+                      <td>2</td>
+                      <td>XYZ</td>
+                      <td>0/1/0</td>
+                      <td>50%</td>
+                      <td>60%</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
-    <!-- Modal Backdrop -->
-<div id="modalBackdrop" class="modal-backdrop" style="display: none;">
-  
-  <!-- Modal -->
-  <div class="standings-modal">
-
-    <!-- Modal Content -->
-    <div class="modal-content">
-
-      <!-- Modal Container -->
-      <div class="modal-header-container">
-        
-        <!-- Modal Header -->
-        <div class="modal-header">
-          <h2 id="modalTitle" class="medium1">Tournament Name</h2>
-          <button class="close-button" onclick="closeModal()" aria-label="Close">
-            <svg xmlns="http://www.w3.org/2000/svg" width="21" height="20" viewBox="0 0 21 20" fill="none">
-              <path d="M20 0.5L1 19.5M20 19.5L1 0.5" stroke="white" stroke-linecap="round"/>
-            </svg>
-          </button>
-        </div>
-
-        <div class="modal-info-container">
-          <!-- Modal Info Block -->
-          <div class="modal-info">
-            <div class="info-item">
-              <p class="caption">Type:</p>
-              <p class="regular4">Round Robin</p>
-            </div>
-            <div class="info-item">
-              <p class="caption">Game:</p>
-              <p class="regular4">Pokémon TCG</p>
-            </div>
-            <div class="info-item">
-              <p class="caption">Round Time Limit:</p>
-              <p class="regular4">30 Minutes</p>
-            </div>
-          </div>
-          
-          <!-- Modal Date Block -->
-          <div class="modal-date">
-            <div class="info-item">
-              <p class="regular4">07/05/2025</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Table Container -->
-        <div class="table-container">
-
-          <!-- Table Label -->
-          <div class="table-label">
-            <h3 class="medium2 table-heading">STANDINGS:</h3>
-            <p class="caption table-caption">OWP = Opponents Win Percentage</p>
-          </div>
-
-          <!-- Table Wrapper -->
-          <div class="table-wrapper">
-            <table class="app-table">
-              <thead>
-                <tr>
-                  <th>Rank</th>
-                  <th>Player</th>
-                  <th>W/L/T</th>
-                  <th>OWP</th>
-                  <th>Opponent's OWP</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>1</td>
-                  <td>ABC</td>
-                  <td>1/0/0</td>
-                  <td>100%</td>
-                  <td>75%</td>
-                </tr>
-                <tr>
-                  <td>2</td>
-                  <td>XYZ</td>
-                  <td>0/1/0</td>
-                  <td>50%</td>
-                  <td>60%</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        </div> <!-- End Table Container -->
-
-      </div> <!-- End Modal Info Container -->
-
-    </div> <!-- End Modal Content -->
-
-  </div> <!-- End Modal -->
-
-</div> <!-- End Modal Backdrop -->
-
 </div>
 {% endblock %}
