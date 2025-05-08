@@ -886,6 +886,18 @@ html, body {
     align-items: baseline;
 }
 
+.admin-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+  
+.admin-header select {
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    min-width: 3ch;
+}
+
 /*Standings Modal Styles*/
 .modal-backdrop {
     position: fixed;
@@ -960,6 +972,7 @@ html, body {
     font-style: normal;
     font-weight: 400;
     line-height: normal;
+    text-transform: none;
 }
 
 .modal-info .info-item {

@@ -144,12 +144,12 @@
     </div>
   
     <div id="adminView" class="analytics-view" style="display: none;">
-      <h2 class="subheadline purple-text">Recent Tournaments</h2>
-      <div class="admin-limit-selector-container">
+      <div class="admin-header">
+        <h2 class="subheadline purple-text">Recent Tournaments</h2>
         <select id="adminLimitSelector">
           {% for opt in [3,5,10,20] %}
             <option value="{{ opt }}" {% if opt == limit %}selected{% endif %}>
-              Recent {{ opt }}
+              Show {{ opt }}
             </option>
           {% endfor %}
         </select>
