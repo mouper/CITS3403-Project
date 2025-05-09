@@ -1,7 +1,7 @@
 from flask import render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_user, logout_user, current_user, login_required
 from app import application
-from models import User, UserStat, Tournament, TournamentPlayer
+from models import User, UserStat, Tournament, TournamentPlayer, TournamentResult
 from db import db  # Use the centralized db object from db.py
 import json
 
@@ -209,35 +209,36 @@ def upload_tournament_data():
 
     try:
         data = json.load(uploaded_file)
-        print("Parsed tournament data:", data)  # 🐛 Debug print for now
+        print("Parsed tournament data:", data)
 
-        # Use the JSON fields as-is
+        # Validate required fields
+        required_keys = ["user_id", "tournament_id", "game_type", "games_won", "games_lost"]
+        missing_keys = [key for key in required_keys if key not in data]
+
+        if missing_keys:
+            flash(f"Missing field(s) in upload: {', '.join(missing_keys)}", "error")
+            return redirect(url_for('dashboard'))
+
         user_id = data["user_id"]
+        tournament_id = data["tournament_id"]
         game_type = data["game_type"]
-        games_played = data["games_played"]
         games_won = data["games_won"]
         games_lost = data["games_lost"]
-        win_percentage = data["win_percentage"]
+        opponent_win_percentage = data.get("opponent_win_percentage")
+        opp_opp_win_percentage = data.get("opp_opp_win_percentage")
 
-        # Check for existing record
+        # Calculate games_played
+        games_played = games_won + games_lost
+
+        # -------- Update UserStat --------
         stat = db.session.query(UserStat).filter_by(user_id=user_id, game_type=game_type).first()
 
         if stat:
-            # Calculate new totals first
-            total_games_played = stat.games_played + games_played
-            total_games_won = stat.games_won + games_won
-            total_games_lost = stat.games_lost + games_lost
-
-            # Update fields
-            stat.games_played = total_games_played
-            stat.games_won = total_games_won
-            stat.games_lost = total_games_lost
-
-            # Recalculate win %
-            stat.win_percentage = round((total_games_won / total_games_played) * 100, 2) if total_games_played > 0 else 0.0
-
+            stat.games_played += games_played
+            stat.games_won += games_won
+            stat.games_lost += games_lost
+            stat.win_percentage = round((stat.games_won / stat.games_played) * 100, 2) if stat.games_played > 0 else 0.0
         else:
-            # Insert new record
             new_stat = UserStat(
                 user_id=user_id,
                 game_type=game_type,
@@ -248,10 +249,43 @@ def upload_tournament_data():
             )
             db.session.add(new_stat)
 
-        db.session.commit()
+        # -------- Add TournamentResult --------
+        tournament_player = db.session.query(TournamentPlayer).filter_by(
+            tournament_id=tournament_id,
+            user_id=user_id
+        ).first()
 
+        if not tournament_player:
+            flash("Error: User is not a participant in the given tournament.", "error")
+            return redirect(url_for('dashboard'))
+
+        # Prevent duplicate tournament results
+        existing_result = db.session.query(TournamentResult).filter_by(
+            tournament_id=tournament_id,
+            player_id=tournament_player.id
+        ).first()
+
+        if existing_result:
+            flash("Tournament result already uploaded for this user.", "error")
+            return redirect(url_for('dashboard'))
+
+        # Safe to add new result
+        new_result = TournamentResult(
+            tournament_id=tournament_id,
+            player_id=tournament_player.id,
+            game_type=game_type,
+            wins=games_won,
+            losses=games_lost,
+            opponent_win_percentage=opponent_win_percentage,
+            opp_opp_win_percentage=opp_opp_win_percentage
+        )
+        db.session.add(new_result)
+
+        db.session.commit()
         flash("Tournament data uploaded successfully!", "success")
+
     except Exception as e:
+        db.session.rollback()
         print("Error processing file:", e)
         flash("Failed to process the uploaded file.", "error")
 
