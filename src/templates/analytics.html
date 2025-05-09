@@ -148,8 +148,9 @@
       <div class="admin-header">
         <h2 class="subheadline purple-text">Recent Tournaments</h2>
         <select id="adminLimitSelector">
-          {% for opt in [3,5,10,20] %}
-            <option value="{{ opt }}" {% if opt == limit %}selected{% endif %}>
+          <option value="all"   {% if limit == 'all' %}selected{% endif %}>Show All</option>
+          {% for opt in [3,6,9,12] %}
+            <option value="{{ opt }}" {% if limit == opt|string %}selected{% endif %}>
               Show {{ opt }}
             </option>
           {% endfor %}
