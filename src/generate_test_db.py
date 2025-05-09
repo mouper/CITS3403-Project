@@ -4,8 +4,6 @@ from werkzeug.security import generate_password_hash
 import os
 import random
 import datetime
-# No need for dateutil import as we're using standard datetime
-import json
 
 # Import models from the models.py file
 from models import db, User, Friend, Tournament, TournamentPlayer, Round, Match, TournamentResult, UserStat
