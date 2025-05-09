@@ -1,0 +1,10 @@
+{
+    "user_id": 1,
+    "tournament_id": 1,
+    "game_type": "chess",
+    "games_won": 4,
+    "games_lost": 1,
+    "opponent_win_percentage": 55.0,
+    "opp_opp_win_percentage": 48.7
+}
+  
