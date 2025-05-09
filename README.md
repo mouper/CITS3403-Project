@@ -25,8 +25,8 @@ Initial Set Up:
     # Setting up the database
     flask --app app db upgrade
 
-    # Running the site
-    flask --app app run
+Initialise Test Database (previous steps must be completed):
+    python3 generate_test_db.py
 
 Running the Website (after set up has been completed once):
     # If you are not already in the src folder
