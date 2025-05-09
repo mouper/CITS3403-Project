@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "components/admincards_macros.html" import admincards %}
 
 {% block content %}
 <div class="analytics-container">
@@ -155,7 +156,7 @@
         </select>
       </div>
       <div class="statcard-container" id="adminStatcards">
-        {% include 'components/admincards.html' %}
+        {{ admincards(recent_tournaments) }}
       </div>
       <script>
         window.recentTournaments = {{ recent_tournaments|tojson }};
