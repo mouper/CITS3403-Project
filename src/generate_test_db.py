@@ -21,8 +21,8 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db.init_app(app)
 
 # Game types for variety
-GAME_TYPES = ["Chess", "Poker", "Magic: The Gathering", "Settlers of Catan", 
-              "Dominion", "Ticket to Ride", "Pandemic", "Uno", "Monopoly", "Go"]
+GAME_TYPES = ["Pokémon TCG", "Chess", "Magic: The Gathering", "Checkers", 
+              "YuGiOh", "One Piece Card Game"]
 
 def add_users():
     """Add sample users to the database"""
@@ -237,32 +237,32 @@ def add_tournaments():
             "start_time": datetime.datetime.now() - datetime.timedelta(days=7)
         },
         {
-            "title": "Poker Night",
-            "game_type": "Poker",
+            "title": "Pokémon TCG League",
+            "game_type": "Pokémon TCG",
             "format": "single elimination",
             "created_by": 9,
             "status": "in progress",
             "num_players": 6,
-            "round_time_minutes": 60,
+            "round_time_minutes": 45,
             "total_rounds": 2,
             "include_creator_as_player": True,
             "start_time": datetime.datetime.now() - datetime.timedelta(days=1)
         },
         {
-            "title": "Settlers of Catan League",
-            "game_type": "Settlers of Catan",
+            "title": "YuGiOh Championship",
+            "game_type": "YuGiOh",
             "format": "round robin",
             "created_by": 10,
             "status": "draft",
             "num_players": 4,
-            "round_time_minutes": 90,
+            "round_time_minutes": 40,
             "total_rounds": 3,
             "include_creator_as_player": False,
             "start_time": datetime.datetime.now() + datetime.timedelta(days=7)
         },
         {
-            "title": "Board Game Bonanza",
-            "game_type": "Ticket to Ride",
+            "title": "One Piece Card Game Tournament",
+            "game_type": "One Piece Card Game",
             "format": "swiss",
             "created_by": 9,
             "status": "draft",
