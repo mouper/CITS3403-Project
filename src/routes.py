@@ -91,7 +91,7 @@ def analytics():
       .order_by(Tournament.created_at.desc())
       .limit(limit)
       .all()
-)
+    )
 
     recent_tournaments = []
     for tourney in recent:
@@ -105,7 +105,10 @@ def analytics():
 
         standings = []
         for player, result, user in rows:
-            name = user.username if user else player.guest_name
+            if player.user_id == 1:
+                name = player.guest_name
+            else:
+                name = user.username if user else player.guest_name
             standings.append({
                 'username': name,
                 'wins':       result.wins,
@@ -118,7 +121,7 @@ def analytics():
         if len(standings) < 3:
             continue
 
-        standings.sort(key=lambda x: x['wins'], reverse=True)
+        standings.sort(key=lambda p: (p['wins'], p['opp_owp']),reverse=True)
         recent_tournaments.append({
             'id':                   tourney.id,
             'title':                tourney.title,
