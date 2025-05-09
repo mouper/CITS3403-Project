@@ -95,8 +95,8 @@ This project follows a consistent branch naming strategy to improve collaboratio
 - **`bugfix/`**  
   Used for fixing a bug.
 
-- **`test/`**  
-  Used for experimenting or prototyping outside of a specific ticket or issue.
+- **`testing/`**  
+  Used for adding/ updating tests.
 
 ### Reference
 
