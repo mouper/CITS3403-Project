@@ -244,7 +244,7 @@ def add_tournaments():
             "status": "in progress",
             "num_players": 6,
             "round_time_minutes": 45,
-            "total_rounds": 2,
+            "total_rounds": 3,  # Increased from 2 to 3
             "include_creator_as_player": True,
             "start_time": datetime.datetime.now() - datetime.timedelta(days=1)
         },
@@ -253,24 +253,60 @@ def add_tournaments():
             "game_type": "YuGiOh",
             "format": "round robin",
             "created_by": 10,
-            "status": "draft",
+            "status": "in progress",  # Changed from draft to in progress
             "num_players": 4,
             "round_time_minutes": 40,
             "total_rounds": 3,
             "include_creator_as_player": False,
-            "start_time": datetime.datetime.now() + datetime.timedelta(days=7)
+            "start_time": datetime.datetime.now() - datetime.timedelta(days=2)
         },
         {
             "title": "One Piece Card Game Tournament",
             "game_type": "One Piece Card Game",
             "format": "swiss",
             "created_by": 9,
-            "status": "draft",
+            "status": "in progress",  # Changed from draft to in progress
             "num_players": 12,
             "round_time_minutes": 45,
             "total_rounds": 4,
             "include_creator_as_player": True,
-            "start_time": datetime.datetime.now() + datetime.timedelta(days=14)
+            "start_time": datetime.datetime.now() - datetime.timedelta(days=1)
+        },
+        {
+            "title": "Checkers Invitational",
+            "game_type": "Checkers",
+            "format": "swiss",
+            "created_by": 10,
+            "status": "completed",  # Added a new completed tournament
+            "num_players": 8,
+            "round_time_minutes": 30,
+            "total_rounds": 3,
+            "include_creator_as_player": True,
+            "start_time": datetime.datetime.now() - datetime.timedelta(days=21)
+        },
+        {
+            "title": "Magic Standard Tournament",
+            "game_type": "Magic: The Gathering",
+            "format": "single elimination",
+            "created_by": 9,
+            "status": "completed",  # Added a new completed tournament
+            "num_players": 16,
+            "round_time_minutes": 45,
+            "total_rounds": 4,
+            "include_creator_as_player": False,
+            "start_time": datetime.datetime.now() - datetime.timedelta(days=28)
+        },
+        {
+            "title": "Upcoming Pokémon TCG Draft Tournament",
+            "game_type": "Pokémon TCG",
+            "format": "swiss",
+            "created_by": 10,
+            "status": "draft",  # This is our new draft tournament
+            "num_players": 8,
+            "round_time_minutes": 40,
+            "total_rounds": 3,
+            "include_creator_as_player": True,
+            "start_time": datetime.datetime.now() + datetime.timedelta(days=7)  # Future date
         }
     ]
     
@@ -349,11 +385,14 @@ def add_tournament_players(created_tournaments):
         
         # Fill remaining slots with guests
         for i in range(players_to_add):
-            guest_name = f"Guest {i+1}"
+            # Generate a complete name for guests
+            guest_firstname = random.choice(["Jamie", "Pat", "Robin", "Jordan", "Casey", "Taylor", "Alex", "Morgan"])
+            guest_lastname = random.choice(["Smith", "Johnson", "Lee", "Garcia", "Wilson", "Brown", "Taylor", "Martinez"])
             guest_email = f"guest{i+1}@example.com"
             new_player = TournamentPlayer(
                 tournament_id=tournament_id,
-                guest_name=guest_name,
+                guest_firstname=guest_firstname,
+                guest_lastname=guest_lastname,
                 email=guest_email,
                 is_confirmed=random.choice([True, False])
             )
@@ -363,21 +402,44 @@ def add_tournament_players(created_tournaments):
     db.session.commit()
 
 def add_rounds_and_matches(created_tournaments):
-    """Create rounds and matches for tournaments"""
+    """Create rounds and matches for tournaments with proper round status logic"""
     for tournament_id, tournament_info in created_tournaments:
         if tournament_info["status"] in ["in progress", "completed"]:
             # Get players for this tournament
             players = TournamentPlayer.query.filter_by(tournament_id=tournament_id, is_confirmed=True).all()
             
-            # Calculate how many rounds to create based on tournament status
-            if tournament_info["status"] == "completed":
-                rounds_to_create = tournament_info["total_rounds"]
-            else:  # in progress
-                rounds_to_create = random.randint(1, tournament_info["total_rounds"] - 1)
+            # Calculate how many rounds to create and their statuses based on tournament status
+            total_rounds = tournament_info["total_rounds"]
             
-            for round_num in range(1, rounds_to_create + 1):
+            # For completed tournaments, all rounds are completed
+            if tournament_info["status"] == "completed":
+                round_statuses = ["completed"] * total_rounds
+            else:  # For in-progress tournaments
+                # Select a tournament to have a "not started" round
+                if tournament_info["title"] in ["Pokémon TCG League", "One Piece Card Game Tournament"] and random.random() < 0.5:
+                    # This is one of our chosen tournaments that will have "not started" rounds
+                    
+                    # Decide how many rounds are complete or in progress
+                    active_rounds = random.randint(1, total_rounds - 1)
+                    
+                    # All rounds before "active_rounds" are completed
+                    round_statuses = ["completed"] * (active_rounds - 1)
+                    
+                    # The active_rounds position is "in progress"
+                    round_statuses.append("in progress")
+                    
+                    # All remaining rounds are "not started"
+                    round_statuses.extend(["not started"] * (total_rounds - active_rounds))
+                else:
+                    # Regular in-progress tournament with no "not started" rounds
+                    active_rounds = random.randint(1, total_rounds - 1)
+                    round_statuses = ["completed"] * active_rounds
+                    round_statuses.append("in progress")
+                    round_statuses.extend(["not started"] * (total_rounds - active_rounds - 1))
+            
+            # Create rounds and matches for this tournament
+            for round_num, round_status in enumerate(round_statuses, start=1):
                 # Create round
-                round_status = "completed" if round_num < rounds_to_create or tournament_info["status"] == "completed" else "in progress"
                 new_round = Round(
                     tournament_id=tournament_id,
                     round_number=round_num,
@@ -394,11 +456,17 @@ def add_rounds_and_matches(created_tournaments):
                     player1 = available_players.pop()
                     player2 = available_players.pop()
                     
-                    match_status = "completed" if round_status == "completed" else "in progress"
-                    winner_id = None
-                    
-                    if match_status == "completed":
+                    # Determine match status based on round status
+                    if round_status == "completed":
+                        match_status = "completed"
                         winner_id = random.choice([player1.id, player2.id])
+                    elif round_status == "in progress":
+                        # Some matches in an in-progress round may be completed
+                        match_status = random.choice(["in progress", "completed"] + ["in progress"] * 3)
+                        winner_id = player1.id if match_status == "completed" and random.random() > 0.5 else None
+                    else:  # not started
+                        match_status = "not started"
+                        winner_id = None
                     
                     new_match = Match(
                         round_id=new_round.id,
@@ -406,14 +474,25 @@ def add_rounds_and_matches(created_tournaments):
                         player2_id=player2.id,
                         winner_id=winner_id,
                         status=match_status,
-                        notes=f"Round {round_num} match between {player1.id} and {player2.id}"
+                        notes=f"Round {round_num} match between {player1.id} and {player2.id}",
+                        is_bye=False
                     )
                     db.session.add(new_match)
                 
                 # If there's an odd player left, they get a bye
                 if available_players:
-                    # In a real system, you'd handle byes differently
-                    pass
+                    bye_player = available_players.pop()
+                    
+                    bye_match = Match(
+                        round_id=new_round.id,
+                        player1_id=bye_player.id,
+                        player2_id=None,
+                        winner_id=bye_player.id if round_status != "not started" else None,
+                        status="completed" if round_status != "not started" else "not started",
+                        notes=f"Round {round_num} bye for player {bye_player.id}",
+                        is_bye=True
+                    )
+                    db.session.add(bye_match)
     
     print("Added rounds and matches successfully.")
     db.session.commit()
@@ -494,6 +573,30 @@ def add_user_stats():
                     game_type_stats[tournament.game_type]['played'] += result.wins + result.losses
                     game_type_stats[tournament.game_type]['won'] += result.wins
                     game_type_stats[tournament.game_type]['lost'] += result.losses
+                
+                # For in-progress tournaments, add some match data
+                if tournament.status == "in progress":
+                    # Get completed matches
+                    completed_matches = 0
+                    wins = 0
+                    
+                    rounds = Round.query.filter_by(tournament_id=tournament.id).all()
+                    for round_obj in rounds:
+                        matches = Match.query.filter(
+                            Match.round_id == round_obj.id,
+                            ((Match.player1_id == player_entry.id) | (Match.player2_id == player_entry.id)),
+                            Match.status == "completed"
+                        ).all()
+                        
+                        for match in matches:
+                            completed_matches += 1
+                            if match.winner_id == player_entry.id:
+                                wins += 1
+                    
+                    if completed_matches > 0:
+                        game_type_stats[tournament.game_type]['played'] += completed_matches
+                        game_type_stats[tournament.game_type]['won'] += wins
+                        game_type_stats[tournament.game_type]['lost'] += (completed_matches - wins)
         
         # Also add some random game types that might not be in tournaments
         for game_type in random.sample(GAME_TYPES, 3):
