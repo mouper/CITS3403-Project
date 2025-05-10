@@ -125,23 +125,20 @@ def analytics():
         standings = []
         for player, result, user in rows:
             if user:
-                # Registered users: use their display_name
-                display_name = user.display_name or f"{user.first_name} {user.last_name[0] if user.last_name else ''}"
+                display_name = user.display_name
             else:
-                # Guests: parse guest_name into First L
-                parts = (player.guest_name or "").split()
-                if len(parts) >= 2:
-                    display_name = f"{parts[0]} {parts[-1][0]}"
-                else:
-                    display_name = parts[0] if parts else "Unknown"
+                first = player.guest_firstname or ""
+                last_initial = player.guest_lastname[0] if player.guest_lastname else ""
+                display_name = f"{first} {last_initial}".strip() or "Unknown"
 
             standings.append({
-                "username":  display_name,
-                "wins":      result.wins,
-                "losses":    result.losses,
-                "owp":       round(result.opponent_win_percentage * 100, 2),
-                "opp_owp":   round(result.opp_opp_win_percentage  * 100, 2)
+                'username': display_name,
+                'wins':     result.wins,
+                'losses':   result.losses,
+                'owp':      round(result.opponent_win_percentage * 100, 2),
+                'opp_owp':  round(result.opp_opp_win_percentage   * 100, 2)
             })
+
 
         if len(standings) < 3:
             continue
