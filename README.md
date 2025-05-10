@@ -25,8 +25,8 @@ Initial Set Up:
     # Setting up the database
     flask --app app db upgrade
 
-    # Running the site
-    flask --app app run
+Initialise Test Database (previous steps must be completed):
+    python3 generate_test_db.py
 
 Running the Website (after set up has been completed once):
     # If you are not already in the src folder
@@ -95,8 +95,8 @@ This project follows a consistent branch naming strategy to improve collaboratio
 - **`bugfix/`**  
   Used for fixing a bug.
 
-- **`test/`**  
-  Used for experimenting or prototyping outside of a specific ticket or issue.
+- **`testing/`**  
+  Used for adding/ updating tests.
 
 ### Reference
 
