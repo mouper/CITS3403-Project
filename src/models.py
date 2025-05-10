@@ -18,6 +18,7 @@ class User(UserMixin, db.Model):
     show_last_three = db.Column(db.Boolean, default=False)
     show_best_three = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, server_default=func.now())
+    avatar_path = db.Column(db.String(120))
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -98,6 +99,7 @@ class TournamentResult(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     tournament_id = db.Column(db.Integer, db.ForeignKey('tournaments.id', ondelete='CASCADE'), nullable=False)
     player_id = db.Column(db.Integer, db.ForeignKey('tournament_players.id'), nullable=False)
+    game_type = db.Column(db.Text, nullable=False)
     wins = db.Column(db.Integer, default=0)
     losses = db.Column(db.Integer, default=0)
     opponent_win_percentage = db.Column(db.Float)
