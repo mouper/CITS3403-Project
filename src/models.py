@@ -65,7 +65,8 @@ class TournamentPlayer(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     tournament_id = db.Column(db.Integer, db.ForeignKey('tournaments.id', ondelete='CASCADE'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='SET NULL'))
-    guest_name = db.Column(db.Text)
+    guest_firstname = db.Column(db.Text)
+    guest_lastname = db.Column(db.Text)
     email = db.Column(db.Text)
     is_confirmed = db.Column(db.Boolean, default=False)
 
@@ -74,10 +75,10 @@ class Round(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     tournament_id = db.Column(db.Integer, db.ForeignKey('tournaments.id', ondelete='CASCADE'), nullable=False)
     round_number = db.Column(db.Integer, nullable=False)
-    status = db.Column(db.Text, nullable=False, default='in progress')
+    status = db.Column(db.Text, nullable=False, default='not started')
 
     __table_args__ = (
-        db.CheckConstraint("status IN ('in progress', 'completed')", name='round_status_check'),
+        db.CheckConstraint("status IN ('not started', 'in progress', 'completed')", name='round_status_check'),
     )
 
 class Match(db.Model):
@@ -85,13 +86,14 @@ class Match(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     round_id = db.Column(db.Integer, db.ForeignKey('rounds.id', ondelete='CASCADE'), nullable=False)
     player1_id = db.Column(db.Integer, db.ForeignKey('tournament_players.id'), nullable=False)
-    player2_id = db.Column(db.Integer, db.ForeignKey('tournament_players.id'), nullable=False)
+    player2_id = db.Column(db.Integer, db.ForeignKey('tournament_players.id'))
     winner_id = db.Column(db.Integer, db.ForeignKey('tournament_players.id'))
-    status = db.Column(db.Text, default='in progress')
+    status = db.Column(db.Text, default='not started', nullable=False)
     notes = db.Column(db.Text)
+    is_bye = db.Column(db.Boolean, default=False)
     
     __table_args__ = (
-        db.CheckConstraint("status IN ('in progress', 'completed')", name='match_status_check'),
+        db.CheckConstraint("status IN ('not started', 'in progress', 'completed')", name='match_status_check'),
     )
 
 class TournamentResult(db.Model):
