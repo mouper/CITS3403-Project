@@ -657,7 +657,7 @@ function initAnalytics() {
             <tr>
               <td>${i+1}</td>
               <td>${p.username}</td>
-              <td>${p.wins}/${p.losses}/${p.ties}</td>
+              <td>${p.wins}/${p.losses}</td>
               <td>${p.owp}%</td>
               <td>${p.opp_owp}%</td>
             </tr>

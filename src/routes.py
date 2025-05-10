@@ -132,7 +132,6 @@ def analytics():
                 'username': name,
                 'wins':       result.wins,
                 'losses':     result.losses,
-                'ties':       result.draws,
                 'owp':        round(result.opponent_win_percentage * 100, 2),
                 'opp_owp':    round(result.opp_opp_win_percentage  * 100, 2)
             })
