@@ -3,10 +3,11 @@ import math
 import random
 from flask import render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_user, logout_user, current_user, login_required
-from app import application
-from models import User, UserStat, Tournament, TournamentPlayer, TournamentResult, Match, Round
+from flask_mail import Message
+from app import application, mail
+from models import Friend, User, UserStat, Tournament, TournamentPlayer, TournamentResult, Match, Round
 from db import db  # Use the centralized db object from db.py
-import json
+import json, io
 
 @application.route('/')
 def landing():
@@ -220,10 +221,10 @@ def start_tournament():
                 # If we have an odd number of players, the last player gets a bye
                 if i + 1 >= len(player_ids):
                     # Create a bye match
-                    create_match(new_tournament.id, 1, player_ids[i], None, is_bye=True)
+                    create_match(new_tournament.id, 1, player_ids[i], None, is_bye=True, status='not started')
                 else:
                     # Create a normal match
-                    create_match(new_tournament.id, 1, player_ids[i], player_ids[i+1])
+                    create_match(new_tournament.id, 1, player_ids[i], player_ids[i+1], status='not started')
                 
         elif data['format'] == 'single elimination':
             # For single elimination, calculate number of byes needed
@@ -238,15 +239,15 @@ def start_tournament():
             for i in range(0, len(player_ids), 2):
                 if match_index < num_byes:
                     # This player gets a bye
-                    create_match(new_tournament.id, 1, player_ids[i], None, is_bye=True)
+                    create_match(new_tournament.id, 1, player_ids[i], None, is_bye=True, status='not started')
                     
                     # Next player also gets a match
                     if i + 1 < len(player_ids):
-                        create_match(new_tournament.id, 1, player_ids[i+1], None, is_bye=True)
+                        create_match(new_tournament.id, 1, player_ids[i+1], None, is_bye=True, status='not started')
                 else:
                     # Regular match between two players
                     if i + 1 < len(player_ids):
-                        create_match(new_tournament.id, 1, player_ids[i], player_ids[i+1])
+                        create_match(new_tournament.id, 1, player_ids[i], player_ids[i+1], status='not started')
                 
                 match_index += 1
         
@@ -268,39 +269,844 @@ def start_tournament():
             'success': False,
             'message': f"Error starting tournament: {str(e)}"
         }), 500
-
-@application.route('/tournament/<int:tournament_id>')
+    
+@application.route('/tournament/<int:tournament_id>', methods=['GET'])
 @login_required
-def tournament_details(tournament_id):
+def view_tournament(tournament_id):
+    view_state = request.args.get('view_state', 'normal')
+    # Get the tournament
+    tournament = Tournament.query.get_or_404(tournament_id)
+    
+    # Get all rounds for this tournament
+    rounds = Round.query.filter_by(tournament_id=tournament_id).order_by(Round.round_number).all()
+    rounds_count = len(rounds)
+    completed_rounds = sum(1 for r in rounds if r.status == 'completed')
+    
+    # Get current round (the first non-completed round, or the last round if all are completed)
+    current_round = next((r for r in rounds if r.status != 'completed'), rounds[-1] if rounds else None)
+    
+    # Get all players in this tournament
+    tournament_players = TournamentPlayer.query.filter_by(tournament_id=tournament_id).all()
+    
+    # Create a dictionary to easily access players by ID
+    players = {}
+    for player in tournament_players:
+        players[player.id] = player
+        # Eagerly load user data if player is a registered user
+        if player.user_id:
+            player.user = User.query.get(player.user_id)
+    
+    # Get all matches organized by round
+    matches_by_round = {}
+    all_matches = Match.query.join(Round).filter(Round.tournament_id == tournament_id).all()
+    
+    for match in all_matches:
+        round_obj = Round.query.get(match.round_id)
+        round_num = round_obj.round_number
+        if round_num not in matches_by_round:
+            matches_by_round[round_num] = []
+        matches_by_round[round_num].append(match)
+    
+    # Get current round matches
+    current_matches = []
+    if current_round:
+        current_matches = Match.query.filter_by(round_id=current_round.id).all()
+    
+    # Calculate player stats (wins/losses across all completed rounds)
+    player_stats = {}
+    for player in tournament_players:
+        player_stats[player.id] = {'wins': 0, 'losses': 0}
+    
+    for match in all_matches:
+        if match.winner_id:
+            # Increment winner's win count
+            if match.winner_id in player_stats:
+                player_stats[match.winner_id]['wins'] += 1
+            
+            # Increment loser's loss count
+            if match.player1_id != match.winner_id and match.player1_id in player_stats:
+                player_stats[match.player1_id]['losses'] += 1
+            
+            if match.player2_id and match.player2_id != match.winner_id and match.player2_id in player_stats:
+                player_stats[match.player2_id]['losses'] += 1
+    
+    # Prepare player results for rankings
+    ranked_players = []
+    for player_id, player in players.items():
+        player_result = {
+            'id': player_id,
+            'name': "",
+            'wins': player_stats[player_id]['wins'],
+            'losses': player_stats[player_id]['losses'],
+            'owp': 0,
+            'oowp': 0
+        }
+        
+        # Set player name
+        if player.user_id:
+            player_result['name'] = player.user.display_name or player.user.username
+        else:
+            player_result['name'] = f"{player.guest_firstname} {player.guest_lastname}"
+        
+        # Get tournament result for this player (for Swiss tiebreakers)
+        tournament_result = TournamentResult.query.filter_by(
+            tournament_id=tournament_id, 
+            player_id=player_id
+        ).first()
+        
+        if tournament_result:
+            player_result['owp'] = tournament_result.opponent_win_percentage or 0
+            player_result['oowp'] = tournament_result.opp_opp_win_percentage or 0
+        
+        ranked_players.append(player_result)
+    
+    # Sort ranked players based on tournament format
+    if tournament.format == 'swiss':
+        ranked_players.sort(key=lambda x: (-x['wins'], -x['owp'], -x['oowp']))
+    else:
+        ranked_players.sort(key=lambda x: -x['wins'])
+    
+    # If tournament is completed, use the completed template with special stats
+    if tournament.status == 'completed':
+        # Calculate additional tournament statistics
+        total_matches = sum(len(matches) for matches in matches_by_round.values())
+        total_byes = sum(1 for match in all_matches if match.is_bye)
+        
+        # Calculate tournament duration
+        if tournament.start_time:
+            end_time = datetime.datetime.now()
+            duration = end_time - tournament.start_time
+            hours, remainder = divmod(duration.total_seconds(), 3600)
+            minutes, _ = divmod(remainder, 60)
+            tournament_duration = f"{int(hours)}h {int(minutes)}m"
+        else:
+            tournament_duration = "N/A"
+        
+        # Check if current user is the tournament creator
+        is_creator = current_user.id == tournament.created_by
+        
+        return render_template(
+            'tournament_completed.html',
+            tournament=tournament,
+            rounds=rounds,
+            rounds_count=rounds_count,
+            completed_rounds=completed_rounds,
+            players=players,
+            matches_by_round=matches_by_round,
+            player_stats=player_stats,
+            ranked_players=ranked_players,
+            player_count=len(tournament_players),
+            total_matches=total_matches,
+            total_byes=total_byes,
+            tournament_duration=tournament_duration,
+            is_creator=is_creator
+        )
+    else:
+        # Use the regular tournament template for in-progress tournaments
+        return render_template(
+            'tournament.html',
+            tournament=tournament,
+            rounds=rounds,
+            rounds_count=rounds_count,
+            completed_rounds=completed_rounds,
+            current_round=current_round,
+            players=players,
+            matches_by_round=matches_by_round,
+            current_matches=current_matches,
+            player_stats=player_stats,
+            ranked_players=ranked_players,
+            view_state=view_state
+        )
+    
+@application.route('/tournament/<int:tournament_id>/completed', methods=['GET'])
+@login_required
+def view_tournament_completed(tournament_id):
+    # Mark tournament as completed if it's not already
+    tournament = Tournament.query.get_or_404(tournament_id)
+    if tournament.status != 'completed':
+        tournament.status = 'completed'
+        db.session.commit()
+    
+    # Redirect to the main tournament view, which will now render the completed template
+    return redirect(url_for('view_tournament', tournament_id=tournament_id))
+
+@application.route('/tournament/<int:tournament_id>/start_round', methods=['POST'])
+@login_required
+def start_round(tournament_id):
+    """Start a round in the tournament."""
+    tournament = Tournament.query.get_or_404(tournament_id)
+    
+    # Get the current round (first non-completed round)
+    rounds = Round.query.filter_by(tournament_id=tournament_id).order_by(Round.round_number).all()
+    current_round = next((r for r in rounds if r.status != 'completed'), None)
+    
+    if not current_round:
+        # If all rounds are completed, create a new one only if we're under the total rounds limit
+        completed_rounds = len(rounds)
+        if completed_rounds < tournament.total_rounds:
+            current_round = Round(
+                tournament_id=tournament_id,
+                round_number=completed_rounds + 1,
+                status='not started'
+            )
+            db.session.add(current_round)
+            db.session.commit()
+        else:
+            return jsonify(success=False, message="All rounds have been completed"), 400
+    
+    # Change status to 'in progress' if not already
+    if current_round.status == 'not started':
+        current_round.status = 'in progress'
+        db.session.commit()
+        
+    return jsonify(success=True)
+
+
+@application.route('/tournament/<int:tournament_id>/complete_round', methods=['POST'])
+@login_required
+def complete_round(tournament_id):
+    """Complete the current round and save match results."""
+    tournament = Tournament.query.get_or_404(tournament_id)
+    
+    # Get the current round
+    current_round = Round.query.filter_by(
+        tournament_id=tournament_id, 
+        status='in progress'
+    ).first()
+    
+    if not current_round:
+        return jsonify(success=False, message="No round in progress"), 400
+    
+    # Get match results from request
+    match_results = request.json.get('match_results', [])
+    
+    # Get all matches for this round to validate completeness
+    all_matches = Match.query.filter_by(round_id=current_round.id).all()
+    non_bye_matches = [m for m in all_matches if not m.is_bye]
+    
+    # Check if all non-bye matches have a result
+    if len(match_results) < len(non_bye_matches):
+        return jsonify(success=False, message="Not all matches have results"), 400
+    
+    # Update match results
+    for result in match_results:
+        match_id = result.get('match_id')
+        winner_id = result.get('winner_id')
+        
+        match = Match.query.get(match_id)
+        if match and match.round_id == current_round.id:
+            match.winner_id = winner_id
+            match.status = 'completed'
+    
+    # Mark round as completed
+    current_round.status = 'completed'
+    db.session.commit()
+    
+    # Update tournament results and tiebreakers
+    update_tournament_results(tournament_id)
+    
+    return jsonify(success=True)
+
+
+
+@application.route('/tournament/<int:tournament_id>/save_results', methods=['POST'])
+@login_required
+def save_results(tournament_id):
+    """Save match results without completing the round."""
+    tournament = Tournament.query.get_or_404(tournament_id)
+    
+    # Get match results from request
+    match_results = request.json.get('match_results', [])
+    
+    # Update match results
+    for result in match_results:
+        match_id = result.get('match_id')
+        winner_id = result.get('winner_id')
+        
+        match = Match.query.get(match_id)
+        if match:
+            match.winner_id = winner_id
+    
+    db.session.commit()
+    return jsonify(success=True)
+
+
+@application.route('/tournament/<int:tournament_id>/next_round', methods=['POST'])
+@login_required
+def next_round(tournament_id):
+    """Create the next round for the tournament."""
+    tournament = Tournament.query.get_or_404(tournament_id)
+    
+    # Get the current round
+    current_round = Round.query.filter_by(
+        tournament_id=tournament_id, 
+        status='completed'
+    ).order_by(Round.round_number.desc()).first()
+    
+    if not current_round:
+        return jsonify(success=False, message="No completed round found"), 400
+    
+    # Verify all matches in the current round have winners
+    incomplete_matches = Match.query.filter_by(
+        round_id=current_round.id,
+        winner_id=None,
+        is_bye=False
+    ).count()
+    
+    if incomplete_matches > 0:
+        return jsonify(success=False, message="Not all matches have been completed"), 400
+    
+    # Get all rounds for this tournament
+    rounds = Round.query.filter_by(tournament_id=tournament_id).order_by(Round.round_number).all()
+    completed_rounds = sum(1 for r in rounds if r.status == 'completed')
+    
+    if completed_rounds >= tournament.total_rounds:
+        # All rounds are completed, mark the tournament as finished
+        tournament.status = 'completed'
+        db.session.commit()
+        return jsonify(success=True)
+    
+    # Create the next round
+    next_round_number = completed_rounds + 1
+    new_round = Round(
+        tournament_id=tournament_id,
+        round_number=next_round_number,
+        status='not started'
+    )
+    db.session.add(new_round)
+    db.session.commit()
+    
+    # Create match pairings for the new round
+    create_pairings_for_round(tournament, new_round)
+    
+    return jsonify(success=True)
+
+@application.route('/tournament/<int:tournament_id>/send_results', methods=['POST'])
+@login_required
+def send_results_to_players(tournament_id):
     tournament = Tournament.query.get_or_404(tournament_id)
     players = TournamentPlayer.query.filter_by(tournament_id=tournament_id).all()
-    rounds = Round.query.filter_by(tournament_id=tournament_id).order_by(Round.round_number).all()
-    
-    # Prepare matches with player details for each round
-    round_matches = {}
-    for round_obj in rounds:
-        matches = Match.query.filter_by(round_id=round_obj.id).all()
-        match_details = []
-        for match in matches:
-            player1 = TournamentPlayer.query.get(match.player1_id)
-            player2 = TournamentPlayer.query.get(match.player2_id) if match.player2_id else None
-            winner = TournamentPlayer.query.get(match.winner_id) if match.winner_id else None
-            
-            match_details.append({
-                'match': match,
-                'player1': player1,
-                'player2': player2,
-                'winner': winner,
-                'is_bye': match.player2_id is None
-            })
+
+    ranked_players = compute_rankings(tournament_id, tournament.format)
+    total_matches = Match.query.join(Round, Match.round_id == Round.id).filter(Round.tournament_id == tournament.id).count()
+    total_byes = Match.query.join(Round, Match.round_id == Round.id).filter(
+        Round.tournament_id == tournament.id,
+        Match.is_bye == True
+    ).count()
+
+    for player in players:
+        if not player.email:
+            continue
+
+        html_body = render_template(
+            "components/tournament_results_email.html",
+            tournament=tournament,
+            ranked_players=ranked_players,
+            total_matches=total_matches,
+            total_byes=total_byes
+        )
+
+        msg = Message(subject=f"Tournament Results: {tournament.title}",
+                      recipients=[player.email])
+        msg.html = html_body
+
+        # Guest attachment
+        if not player.user_id:
+            player_matches = Match.query.join(Round, Match.round_id == Round.id).filter(
+                ((Match.player1_id == player.id) | (Match.player2_id == player.id)) &
+                (Round.tournament_id == tournament.id)
+            ).all()
+
+            wins = sum(1 for m in player_matches if m.winner_id == player.id)
+            losses = sum(1 for m in player_matches if m.winner_id and m.winner_id != player.id)
+
+            result = {
+                "user_id": None,
+                "tournament_id": tournament_id,
+                "game_type": tournament.game_type,
+                "games_won": wins,
+                "games_lost": losses,
+                "opponent_win_percentage": None,
+                "opp_opp_win_percentage": None
+            }
+
+            buffer = io.BytesIO()
+            buffer.write(json.dumps(result).encode('utf-8'))
+            buffer.seek(0)
+            msg.attach(f"tournament_{tournament_id}_results.json", "application/json", buffer.read())
+
+        mail.send(msg)
+
+    flash("Results sent to all players!", "success")
+    return redirect(url_for('dashboard'))
+
+def compute_rankings(tournament_id, format):
+    # Get all tournament players
+    players = TournamentPlayer.query.filter_by(tournament_id=tournament_id).all()
+
+    # Initialize stats for each player
+    player_stats = {p.id: {"player": p, "wins": 0, "losses": 0, "opponents": []} for p in players}
+
+    # Get the matches for this tournament
+    matches = Match.query.join(Round, Match.round_id == Round.id)\
+        .filter(Round.tournament_id == tournament_id).all()
+
+    # Process each match
+    for match in matches:
+        p1 = match.player1_id
+        p2 = match.player2_id
+        winner = match.winner_id
+
+        # Handle bye: Player2 is None, meaning player 1 got a bye
+        if match.is_bye:
+            if p1:
+                # Player 1 gets the win
+                player_stats[p1]["wins"] += 1
+                player_stats[p1]["opponents"].append(None)  # No opponent for player1 in bye
+            if p2:
+                # Player 2 got a bye, they don't get the loss
+                player_stats[p2]["wins"] += 1
+                player_stats[p2]["opponents"].append(None)  # No opponent for player2 in bye
+            continue
+
+        # Track the players' opponents if it's a real match (i.e., no bye)
+        if p1 and p2:  # Ensure both players exist
+            player_stats[p1]["opponents"].append(p2)
+            player_stats[p2]["opponents"].append(p1)
+
+        # Track wins and losses
+        if winner == p1:
+            player_stats[p1]["wins"] += 1
+            if p2:
+                player_stats[p2]["losses"] += 1
+        elif winner == p2:
+            player_stats[p2]["wins"] += 1
+            player_stats[p1]["losses"] += 1
+
+    # Calculate OWP (Opponent Win Percentage) and OOWP (Opponents' Opponent Win Percentage)
+    standings = []
+
+    for player_id, stats in player_stats.items():
+        opponents = stats["opponents"]
+        opp_wp_list = []
+
+        # Calculate OWP: Average win percentage of the player's opponents
+        for opp_id in opponents:
+            if opp_id:  # Skip None (bye)
+                opp_results = TournamentResult.query.filter_by(player_id=opp_id, tournament_id=tournament_id).first()
+                if opp_results:
+                    total_games = opp_results.wins + opp_results.losses
+                    if total_games > 0:
+                        opp_wp_list.append(opp_results.wins / total_games)
+
+        owp = sum(opp_wp_list) / len(opp_wp_list) if opp_wp_list else 0
+
+        # Calculate OOWP: Average OWP of the player's opponents
+        oowp_list = []
+        for opp_id in opponents:
+            if opp_id:  # Skip None (bye)
+                opp_results = TournamentResult.query.filter_by(player_id=opp_id, tournament_id=tournament_id).first()
+                if opp_results:
+                    oowp_list.append(opp_results.opponent_win_percentage or 0)
+
+        oowp = sum(oowp_list) / len(oowp_list) if oowp_list else 0
+
+        # Add player's data to the standings
+        p = stats["player"]
         
-        round_matches[round_obj.round_number] = match_details
+        # Use the guest's name if user_id is None
+        if p.user_id:
+            user = User.query.get(p.user_id)
+            player_name = f"{user.first_name} {user.last_name}" if user else f"{p.guest_firstname} {p.guest_lastname}"
+        else:
+            player_name = f"{p.guest_firstname} {p.guest_lastname}"
+
+        standings.append({
+            "name": player_name,
+            "wins": stats["wins"],
+            "losses": stats["losses"],
+            "owp": round(owp, 3),
+            "oowp": round(oowp, 3)
+        })
+
+    # Sort the standings: by wins, then OWP, then OOWP
+    standings.sort(key=lambda x: (-x["wins"], -x["owp"], -x["oowp"]))
+
+    return standings
+
+
+def create_pairings_for_round(tournament, current_round):
+    """Create match pairings for the current round based on tournament format."""
+    tournament_players = TournamentPlayer.query.filter_by(tournament_id=tournament.id).all()
     
-    return render_template('tournament.html',
-                         tournament=tournament,
-                         players=players,
-                         rounds=rounds,
-                         round_matches=round_matches)
+    if tournament.format == 'swiss':
+        create_swiss_pairings(tournament, current_round, tournament_players)
+    elif tournament.format == 'single elimination':
+        create_single_elimination_pairings(tournament, current_round, tournament_players)
+    elif tournament.format == 'round robin':
+        create_round_robin_pairings(tournament, current_round, tournament_players)
+    
+    db.session.commit()
+
+
+def create_swiss_pairings(tournament, current_round, players):
+    """Create pairings for Swiss tournament format."""
+    # Get player standings based on wins and tiebreakers
+    player_standings = []
+    
+    for player in players:
+        # Get player's tournament result
+        result = TournamentResult.query.filter_by(
+            tournament_id=tournament.id,
+            player_id=player.id
+        ).first()
+        
+        if not result:
+            result = TournamentResult(
+                tournament_id=tournament.id,
+                player_id=player.id,
+                game_type=tournament.game_type,
+                wins=0,
+                losses=0,
+                opponent_win_percentage=0.0,
+                opp_opp_win_percentage=0.0
+            )
+            db.session.add(result)
+        
+        player_standings.append({
+            'player_id': player.id,
+            'wins': result.wins,
+            'losses': result.losses,
+            'owp': result.opponent_win_percentage or 0.0,
+            'oowp': result.opp_opp_win_percentage or 0.0,
+            'paired': False  # Flag to track if player has been paired in this round
+        })
+    
+    # Sort by score (wins), then by tiebreakers
+    player_standings.sort(key=lambda x: (-x['wins'], -x['owp'], -x['oowp']))
+    
+    # Get previously paired opponents to avoid re-pairing
+    previous_pairings = set()
+    previous_rounds = Round.query.filter(
+        Round.tournament_id == tournament.id,
+        Round.round_number < current_round.round_number
+    ).all()
+    
+    for round_obj in previous_rounds:
+        matches = Match.query.filter_by(round_id=round_obj.id).all()
+        for match in matches:
+            if match.player1_id and match.player2_id:
+                pair = tuple(sorted([match.player1_id, match.player2_id]))
+                previous_pairings.add(pair)
+    
+    # Create pairings for the current round
+    matches = []
+    
+    # Pair players with the same score as much as possible
+    score_groups = {}
+    for player in player_standings:
+        score = player['wins']
+        if score not in score_groups:
+            score_groups[score] = []
+        score_groups[score].append(player)
+    
+    # Process each score group
+    for score in sorted(score_groups.keys(), reverse=True):
+        players_group = score_groups[score]
+        
+        while len(players_group) > 1:
+            player1 = players_group[0]
+            players_group.pop(0)
+            
+            # Try to find an opponent not previously paired with player1
+            paired = False
+            for i, player2 in enumerate(players_group):
+                pair = tuple(sorted([player1['player_id'], player2['player_id']]))
+                if pair not in previous_pairings:
+                    matches.append((player1['player_id'], player2['player_id']))
+                    players_group.pop(i)
+                    paired = True
+                    break
+            
+            # If no unpaired opponent found, pair with the first available
+            if not paired and players_group:
+                player2 = players_group[0]
+                players_group.pop(0)
+                matches.append((player1['player_id'], player2['player_id']))
+    
+    # Handle odd number of players with a bye
+    remaining_players = []
+    for score in sorted(score_groups.keys(), reverse=True):
+        remaining_players.extend(score_groups[score])
+    
+    if remaining_players:
+        # Give bye to the lowest-ranked player who hasn't had a bye yet
+        player_with_bye = remaining_players[-1]['player_id']
+        
+        # Check if this player already had a bye
+        had_bye = Match.query.join(Round).filter(
+            Round.tournament_id == tournament.id,
+            Match.player1_id == player_with_bye,
+            Match.is_bye == True
+        ).first()
+        
+        if had_bye:
+            # Try to find someone else for the bye
+            for player in reversed(player_standings):
+                if player['player_id'] != player_with_bye:
+                    had_bye = Match.query.join(Round).filter(
+                        Round.tournament_id == tournament.id,
+                        Match.player1_id == player['player_id'],
+                        Match.is_bye == True
+                    ).first()
+                    
+                    if not had_bye:
+                        player_with_bye = player['player_id']
+                        break
+        
+        # Create a bye match
+        bye_match = Match(
+            round_id=current_round.id,
+            player1_id=player_with_bye,
+            player2_id=None,
+            is_bye=True,
+            status='not started'
+        )
+        db.session.add(bye_match)
+    
+    # Create matches in the database
+    for player1_id, player2_id in matches:
+        match = Match(
+            round_id=current_round.id,
+            player1_id=player1_id,
+            player2_id=player2_id,
+            is_bye=False,
+            status='not started'
+        )
+        db.session.add(match)
+
+
+def create_single_elimination_pairings(tournament, current_round, players):
+    """Create pairings for single elimination tournament format."""
+    # For first round: random seeding
+    if current_round.round_number == 1:
+        import random
+        player_ids = [p.id for p in players]
+        random.shuffle(player_ids)
+        
+        # Add byes for power of 2
+        next_power_of_2 = 2 ** (tournament.total_rounds)
+        while len(player_ids) < next_power_of_2:
+            player_ids.append(None)  # None represents a bye
+        
+        # Create first round matches
+        for i in range(0, len(player_ids), 2):
+            player1_id = player_ids[i]
+            player2_id = player_ids[i+1] if i+1 < len(player_ids) else None
+            
+            is_bye = player2_id is None
+            
+            match = Match(
+                round_id=current_round.id,
+                player1_id=player1_id,
+                player2_id=player2_id,
+                is_bye=is_bye,
+                status='not started'
+            )
+            db.session.add(match)
+    else:
+        # For subsequent rounds: winners of previous round
+        prev_round = Round.query.filter_by(
+            tournament_id=tournament.id,
+            round_number=current_round.round_number - 1
+        ).first()
+        
+        prev_matches = Match.query.filter_by(round_id=prev_round.id).order_by(Match.id).all()
+        
+        # Create matches based on winners from previous round
+        for i in range(0, len(prev_matches), 2):
+            match1 = prev_matches[i]
+            match2 = prev_matches[i+1] if i+1 < len(prev_matches) else None
+            
+            player1_id = match1.winner_id if match1 and match1.winner_id else None
+            player2_id = match2.winner_id if match2 and match2.winner_id else None
+            
+            is_bye = player2_id is None and player1_id is not None
+            
+            match = Match(
+                round_id=current_round.id,
+                player1_id=player1_id,
+                player2_id=player2_id,
+                is_bye=is_bye,
+                status='not started'
+            )
+            db.session.add(match)
+
+
+def create_round_robin_pairings(tournament, current_round, players):
+    """Create pairings for round robin tournament format."""
+    player_ids = [p.id for p in players]
+    n = len(player_ids)
+    
+    # Handle odd number of players
+    has_bye = False
+    if n % 2 != 0:
+        player_ids.append(None)  # Add a bye
+        n += 1
+        has_bye = True
+    
+    round_num = current_round.round_number
+    
+    pairings = []
+    
+    if round_num <= n - 1:
+        fixed = player_ids[0]
+        rotating = player_ids[1:]
+        
+        rotation = (round_num - 1) % (n - 1)
+        rotated = rotating[-rotation:] + rotating[:-rotation]
+        
+        for i in range(n // 2):
+            if i == 0:
+                p1, p2 = fixed, rotated[i]
+            else:
+                p1, p2 = rotated[i], rotated[n - 1 - i]
+            
+            # Ensure player1_id is always not None
+            if p1 is None and p2 is not None:
+                p1, p2 = p2, None
+            elif p1 is None and p2 is None:
+                continue  # Skip invalid pairing (shouldn't occur, but safe check)
+
+            pairings.append((p1, p2))
+    
+    # Create matches in the database
+    for player1_id, player2_id in pairings:
+        is_bye = player2_id is None
+        
+        match = Match(
+            round_id=current_round.id,
+            player1_id=player1_id,
+            player2_id=player2_id,
+            is_bye=is_bye,
+            status='not started'
+        )
+        db.session.add(match)
+
+
+def update_tournament_results(tournament_id):
+    """Update tournament results and tiebreakers after a round is completed."""
+    tournament = Tournament.query.get(tournament_id)
+    
+    # Get all players in this tournament
+    players = TournamentPlayer.query.filter_by(tournament_id=tournament_id).all()
+    
+    # Get all matches across all rounds
+    matches = Match.query.join(Round).filter(
+        Round.tournament_id == tournament_id,
+        Round.status == 'completed'
+    ).all()
+    
+    # Calculate win-loss record for each player
+    player_records = {}
+    for player in players:
+        player_records[player.id] = {
+            'player_id': player.id,
+            'wins': 0,
+            'losses': 0,
+            'opponents': []  # To track opponents for tiebreakers
+        }
+    
+    # Process match results
+    for match in matches:
+        if match.winner_id:
+            # Record the win
+            if match.winner_id in player_records:
+                player_records[match.winner_id]['wins'] += 1
+            
+            # Record the loss for the other player
+            if match.player1_id != match.winner_id and match.player1_id in player_records:
+                player_records[match.player1_id]['losses'] += 1
+                # Add opponent for tiebreakers
+                if not match.is_bye and match.player2_id:
+                    player_records[match.player1_id]['opponents'].append(match.player2_id)
+            
+            if match.player2_id and match.player2_id != match.winner_id and match.player2_id in player_records:
+                player_records[match.player2_id]['losses'] += 1
+                # Add opponent for tiebreakers
+                player_records[match.player2_id]['opponents'].append(match.player1_id)
+    
+    # Calculate opponent win percentage (OWP) for Swiss tiebreakers
+    if tournament.format == 'swiss':
+        for player_id, record in player_records.items():
+            opponents = record['opponents']
+            if not opponents:
+                record['owp'] = 0.0
+                continue
+            
+            # Calculate opponents' win percentages
+            opponent_win_percentages = []
+            for opp_id in opponents:
+                if opp_id in player_records:
+                    opp_record = player_records[opp_id]
+                    # Exclude matches against this player for opponent's win percentage
+                    opp_wins = opp_record['wins']
+                    opp_losses = opp_record['losses']
+                    
+                    # Handle division by zero
+                    if opp_wins + opp_losses > 0:
+                        opp_win_pct = opp_wins / (opp_wins + opp_losses)
+                    else:
+                        opp_win_pct = 0.0
+                    
+                    opponent_win_percentages.append(opp_win_pct)
+            
+            # Calculate average opponent win percentage
+            if opponent_win_percentages:
+                record['owp'] = sum(opponent_win_percentages) / len(opponent_win_percentages)
+            else:
+                record['owp'] = 0.0
+        
+        # Calculate opponents' opponent win percentage (OOWP)
+        for player_id, record in player_records.items():
+            opponents = record['opponents']
+            if not opponents:
+                record['oowp'] = 0.0
+                continue
+            
+            opp_opp_win_percentages = []
+            for opp_id in opponents:
+                if opp_id in player_records and 'owp' in player_records[opp_id]:
+                    opp_opp_win_percentages.append(player_records[opp_id]['owp'])
+            
+            if opp_opp_win_percentages:
+                record['oowp'] = sum(opp_opp_win_percentages) / len(opp_opp_win_percentages)
+            else:
+                record['oowp'] = 0.0
+    
+    # Update tournament results in the database
+    for player_id, record in player_records.items():
+        result = TournamentResult.query.filter_by(
+            tournament_id=tournament_id,
+            player_id=player_id
+        ).first()
+        
+        if not result:
+            result = TournamentResult(
+                tournament_id=tournament_id,
+                player_id=player_id,
+                game_type=tournament.game_type
+            )
+            db.session.add(result)
+        
+        result.wins = record['wins']
+        result.losses = record['losses']
+        
+        if tournament.format == 'swiss':
+            result.opponent_win_percentage = record.get('owp', 0.0)
+            result.opp_opp_win_percentage = record.get('oowp', 0.0)
+    
+    db.session.commit()
 
 # Helper functions
 def validate_tournament_data(data):
@@ -309,6 +1115,7 @@ def validate_tournament_data(data):
     email_with_accounts = []
     duplicate_usernames = []
     duplicate_emails = []
+    non_friend_usernames = []
     used_usernames = {}
     used_emails = {}
 
@@ -328,6 +1135,19 @@ def validate_tournament_data(data):
                     existing_user = db.session.query(User).filter_by(username=player_data['username']).first()
                     if not existing_user:
                         invalid_usernames.append(player_data['username'])
+                    else:
+                        # Check if the tournament creator is friends with this user
+                        friendship = Friend.query.filter(
+                            (
+                                (Friend.user_id == current_user.id) & (Friend.friend_id == existing_user.id)
+                            ) | (
+                                (Friend.user_id == existing_user.id) & (Friend.friend_id == current_user.id)
+                            ),
+                            Friend.status == 'accepted'
+                        ).first()
+                        
+                        if not friendship and player_data['username'] != current_user.username:
+                            non_friend_usernames.append(player_data['username'])
         
         # Check for duplicate emails within the tournament
         if player_data.get('email') and player_data['email'].strip() != '':
@@ -389,6 +1209,22 @@ def validate_tournament_data(data):
             }
         }
     
+    if non_friend_usernames:
+        error_messages = []
+        for username in non_friend_usernames:
+            if username != current_user.username:
+                error_messages.append(f"You must be friends with '{username}' to add them to your tournament")
+            
+        return {
+            'valid': False,
+            'response': {
+                'success': False,
+                'message': "Non-friend username(s) detected in tournament",
+                'non_friend_usernames': non_friend_usernames,
+                'detailed_errors': error_messages
+            }
+        }
+    
     if email_with_accounts:
         error_messages = []
         for email in email_with_accounts:
@@ -410,7 +1246,8 @@ def create_tournament_player(tournament_id, player_data):
     """Reusable player creation logic"""
     new_player = TournamentPlayer(
         tournament_id=tournament_id,
-        guest_name=player_data.get('guest_name', ''),
+        guest_firstname=player_data.get('guest_firstname', ''),
+        guest_lastname=player_data.get('guest_lastname', ''),
         email=player_data.get('email', ''),
         is_confirmed=player_data.get('is_confirmed', False)
     )
@@ -418,21 +1255,24 @@ def create_tournament_player(tournament_id, player_data):
     if 'user_id' in player_data and player_data['user_id']:
         new_player.user_id = player_data['user_id']
         if player_data['user_id'] == current_user.id:
-            new_player.guest_name = f"{current_user.first_name} {current_user.last_name}".strip()
+            new_player.guest_firstname = current_user.first_name
+            new_player.guest_lastname = current_user.last_name
     elif 'username' in player_data and player_data['username']:
         existing_user = db.session.query(User).filter_by(username=player_data['username']).first()
         if existing_user:
             new_player.user_id = existing_user.id
-            new_player.guest_name = f"{existing_user.first_name} {existing_user.last_name}".strip()
+            new_player.guest_firstname = existing_user.first_name
+            new_player.guest_lastname = existing_user.last_name
     elif player_data.get('email'):
         existing_user = db.session.query(User).filter_by(email=player_data['email']).first()
         if existing_user:
             new_player.user_id = existing_user.id
-            new_player.guest_name = f"{existing_user.first_name} {existing_user.last_name}".strip()
+            new_player.guest_firstname = existing_user.first_name
+            new_player.guest_lastname = existing_user.last_name
 
     return new_player
 
-def create_match(tournament_id, round_number, player1_id, player2_id=None, is_bye=False):
+def create_match(tournament_id, round_number, player1_id, player2_id=None, is_bye=False, status='not started'):
     """Helper to create match records with original structure"""
     # First create or get the round
     round_obj = Round.query.filter_by(
@@ -444,7 +1284,7 @@ def create_match(tournament_id, round_number, player1_id, player2_id=None, is_by
         round_obj = Round(
             tournament_id=tournament_id,
             round_number=round_number,
-            status='in progress'
+            status='not started'
         )
         db.session.add(round_obj)
         db.session.flush()
@@ -454,7 +1294,7 @@ def create_match(tournament_id, round_number, player1_id, player2_id=None, is_by
         round_id=round_obj.id,
         player1_id=player1_id,
         player2_id=player2_id,
-        status='in progress'
+        status='not started'
     )
     db.session.add(new_match)
     return new_match
