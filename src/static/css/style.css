@@ -27,6 +27,7 @@ html, body {
     flex: 1;
     background-color: var(--background-shade1);
     color: var(--off-white);
+    overflow-y: auto;
 }
 
 /* Content styles - when navbar exists */
@@ -447,7 +448,7 @@ html, body {
     padding: 0.75rem 1rem;
     font-size: 1rem;
     color: var(--off-white);
-    width: 100%; /* Use 100% width instead of fixed min-width */
+    width: 100%; 
     box-sizing: border-box;
 }
   
