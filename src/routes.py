@@ -290,3 +290,55 @@ def upload_tournament_data():
         flash("Failed to process the uploaded file.", "error")
 
     return redirect(url_for('dashboard'))
+
+@application.route('/search_players')
+def search_players():
+    """Search for players based on a query string"""
+    query = request.args.get('query', '')
+    
+    if not query or len(query) < 1:
+        return jsonify({'players': []})
+    
+    # Search for players matching the query in username, email, first_name, last_name, or display_name
+    # Using case-insensitive search with LIKE
+    search_term = f"%{query}%"
+    players = User.query.filter(
+        (User.username.ilike(search_term)) |
+        (User.email.ilike(search_term)) |
+        (User.first_name.ilike(search_term)) |
+        (User.last_name.ilike(search_term)) |
+        (User.display_name.ilike(search_term))
+    ).limit(10).all()  # Limit to 10 results
+    
+    # Format the results for the frontend
+    results = []
+    for player in players:
+        results.append({
+            'id': player.id,
+            'username': player.username,
+            'email': player.email,
+            'display_name': player.display_name,
+            'first_name': player.first_name,
+            'last_name': player.last_name
+        })
+    
+    return jsonify({'players': results})
+
+@application.route('/send_invite', methods=['POST'])
+def send_invite():
+    """Send an invite to a player"""
+    data = request.get_json()
+    player_id = data.get('player_id')
+    
+    if not player_id:
+        return jsonify({'success': False, 'message': 'Player ID is required'})
+    
+    # Check if player exists
+    player = User.query.get(player_id)
+    if not player:
+        return jsonify({'success': False, 'message': 'Player not found'})
+    
+    # Here you would implement your invite logic
+    # For now, we'll just return success
+    
+    return jsonify({'success': True, 'message': 'Invite sent successfully'})

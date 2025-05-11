@@ -687,3 +687,94 @@ document.addEventListener('DOMContentLoaded', function() {
     renderPieChart('winRateChart', 40, 73);
   }
 });
+
+document.addEventListener('DOMContentLoaded', function() {
+  const searchInput = document.getElementById('playerSearch');
+  const searchResults = document.getElementById('searchResults');
+  const sendInviteBtn = document.getElementById('sendInviteBtn');
+  let selectedPlayerId = null;
+
+  // Function to handle search input
+  searchInput.addEventListener('input', function() {
+    const query = this.value.trim();
+    
+    if (query.length < 1) {
+      searchResults.style.display = 'none';
+      return;
+    }
+
+    // Make AJAX request to search endpoint
+    fetch(`/search_players?query=${encodeURIComponent(query)}`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.players.length > 0) {
+          // Clear previous results
+          searchResults.innerHTML = '';
+          
+          // Add new results
+          data.players.forEach(player => {
+            const resultItem = document.createElement('div');
+            resultItem.className = 'search-result-item';
+            resultItem.innerHTML = `${player.username}`;
+            
+            // No inline styles - using CSS classes instead
+            
+            // Select player when clicked
+            resultItem.addEventListener('click', function() {
+              searchInput.value = player.username;
+              selectedPlayerId = player.id;
+              searchResults.style.display = 'none';
+              sendInviteBtn.disabled = false;
+            });
+            
+            searchResults.appendChild(resultItem);
+          });
+          
+          searchResults.style.display = 'block';
+        } else {
+          searchResults.innerHTML = '<div style="padding: 10px;">No players found</div>';
+          searchResults.style.display = 'block';
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching search results:', error);
+      });
+  });
+
+  // Close search results when clicking outside
+  document.addEventListener('click', function(event) {
+    if (!searchInput.contains(event.target) && !searchResults.contains(event.target)) {
+      searchResults.style.display = 'none';
+    }
+  });
+
+  // Handle invite button click
+  sendInviteBtn.addEventListener('click', function() {
+    if (selectedPlayerId) {
+      // Send the invite (you'll need to implement this endpoint)
+      fetch('/send_invite', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ player_id: selectedPlayerId })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          alert('Invite sent successfully!');
+          searchInput.value = '';
+          selectedPlayerId = null;
+        } else {
+          alert('Failed to send invite: ' + data.message);
+        }
+      })
+      .catch(error => {
+        console.error('Error sending invite:', error);
+        alert('An error occurred while sending the invite.');
+      });
+    } else {
+      alert('Please select a player first');
+    }
+  });
+});

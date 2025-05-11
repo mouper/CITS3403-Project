@@ -1,6 +1,9 @@
 {% extends "base.html" %}
 
 {% block content %}
+{% extends "base.html" %}
+
+{% block content %}
 <div class="dashboard-container">
   <h1 class="title2 page-header"> <span>TourneyPro Dashboard</span> </h1>
 
@@ -86,9 +89,12 @@
     </div>
 
     <div class="friend-search-bar">
-      <input type="text" placeholder="Search by username or email">
+      <div class="search-container">
+        <input id="playerSearch" type="text" placeholder="Search by username or email" autocomplete="off">
+        <div id="searchResults" class="search-results"></div>
+      </div>
       <div class="SendJoinBtn">
-        <button>
+        <button id="sendInviteBtn">
           <div class="SendIcon"></div>
           Send Invite
         </button>
