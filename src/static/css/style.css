@@ -1068,7 +1068,7 @@ html, body {
         grid-template-columns: 1fr;
       }
 }
-.my-requests-title {
+.request-name {
     color: var(--primary-shade1);
     text-align: left;
     width: 100%;
@@ -1076,10 +1076,9 @@ html, body {
 
 .info-line {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: -1rem;
-    margin-bottom: 1.5rem;
+    align-items: flex-end;
+    gap: 6.875rem;
+    margin-top: 3rem;
 }
 
 .caption {
@@ -1093,20 +1092,8 @@ html, body {
     color: var(--primary-shade1);
 }
 
-.request-name p.regular3{
-    color: var(--off-white);
-    margin-bottom: 3rem;
-}
-
-.request-name p.caption {
-    color: var(--off-white);
-    margin-top: 2rem;
-}
-
 .requests-container {
     width: 100%;
-    max-width: 75rem;
-    display: flex;
     flex-direction: column;
     align-items: center;
 }
@@ -1185,16 +1172,16 @@ html, body {
     border-radius: 0.5rem;
 }
 
-.action-buttons .Dialog{
+.action-buttons{
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    margin-top: 2rem;
+    align-items: flex-end;
+    align-self: stretch;
 }
 
 .action-buttons .Dialog .cancel,
 .action-buttons .Dialog .accept {
-    height: 2.8rem;
+    height: 2.5rem;
     padding: 0.5rem 1rem;
     cursor: pointer;
 }
