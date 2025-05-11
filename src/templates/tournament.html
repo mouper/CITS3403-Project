@@ -21,16 +21,16 @@
         <!-- Tournament Meta Info -->
         <div class="tournament-meta">
             <div class="meta-item">
-                <span class="meta-label regular3">Type:</span>
-                <span class="meta-value medium3">{{ tournament.format|title }}</span>
+                <span class="meta-label regular1">Type:</span>
+                <span class="meta-value medium1">{{ tournament.format|title }}</span>
             </div>
             <div class="meta-item">
-                <span class="meta-label regular3">Game:</span>
-                <span class="meta-value medium3">{{ tournament.game_type }}</span>
+                <span class="meta-label regular1">Game:</span>
+                <span class="meta-value medium1">{{ tournament.game_type }}</span>
             </div>
             <div class="meta-item">
-                <span class="meta-label regular3">Status:</span>
-                <span class="meta-value medium3">{{ tournament.status|title }}</span>
+                <span class="meta-label regular1">Status:</span>
+                <span class="meta-value medium1">{{ tournament.status|title }}</span>
             </div>
         </div>
 
@@ -117,7 +117,7 @@
                                             {% set player2 = players.get(match.player2_id) %}
                                             {% if player2 %}
                                                 {% if player2.user_id %}
-                                                    {{ player1.user.first_name }} {{ player1.user.last_name }}
+                                                    {{ player2.user.first_name }} {{ player2.user.last_name }}
                                                 {% else %}
                                                     {{ player2.guest_firstname }} {{ player2.guest_lastname }}
                                                 {% endif %}
@@ -208,7 +208,7 @@
                                                             {% set player2 = players.get(match.player2_id) %}
                                                             {% if player2 %}
                                                                 {% if player2.user_id %}
-                                                                    {{ player1.user.first_name }} {{ player1.user.last_name }}
+                                                                    {{ player2.user.first_name }} {{ player2.user.last_name }}
                                                                 {% else %}
                                                                     {{ player2.guest_firstname }} {{ player2.guest_lastname }}
                                                                 {% endif %}
