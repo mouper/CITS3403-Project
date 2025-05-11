@@ -637,6 +637,15 @@ function initAnalytics() {
       gameTypeSelector.style.display = isPlayer ? 'block' : 'none';
     }
   });
+
+    // Game type filtering with page reload
+  if (gameTypeSelector) {
+    gameTypeSelector.addEventListener('change', function() {
+      const params = new URLSearchParams(window.location.search);
+      params.set('game_type', this.value);
+      window.location.search = params.toString();
+    });
+  }
 }
 
 // =============================================

@@ -93,7 +93,84 @@ def dashboard():
 @login_required
 def analytics():
     user_stats = db.session.query(UserStat).filter_by(user_id=current_user.id).all()
-    return render_template("analytics.html", title="Analytics", stats=user_stats)
+
+    limit_param = request.args.get('limit', 'all')
+    game_type_param = request.args.get('game_type')
+    try:
+        limit = int(limit_param)
+    except ValueError:
+        limit = None  # means “all”
+
+    base_q = db.session.query(Tournament).filter_by(created_by=current_user.id)
+
+    if game_type_param and game_type_param != 'all':
+        base_q = base_q.filter_by(game_type=game_type_param)
+
+    base_q = base_q.order_by(Tournament.created_at.desc())
+
+    if limit:
+        recent = base_q.limit(limit).all()
+    else:
+        recent = base_q.all()
+
+    recent_tournaments = []
+    for tourney in recent:
+        rows = (
+            db.session.query(TournamentPlayer, TournamentResult, User)
+            .join(TournamentResult, TournamentResult.player_id == TournamentPlayer.id)
+            .outerjoin(User, TournamentPlayer.user_id == User.id)
+            .filter(TournamentPlayer.tournament_id == tourney.id)
+            .all()
+        )
+
+        standings = []
+        for player, result, user in rows:
+            display_name = user.display_name if user else (
+                f"{player.guest_firstname or ''} {player.guest_lastname[0] if player.guest_lastname else ''}".strip() or "Unknown"
+            )
+            standings.append({
+                'username': display_name,
+                'wins':     result.wins,
+                'losses':   result.losses,
+                'owp':      round(result.opponent_win_percentage, 2),
+                'opp_owp':  round(result.opp_opp_win_percentage, 2)
+            })
+
+        if len(standings) < 1:
+            continue
+
+        standings.sort(key=lambda p: (p['wins'], p['opp_owp']), reverse=True)
+
+        recent_tournaments.append({
+            'id':                   tourney.id,
+            'title':                tourney.title,
+            'format':               tourney.format,
+            'game_type':            tourney.game_type,
+            'round_time_minutes':   tourney.round_time_minutes,
+            'date':                 tourney.created_at.strftime("%d/%m/%Y"),
+            'standings':            standings
+        })
+
+    # Best three by player performance
+    best_tournaments = sorted(
+        recent_tournaments,
+        key=lambda t: (t['standings'][0]['wins'], t['standings'][0]['owp']),
+        reverse=True
+    )[:3]
+
+    # Most recent three tournaments
+    most_recent_tournaments = recent_tournaments[:3]
+
+    return render_template(
+        'analytics.html',
+        title='Analytics',
+        stats=user_stats,
+        recent_tournaments=recent_tournaments,
+        best_tournaments=best_tournaments,
+        most_recent_tournaments=most_recent_tournaments,
+        limit=limit_param,
+        selected_game_type=game_type_param or 'all'
+    )
 
 @application.route('/requests')
 @login_required
