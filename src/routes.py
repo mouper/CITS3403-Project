@@ -8,6 +8,7 @@ from app import application, mail
 from models import Friend, User, UserStat, Tournament, TournamentPlayer, TournamentResult, Match, Round
 from db import db  # Use the centralized db object from db.py
 import json, io
+import re
 
 @application.route('/')
 def landing():
@@ -97,8 +98,75 @@ def dashboard():
 @login_required
 def analytics():
     user_stats = db.session.query(UserStat).filter_by(user_id=current_user.id).all()
-    return render_template("analytics.html", title="Analytics", stats=user_stats)
 
+    limit_param = request.args.get('limit', 'all')
+    try:
+        limit = int(limit_param)
+    except ValueError:
+        limit = None  # means “all”
+
+    base_q = (
+        db.session.query(Tournament)
+        .filter_by(created_by=current_user.id)
+        .order_by(Tournament.created_at.desc())
+    )
+
+    if limit:
+        recent = base_q.limit(limit).all()
+    else:
+        recent = base_q.all()
+
+    recent_tournaments = []
+    for tourney in recent:
+        rows = (
+            db.session.query(TournamentPlayer, TournamentResult, User)
+            .join(TournamentResult, TournamentResult.player_id == TournamentPlayer.id)
+            .outerjoin(User, TournamentPlayer.user_id == User.id)
+            .filter(TournamentPlayer.tournament_id == tourney.id)
+            .all()
+        )
+
+        standings = []
+        for player, result, user in rows:
+            if user:
+                display_name = user.display_name
+            else:
+                first = player.guest_firstname or ""
+                last_initial = player.guest_lastname[0] if player.guest_lastname else ""
+                display_name = f"{first} {last_initial}".strip() or "Unknown"
+
+            standings.append({
+                'username': display_name,
+                'wins':     result.wins,
+                'losses':   result.losses,
+                'owp':      round(result.opponent_win_percentage * 100, 2),
+                'opp_owp':  round(result.opp_opp_win_percentage   * 100, 2)
+            })
+
+
+        if len(standings) < 3:
+            continue
+
+        standings.sort(key=lambda p: (p['wins'], p['opp_owp']),reverse=True)
+        recent_tournaments.append({
+            'id':                   tourney.id,
+            'title':                tourney.title,
+            'format':               tourney.format,
+            'game_type':            tourney.game_type,
+            'round_time_minutes':   tourney.round_time_minutes,
+            'date':                 tourney.created_at.strftime("%d/%m/%Y"),
+            'standings':            standings
+        })
+
+    return render_template(
+        'analytics.html',
+        title='Analytics',
+        stats=user_stats,
+        recent_tournaments=recent_tournaments,
+        limit=limit_param
+    )
+
+    
 @application.route('/requests')
 @login_required
 def requests():
@@ -119,7 +187,6 @@ def new_tournament():
 @login_required
 def save_tournament():
     try:
-        # Get JSON data from request
         data = request.json
         
         # Validate tournament data
@@ -127,7 +194,6 @@ def save_tournament():
         if not validation_result['valid']:
             return jsonify(validation_result['response']), 400
             
-        # Create new tournament
         new_tournament = Tournament(
             title=data['title'],
             format=data['format'],
@@ -137,16 +203,13 @@ def save_tournament():
             include_creator_as_player=data['include_creator_as_player']
         )
         
-        # Add tournament to database and flush to get ID
         db.session.add(new_tournament)
         db.session.flush()
         
-        # Process players
         for player_data in data['players']:
             new_player = create_tournament_player(new_tournament.id, player_data)
             db.session.add(new_player)
         
-        # Commit all changes
         db.session.commit()
         
         return jsonify({
@@ -156,7 +219,6 @@ def save_tournament():
         })
         
     except Exception as e:
-        # Roll back any changes if error occurs
         db.session.rollback()
         print(f"Error saving tournament: {str(e)}")
         
@@ -1303,7 +1365,6 @@ def create_match(tournament_id, round_number, player1_id, player2_id=None, is_by
 @login_required
 def upload_tournament_data():
     uploaded_file = request.files.get('file')
-
     if not uploaded_file or not uploaded_file.filename.endswith('.json'):
         flash("Please upload a valid .json file.", "error")
         return redirect(url_for('dashboard'))
@@ -1341,12 +1402,12 @@ def upload_tournament_data():
             stat.win_percentage = round((stat.games_won / stat.games_played) * 100, 2) if stat.games_played > 0 else 0.0
         else:
             new_stat = UserStat(
-                user_id=user_id,
-                game_type=game_type,
-                games_played=games_played,
-                games_won=games_won,
-                games_lost=games_lost,
-                win_percentage=round((games_won / games_played) * 100, 2) if games_played > 0 else 0.0
+                user_id       = current_user.id,
+                game_type     = game_type,
+                games_played  = games_played,
+                games_won     = games_won,
+                games_lost    = games_lost,
+                win_percentage= win_percentage
             )
             db.session.add(new_stat)
 

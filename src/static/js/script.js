@@ -1796,28 +1796,26 @@ function initNavbar() {
 // =============================================
 
 function initAnalytics() {
-  const viewSelector = document.getElementById('viewSelector');
-  const playerView = document.getElementById('playerView');
-  const adminView = document.getElementById('adminView');
-  const gameTypeSelector = document.getElementById('gameTypeSelector');
+  const viewSelector      = document.getElementById('viewSelector');
+  const playerView        = document.getElementById('playerView');
+  const adminView         = document.getElementById('adminView');
+  const gameTypeSelector  = document.getElementById('gameTypeSelector');
+  const limitSelector     = document.getElementById('adminLimitSelector');
 
   if (!viewSelector) return;
 
-  // Game type selector functionality
+  // Game‐type filtering + pie‐chart rendering
   if (gameTypeSelector) {
     gameTypeSelector.addEventListener('change', () => {
-      const selectedGame = gameTypeSelector.value;
-      const statSections = document.querySelectorAll('.game-stat');
-
-      statSections.forEach((section) => {
-        if (section.dataset.game === selectedGame) {
+      const selected = gameTypeSelector.value;
+      document.querySelectorAll('.game-stat').forEach(section => {
+        if (section.dataset.game === selected) {
           section.style.display = 'block';
           const canvas = section.querySelector('canvas');
           if (canvas && !canvas.dataset.rendered) {
-            const wins = parseInt(section.querySelector('.total-stat:nth-child(1) .title2').textContent);
-            const games = parseInt(section.querySelector('.total-stat:nth-child(2) .title2').textContent);
-            const losses = games - wins;
-            renderPieChart(canvas.id, wins, losses);
+            const wins   = +section.querySelector('.total-stat:nth-child(1) .title2').textContent;
+            const games  = +section.querySelector('.total-stat:nth-child(2) .title2').textContent;
+            renderPieChart(canvas.id, wins, games - wins);
             canvas.dataset.rendered = 'true';
           }
         } else {
@@ -1826,21 +1824,61 @@ function initAnalytics() {
       });
     });
 
-    // Run filter once on page load to show default
     gameTypeSelector.dispatchEvent(new Event('change'));
   }
 
-  // View selector functionality
-  viewSelector.addEventListener('change', function() {
-    const isPlayer = this.value === 'player';
-    if (playerView) playerView.style.display = isPlayer ? 'block' : 'none';
-    if (adminView) adminView.style.display = isPlayer ? 'none' : 'block';
-    
-    // Show game type selector only in player view
-    if (gameTypeSelector) {
+  // Player/Admin toggle
+  viewSelector.addEventListener('change', () => {
+    const isPlayer = viewSelector.value === 'player';
+    playerView.style.display = isPlayer ? 'block' : 'none';
+    adminView .style.display = isPlayer ? 'none'  : 'block';
+    if (gameTypeSelector)
       gameTypeSelector.style.display = isPlayer ? 'block' : 'none';
-    }
   });
+
+  viewSelector.dispatchEvent(new Event('change'));
+
+  // Standings modal
+  document.querySelectorAll('#adminStatcards .view-tourney')
+    .forEach(link => {
+      link.addEventListener('click', e => {
+        e.preventDefault();
+        const id     = link.dataset.tourneyId;
+        const tourney= window.recentTournaments.find(t => t.id == id);
+        if (!tourney) return;
+
+        document.getElementById('modalTitle').textContent = tourney.title;
+        const info  = document.querySelectorAll('.modal-info .info-item .regular4');
+        info[0].textContent = tourney.format;
+        info[1].textContent = tourney.game_type;
+        info[2].textContent = tourney.round_time_minutes + ' Minutes';
+        document.querySelector('.modal-date .regular4').textContent = tourney.date;
+
+        const tbody = document.querySelector('.table-wrapper tbody');
+        tbody.innerHTML = '';
+        tourney.standings.forEach((p,i) => {
+          tbody.insertAdjacentHTML('beforeend', `
+            <tr>
+              <td>${i+1}</td>
+              <td>${p.username}</td>
+              <td>${p.wins}/${p.losses}</td>
+              <td>${p.owp}%</td>
+              <td>${p.opp_owp}%</td>
+            </tr>
+          `);
+        });
+
+        document.getElementById('modalBackdrop').style.display = 'block';
+      });
+    });
+  if (limitSelector) {
+    limitSelector.addEventListener('change', function() {
+      const params = new URLSearchParams(window.location.search);
+      params.set('limit', this.value);
+      params.set('view',  viewSelector.value);   // preserve current tab
+      window.location.search = params.toString();
+    });
+  }
 }
 
 // =============================================
@@ -1875,6 +1913,13 @@ function renderPieChart(canvasId, wins, losses) {
   });
 }
 
+function closeModal() {
+  const modalBackdrop = document.getElementById('modalBackdrop');
+  if (modalBackdrop) {
+    modalBackdrop.style.display = 'none';
+  }
+}
+
 // =============================================
 // MAIN INITIALIZATION
 // =============================================
@@ -1891,4 +1936,36 @@ document.addEventListener('DOMContentLoaded', function() {
   if (winRateChart) {
     renderPieChart('winRateChart', 40, 73);
   }
+
+  // Add event listeners to statcard captions
+  document.querySelectorAll('.statcard .caption').forEach(link => {
+    link.addEventListener('click', function(event) {
+      event.preventDefault();
+      document.getElementById('modalBackdrop').style.display = 'block';
+    });
+  });
+
+  // Add event listener to close button if you prefer to use event listeners instead of inline onclick
+  const closeButton = document.querySelector('.close-button');
+  if (closeButton) {
+    closeButton.addEventListener('click', closeModal);
+  }
+  const params    = new URLSearchParams(window.location.search);
+  const viewParam = params.get('view');
+  const limParam  = params.get('limit');
+  if (viewParam) {
+    const vs = document.getElementById('viewSelector');
+    vs.value = viewParam;
+    vs.dispatchEvent(new Event('change'));
+  }
+  if (limParam) {
+    const ls = document.getElementById('adminLimitSelector');
+    if (ls) ls.value = limParam;
+  }
+  
+  // finally, show the right panel
+  viewSelector.dispatchEvent(new Event('change'));
+  requestAnimationFrame(() => {
+    initAnalytics();
+  });
 });
