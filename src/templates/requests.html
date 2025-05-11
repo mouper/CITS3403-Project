@@ -2,13 +2,6 @@
 
 {% block content %}
 <div class="dashboard-container">
-    <div class="requests-container">
-        <h1 class="title2 my-requests-title">My Requests</h1>
-    </div>
-    <div class="incoming-container">
-        <p class="medium4">Incoming</p>
-    </div>
-
     {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
     <div class="flashes">
@@ -24,59 +17,68 @@
         <div class="request-card-container">
             <div class="request-card">
                 <div class="request-content">
-                    <div class="request-name">
-                        <h2 class="title2">{{ request.tournament_name }}</h2>
-                        <p class="regular3">Requestor: {{ request.requestor_name }}</p>
-                        <div class="info-line">
+                    <div class="request-info">
+                        <h1 class="title2 tournament-name">{{ request.tournament_name }}</h1>
+                        <p class="regular3 requestor-name">Requestor: {{ request.requestor_name }}</p>
+                        <div class="info-container">
                             <p class="caption">{{ request.accepted }}/{{ request.total }} Competitors Accepted</p>
                             <div class="game-details">
                                 <span class="medium4">{{ request.game_name }}</span>
                                 <span class="medium4">{{ request.type_name }}</span>
                             </div>
-                        </div>                
-                    </div>
-                    <div class="request-image-and-accept">
-                        <div class="request-image">
-                            <img src="https://via.placeholder.com/150x100" alt="Placeholder Image" />
-                        </div>
-                        <div class="action-buttons">
-                            <div class="Dialog">
-                                <button class="cancel medium4">Decline</button>
-                                <button class="accept medium4">Accept</button>
-                            </div>
                         </div>
                     </div>
+                    <div class="request-image">
+                        <img src="{{ request.image_url }}" alt="Tournament Image" />
+                    </div>
+                </div>
+                <div class="action-row">
+                    {% if request.status == 'pending' %}
+                    <div class="Dialog">
+                        <button class="cancel">Decline</button>
+                        <button class="accept">Accept</button>
+                    </div>
+                    {% else %}
+                    <div class="status-indicator">
+                        <button class="status-button accepted medium4">Accepted</button>
+                        <button class="edit-button">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M3 17.25V21H6.75L17.81 9.94L14.06 6.19L3 17.25ZM20.71 7.04C21.1 6.65 21.1 6.02 20.71 5.63L18.37 3.29C17.98 2.9 17.35 2.9 16.96 3.29L15.13 5.12L18.88 8.87L20.71 7.04Z" fill="white"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="status-time">
+                        <p class="caption time-info">Decision Can Be Edited Until 00:00</p>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
         {% endfor %}
     {% else %}
-        <!-- Example card when no requests -->
         <div class="request-card-container">
             <div class="request-card">
                 <div class="request-content">
-                    <div class="request-name">
-                        <h2 class="headline">Tournament Name</h2>
-                        <p class="regular3">Requestor: Username1</p>
-            
-                            <div class="info-line">
-                                <p class="caption">X/Y Competitors Accepted</p>
-                                <div class="game-details">
-                                    <span class="medium4">Game Name</span>
-                                    <span class="medium4">Type Name</span>
-                                </div>
+                    <div class="request-info">
+                        <h1 class="title2 tournament-name">Tournament Name</h1>
+                        <p class="regular3 requestor-name">Requestor: Username1</p>
+                        <div class="info-container">
+                            <p class="caption">X/Y Competitors Accepted</p>
+                            <div class="game-details">
+                                <span class="medium4">Game Name</span>
+                                <span class="medium4">Type Name</span>
                             </div>
-                        
-                    </div>                    
-                    <div class="request-image-and-accept">
-                        <div class="request-image">
-                            <img src="https://via.placeholder.com/150x100" alt="Placeholder Image" />
                         </div>
                     </div>
+                    <div class="request-image">
+                        <img src="https://via.placeholder.com/150x100" alt="Placeholder Image" />
+                    </div>
                 </div>
-                <div class="action-buttons">
-                    <button class="cancel medium4">Decline</button>
-                    <button class="accept medium4">Accept</button>
+                <div class="action-row">
+                    <div class="Dialog">
+                        <button class="cancel">Decline</button>
+                        <button class="accept">Accept</button>
+                    </div>
                 </div>
             </div>
         </div>

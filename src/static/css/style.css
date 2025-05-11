@@ -1171,19 +1171,29 @@ html, body {
     object-fit: cover;
     border-radius: 0.5rem;
 }
-
-.action-buttons{
+.action-row {
     display: flex;
     justify-content: space-between;
-    align-items: flex-end;
-    align-self: stretch;
+    align-items: center;
+    margin-top: 1rem;
+    width: 100%;
 }
 
-.action-buttons .Dialog .cancel,
-.action-buttons .Dialog .accept {
-    height: 2.5rem;
-    padding: 0.5rem 1rem;
-    cursor: pointer;
+.Dialog {
+    display: flex !important;
+    height: 2.2rem !important;
+    align-items: center !important;
+    width: 100% !important;
+    justify-content: space-between !important;
+}
+
+/* Custom button styles with !important for overriding */
+.Dialog button.cancel {
+    margin-right: auto !important;
+}
+
+.Dialog button.accept {
+    margin-left: auto !important;
 }
 
 .flashes {
