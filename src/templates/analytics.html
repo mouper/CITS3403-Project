@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "components/admincards_macros.html" import admincards %}
 
 {% block content %}
 <div class="analytics-container">
@@ -144,80 +145,99 @@
     </div>
   
     <div id="adminView" class="analytics-view" style="display: none;">
-      <h2 class="subheadline purple-text">Recent Tournaments</h2>
-      <div class="statcard-container">
-        <!-- First card -->
-        <div class="statcard">
-          <div class="statcard-top-row">
-            <p class="subheadline">1st</p>
-            <div class="username-container">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="15" viewBox="0 0 20 15" fill="none">
-                <path d="M18.5 3.6L14.5769 7.5L10 1L5.42308 7.5L1.5 3.6V12.05C1.5 12.5672 1.70666 13.0632 2.07452 13.4289C2.44238 13.7946 2.94131 14 3.46154 14H16.5385C17.0587 14 17.5576 13.7946 17.9255 13.4289C18.2933 13.0632 18.5 12.5672 18.5 12.05V3.6Z" stroke="#BBB2FF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              <p class="medium2 white-text">Username1</p>
+      <div class="admin-header">
+        <h2 class="subheadline purple-text">Recent Tournaments</h2>
+        <select id="adminLimitSelector">
+          <option value="all"   {% if limit == 'all' %}selected{% endif %}>Show All</option>
+          {% for opt in [3,6,9,12] %}
+            <option value="{{ opt }}" {% if limit == opt|string %}selected{% endif %}>
+              Show {{ opt }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="statcard-container" id="adminStatcards">
+        {{ admincards(recent_tournaments) }}
+      </div>
+      <script>
+        window.recentTournaments = {{ recent_tournaments|tojson }};
+        document.getElementById('adminLimitSelector').addEventListener('change', function() {
+          const params = new URLSearchParams(window.location.search);
+          params.set('limit', this.value);
+          window.location.search = params.toString();
+        });
+      </script>
+    </div>
+       
+    <div id="modalBackdrop" class="modal-backdrop" style="display: none;">
+      <div class="standings-modal">
+        <div class="modal-content">
+          <div class="modal-header-container">
+            <div class="modal-header">
+              <h2 id="modalTitle" class="medium1">Tournament Name</h2>
+              <button class="close-button" onclick="closeModal()" aria-label="Close">
+                <svg xmlns="http://www.w3.org/2000/svg" width="21" height="20" viewBox="0 0 21 20" fill="none">
+                  <path d="M20 0.5L1 19.5M20 19.5L1 0.5" stroke="white" stroke-linecap="round"/>
+                </svg>
+              </button>
             </div>
-          </div>          
-          <div class="statcard-middle-row">
-            <p class="subheadline">2nd</p>
-            <p class="medium2 white-text">Username2</p>
-          </div>
-          <div class="statcard-bottom-row">
-            <p class="subheadline">3rd</p>
-            <p class="medium2 purple-text">Username3</p>
-          </div>
-          <div class="tournament-footer">
-            <span class="regular3">Tournament Name</span>
-            <a href="#" class="caption">View</a>
-          </div>
-        </div>
-    
-        <!-- Second card -->
-        <div class="statcard">
-          <div class="statcard-top-row">
-            <p class="subheadline">1st</p>
-            <div class="username-container">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="15" viewBox="0 0 20 15" fill="none">
-                <path d="M18.5 3.6L14.5769 7.5L10 1L5.42308 7.5L1.5 3.6V12.05C1.5 12.5672 1.70666 13.0632 2.07452 13.4289C2.44238 13.7946 2.94131 14 3.46154 14H16.5385C17.0587 14 17.5576 13.7946 17.9255 13.4289C18.2933 13.0632 18.5 12.5672 18.5 12.05V3.6Z" stroke="#BBB2FF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              <p class="medium2 white-text">Username1</p>
+            <div class="modal-info-container">
+              <div class="modal-info">
+                <div class="info-item">
+                  <p class="caption">Type:</p>
+                  <p class="regular4">Round Robin</p>
+                </div>
+                <div class="info-item">
+                  <p class="caption">Game:</p>
+                  <p class="regular4">Pokémon TCG</p>
+                </div>
+                <div class="info-item">
+                  <p class="caption">Round Time Limit:</p>
+                  <p class="regular4">30 Minutes</p>
+                </div>
+              </div>
+              <div class="modal-date">
+                <div class="info-item">
+                  <p class="regular4">07/05/2025</p>
+                </div>
+              </div>
             </div>
-          </div>          
-          <div class="statcard-middle-row">
-            <p class="subheadline">2nd</p>
-            <p class="medium2 white-text">Username2</p>
-          </div>
-          <div class="statcard-bottom-row">
-            <p class="subheadline">3rd</p>
-            <p class="medium2 purple-text">Username3</p>
-          </div>
-          <div class="tournament-footer">
-            <span class="regular3">Tournament Name</span>
-            <a href="#" class="caption">View</a>
-          </div>
-        </div>
-    
-        <!-- Third card -->
-        <div class="statcard">
-          <div class="statcard-top-row">
-            <p class="subheadline">1st</p>
-            <div class="username-container">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="15" viewBox="0 0 20 15" fill="none">
-                <path d="M18.5 3.6L14.5769 7.5L10 1L5.42308 7.5L1.5 3.6V12.05C1.5 12.5672 1.70666 13.0632 2.07452 13.4289C2.44238 13.7946 2.94131 14 3.46154 14H16.5385C17.0587 14 17.5576 13.7946 17.9255 13.4289C18.2933 13.0632 18.5 12.5672 18.5 12.05V3.6Z" stroke="#BBB2FF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              <p class="medium2 white-text">Username1</p>
+            <div class="table-container">
+              <div class="table-label">
+                <h3 class="medium2 table-heading">STANDINGS:</h3>
+                <p class="caption table-caption">OWP = Opponents Win Percentage</p>
+              </div>
+              <div class="table-wrapper">
+                <table class="app-table">
+                  <thead>
+                    <tr>
+                      <th>Rank</th>
+                      <th>Player</th>
+                      <th>W/L</th>
+                      <th>OWP</th>
+                      <th>Opponent's OWP</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>1</td>
+                      <td>ABC</td>
+                      <td>1/0/0</td>
+                      <td>100%</td>
+                      <td>75%</td>
+                    </tr>
+                    <tr>
+                      <td>2</td>
+                      <td>XYZ</td>
+                      <td>0/1/0</td>
+                      <td>50%</td>
+                      <td>60%</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>          
-          <div class="statcard-middle-row">
-            <p class="subheadline">2nd</p>
-            <p class="medium2 white-text">Username2</p>
-          </div>
-          <div class="statcard-bottom-row">
-            <p class="subheadline">3rd</p>
-            <p class="medium2 purple-text">Username3</p>
-          </div>
-          <div class="tournament-footer">
-            <span class="regular3">Tournament Name</span>
-            <a href="#" class="caption">View</a>
+            </div>
           </div>
         </div>
       </div>
