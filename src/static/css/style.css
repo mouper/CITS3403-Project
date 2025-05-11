@@ -1185,15 +1185,18 @@ html, body {
     align-items: center !important;
     width: 100% !important;
     justify-content: space-between !important;
+    padding-bottom: 1rem;
 }
 
 /* Custom button styles with !important for overriding */
 .Dialog button.cancel {
     margin-right: auto !important;
+    padding: 0.5rem 1rem !important;
 }
 
 .Dialog button.accept {
     margin-left: auto !important;
+    padding: 0.5rem 1rem !important;
 }
 
 .flashes {
