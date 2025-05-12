@@ -100,10 +100,59 @@ def analytics():
 @application.route('/requests')
 @login_required
 def view_requests():
-    incoming = Friend.query.filter_by(
-        friend_id=current_user.id
-    ).all()  
-    return render_template('requests.html', incoming=incoming)
+    incoming_rels = Friend.query.filter_by(friend_id=current_user.id).all()
+
+    cards = []
+    for fr in incoming_rels:
+        user = fr.sender  
+        
+        stats = UserStat.query.filter_by(user_id=user.id).all()
+        total_played = sum(s.games_played for s in stats)
+        total_won    = sum(s.games_won for s in stats)
+        win_rate     = round((total_won / total_played) * 100, 1) if total_played else 0
+
+        last_three_q = (
+            db.session.query(TournamentResult)
+                      .join(TournamentPlayer)
+                      .join(Tournament)
+                      .filter(TournamentPlayer.user_id == user.id)
+                      .order_by(Tournament.start_time.desc())
+                      .limit(3)
+                      .all()
+        )
+        last_three = []
+        for res in last_three_q:
+            tour = Tournament.query.get(res.tournament_id)
+            last_three.append({
+            "label": tour.title if tour else "Unknown",
+            "w":     res.wins,
+            "l":     res.losses
+            })
+
+        best_three_q = (
+            db.session.query(TournamentResult)
+                      .join(TournamentPlayer)
+                      .filter(TournamentPlayer.user_id == user.id)
+                      .order_by(TournamentResult.wins.desc())
+                      .limit(3)
+                      .all()
+        )
+        best_three = [
+            { "label": res.tournament.title, "w": res.wins, "l": res.losses }
+            for res in best_three_q
+        ]
+
+        cards.append({
+            "fr": fr,
+            "user": user,
+            "win_rate": win_rate,
+            "total_wins_played": total_won,
+            "last_three": last_three,
+            "best_three": best_three
+        })
+
+    return render_template('requests.html', incoming=cards)
+
 
 @application.route('/account')
 @login_required

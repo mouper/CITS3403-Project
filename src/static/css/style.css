@@ -1089,7 +1089,7 @@ html, body {
     padding-bottom: 1rem;
 }
 
-.tournament-name {
+.user-username {
     color: var(--Primary-Shade-1, #BBB2FF);
     font-size: 1.625rem;
     font-style: normal;
