@@ -10,25 +10,25 @@
         <div class="form-group">
             <label class="form-label">Tournament Name</label>
             <div class="TextForm">
-                <input type="text" id="tournamentName" placeholder="Enter tournament name">
+                <input type="text" id="tournamentName" placeholder="Tournament Name" value="{{ tournament.title if tournament else '' }}">
             </div>
         </div>
         <div class="form-sml">
             <div class="Dropdown">
                 <label for="roundTimeLimit" class="form-label">Round Time Limit</label>
                 <select id="roundTimeLimit">
-                    <option value="" disabled selected>Select</option>
-                    <option value="10">10 minutes</option>
-                    <option value="15">15 minutes</option>
-                    <option value="20">20 minutes</option>
-                    <option value="25">25 minutes</option>
-                    <option value="30">30 minutes</option>
-                    <option value="35">35 minutes</option>
-                    <option value="40">40 minutes</option>
-                    <option value="45">45 minutes</option>
-                    <option value="50">50 minutes</option>
-                    <option value="55">55 minutes</option>
-                    <option value="60">60 minutes</option>
+                    <option value="" disabled selected>Select Round Time Limit</option>
+                    <option value="10" {% if tournament and tournament.round_time_minutes == 10 %}selected{% endif %}>10 minutes</option>
+                    <option value="15" {% if tournament and tournament.round_time_minutes == 15 %}selected{% endif %}>15 minutes</option>
+                    <option value="20" {% if tournament and tournament.round_time_minutes == 20 %}selected{% endif %}>20 minutes</option>
+                    <option value="25" {% if tournament and tournament.round_time_minutes == 25 %}selected{% endif %}>25 minutes</option>
+                    <option value="30" {% if tournament and tournament.round_time_minutes == 30 %}selected{% endif %}>30 minutes</option>
+                    <option value="35" {% if tournament and tournament.round_time_minutes == 35 %}selected{% endif %}>35 minutes</option>
+                    <option value="40" {% if tournament and tournament.round_time_minutes == 40 %}selected{% endif %}>40 minutes</option>
+                    <option value="45" {% if tournament and tournament.round_time_minutes == 45 %}selected{% endif %}>45 minutes</option>
+                    <option value="50" {% if tournament and tournament.round_time_minutes == 50 %}selected{% endif %}>50 minutes</option>
+                    <option value="55" {% if tournament and tournament.round_time_minutes == 55 %}selected{% endif %}>55 minutes</option>
+                    <option value="60" {% if tournament and tournament.round_time_minutes == 60 %}selected{% endif %}>60 minutes</option>
                 </select>
             </div>
         </div>
@@ -39,10 +39,10 @@
             <label class="form-label">Tournament Type</label>
             <div class="Dropdown">
                 <select id="tournamentType">
-                <option value="" disabled selected>Select</option>
-                <option value="round robin">Round Robin</option>
-                <option value="swiss">Swiss System</option>
-                <option value="single elimination">Single Elimination</option>
+                    <option value="">Select Tournament Type</option>
+                    <option value="round robin" {% if tournament and tournament.format == 'round robin' %}selected{% endif %}>Round Robin</option>
+                    <option value="single elimination" {% if tournament and tournament.format == 'single elimination' %}selected{% endif %}>Single Elimination</option>
+                    <option value="swiss" {% if tournament and tournament.format == 'swiss' %}selected{% endif %}>Swiss System</option>
                 </select>
             </div>
             </div>
@@ -51,13 +51,13 @@
         <div class="Dropdown">
           <select id="gameType">
             <option value="" disabled selected>Select</option>
-            <option value="pokemon">Pokemon TCG</option>
-            <option value="magic">Magic: The Gathering</option>
-            <option value="chess">Chess</option>
-            <option value="yugioh">Yu Gi Oh</option>
-            <option value="onepiece">One Piece Card Game</option>
-            <option value="digimon">Digimon Card Game</option>
-            <option value="other">Other</option>
+            <option value="pokemon" {% if tournament and tournament.game_type == 'pokemon' %}selected{% endif %}>Pokemon TCG</option>
+            <option value="magic" {% if tournament and tournament.game_type == 'magic' %}selected{% endif %}>Magic: The Gathering</option>
+            <option value="chess" {% if tournament and tournament.game_type == 'chess' %}selected{% endif %}>Chess</option>
+            <option value="yugioh" {% if tournament and tournament.game_type == 'yugioh' %}selected{% endif %}>Yu Gi Oh</option>
+            <option value="onepiece" {% if tournament and tournament.game_type == 'onepiece' %}selected{% endif %}>One Piece Card Game</option>
+            <option value="digimon" {% if tournament and tournament.game_type == 'digimon' %}selected{% endif %}>Digimon Card Game</option>
+            <option value="other" {% if tournament and tournament.game_type == 'other' %}selected{% endif %}>Other</option>
           </select>
         </div>
         </div>
@@ -68,18 +68,10 @@
             <label class="form-label">Number of Competitors</label>
             <div class="Dropdown">
                 <select id="competitorCount">
-                <option value="" disabled selected>Select</option>
-                <option value="2">2</option>
-                <option value="3">3</option>
-                <option value="4">4</option>
-                <option value="5">5</option>
-                <option value="6">6</option>
-                <option value="7">7</option>
-                <option value="8">8</option>
-                <option value="9">9</option>
-                <option value="10">10</option>
-                <option value="11">11</option>
-                <option value="12">12</option>
+                    <option value="" disabled selected>Select Number of Competitors</option>
+                    {% for i in range(2, 33) %}
+                    <option value="{{ i }}" {% if tournament and tournament.num_players == i %}selected{% endif %}>{{ i }}</option>
+                    {% endfor %}
                 </select>
             </div>
         </div>
@@ -87,7 +79,7 @@
             <label class="form-label">Competitor Details</label>
             <div class="Checkbox">
                 <label class="checkbox-option">
-                <input type="checkbox" id="isCompetitor" class="checkbox-input">
+                <input type="checkbox" id="isCompetitor" {% if tournament and tournament.include_creator_as_player %}checked{% endif %} class="checkbox-input">
                 <div class="checkbox-icon">
                     <div class="unchecked-icon UncheckBoxIcon"></div>
                     <div class="checked-icon CheckedBoxIcon"></div>
@@ -132,6 +124,23 @@
         </div>
     </div>
 </div>
+
+<!-- Hidden data container for tournament data -->
+{% if tournament %}
+<div id="tournamentData" 
+    data-tournament='{
+        "id": {{ tournament.id }},
+        "title": "{{ tournament.title|replace('"', '\\"') }}",
+        "format": "{{ tournament.format }}",
+        "game_type": "{{ tournament.game_type }}",
+        "round_time_minutes": {{ tournament.round_time_minutes }},
+        "num_players": {{ tournament.num_players }},
+        "include_creator_as_player": {{ 'true' if tournament.include_creator_as_player else 'false' }},
+        "players": {{ players|tojson|safe }}
+    }'
+    style="display: none;">
+</div>
+{% endif %}
 
 <script>
   // Pass Flask variables to JavaScript

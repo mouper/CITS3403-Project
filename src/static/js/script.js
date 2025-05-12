@@ -31,6 +31,48 @@ function initTournamentForm() {
     username: window.currentUserUsername || "" 
   };
 
+  // Initialize tournament data if available
+  const tournamentDataElement = document.getElementById('tournamentData');
+  if (tournamentDataElement) {
+    window.existingTournament = JSON.parse(tournamentDataElement.dataset.tournament);
+    
+    // Trigger competitor count change to create player sections
+    competitorCountSelect.value = window.existingTournament.num_players;
+    handleCompetitorCountChange();
+    
+    // Wait for player sections to be created
+    setTimeout(() => {
+      // Populate player data
+      window.existingTournament.players.forEach((player, index) => {
+        const playerId = index + 1;
+        
+        // Set TourneyPro account radio
+        if (player.has_tourney_pro_account) {
+          document.getElementById(`tourneyProYes${playerId}`).checked = true;
+          document.getElementById(`usernameGroup${playerId}`).style.display = 'block';
+          document.getElementById(`formGrid${playerId}`).style.display = 'none';
+          
+          // Set username
+          if (player.username) {
+            document.getElementById(`username${playerId}`).value = player.username;
+          }
+        } else {
+          document.getElementById(`tourneyProNo${playerId}`).checked = true;
+          document.getElementById(`usernameGroup${playerId}`).style.display = 'none';
+          document.getElementById(`formGrid${playerId}`).style.display = 'block';
+          
+          // Set guest info
+          document.getElementById(`firstName${playerId}`).value = player.guest_firstname || '';
+          document.getElementById(`lastName${playerId}`).value = player.guest_lastname || '';
+          document.getElementById(`email${playerId}`).value = player.email || '';
+        }
+      });
+      
+      // Check if all players are filled out
+      checkAndCreateConfirmDetailsTab();
+    }, 100);
+  }
+
   // Error message container
   const errorContainer = document.createElement('div');
   errorContainer.className = 'error-container mt-2';
@@ -1191,53 +1233,69 @@ function initTournamentForm() {
 
   // Replace handleSaveTournament with simplified version that uses common functions
   function handleSaveTournament() {
+    const button = document.getElementById('saveTournament');
+    const defaultButtonText = button.innerHTML;
+    
+    // Disable button and show saving state
+    button.disabled = true;
+    button.innerHTML = '<div class="SaveIcon"></div>Saving...';
+    
+    // Collect and validate tournament data
     const tournamentData = collectAndValidateTournamentData();
     if (!tournamentData) {
-      return; // Validation failed
+        button.disabled = false;
+        button.innerHTML = defaultButtonText;
+        return;
     }
     
-    // Set as draft
+    // Set tournament as draft
     tournamentData.is_draft = true;
     
-    // Show loading state
-    saveTournamentBtn.disabled = true;
-    saveTournamentBtn.textContent = 'Saving...';
+    // Get tournament ID from URL if editing
+    const urlParams = new URLSearchParams(window.location.search);
+    const tournamentId = urlParams.get('tournament_id');
+    if (tournamentId) {
+        tournamentData.tournament_id = tournamentId;
+    }
     
-    // Send data to server
+    // Send tournament data to server
     fetch('/save_tournament', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(tournamentData),
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(tournamentData)
     })
-    .then(response => {
-      return response.json().then(data => {
-        if (!response.ok) {
-          throw {
-            status: response.status,
-            data: data
-          };
-        }
-        return data;
-      });
-    })
+    .then(response => response.json())
     .then(data => {
-      if (data.success) {
-        // Show success message without redirecting
-        alert('Tournament saved successfully!');
-        // Reset button state
-        saveTournamentBtn.disabled = false;
-        saveTournamentBtn.textContent = 'Save Tournament Draft';
-      } else {
-        showError('Error: ' + data.message);
-        // Reset button state on error
-        saveTournamentBtn.disabled = false;
-        saveTournamentBtn.textContent = 'Save Tournament Draft';
-      }
+        if (data.success) {
+            // Show success message
+            const successMessage = document.createElement('div');
+            successMessage.className = 'success-message';
+            successMessage.textContent = 'Tournament draft saved successfully!';
+            document.querySelector('.tournament-form-container').insertBefore(
+                successMessage,
+                document.querySelector('.action-buttons')
+            );
+            
+            // Remove success message after 3 seconds
+            setTimeout(() => {
+                successMessage.remove();
+            }, 3000);
+            
+            // Update URL with tournament ID without reloading
+            const newUrl = `/new_tournament?tournament_id=${data.tournament_id}`;
+            window.history.pushState({}, '', newUrl);
+            
+            // Re-enable button
+            button.disabled = false;
+            button.innerHTML = defaultButtonText;
+        } else {
+            handleTournamentError(data, button, defaultButtonText);
+        }
     })
     .catch(error => {
-      handleTournamentError(error, saveTournamentBtn, 'Save Tournament Draft', parseInt(competitorCountSelect.value));
+        handleTournamentError(error, button, defaultButtonText);
     });
   }
 
@@ -1254,6 +1312,13 @@ function initTournamentForm() {
     // Show loading state
     startTournamentBtn.disabled = true;
     startTournamentBtn.textContent = 'Starting...';
+    
+    // Get tournament ID from URL if we're editing a draft
+    const urlParams = new URLSearchParams(window.location.search);
+    const tournamentId = urlParams.get('tournament_id');
+    if (tournamentId) {
+      tournamentData.tournament_id = tournamentId;
+    }
     
     // Send data to server
     fetch('/start_tournament', {
