@@ -1,6 +1,7 @@
 import os
 from flask import Flask, request
 from flask_login import LoginManager, current_user, logout_user
+from flask_mail import Mail, Message
 from models import User
 from db import db, migrate
 from dotenv import load_dotenv
@@ -10,6 +11,15 @@ load_dotenv()
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 application = Flask(__name__)
+
+application.config['MAIL_SERVER'] = os.getenv("MAIL_SERVER", "smtp.gmail.com")
+application.config['MAIL_PORT'] = int(os.getenv("MAIL_PORT", 587))
+application.config['MAIL_USE_TLS'] = True
+application.config['MAIL_USERNAME'] = os.getenv("MAIL_USERNAME")  # your email
+application.config['MAIL_PASSWORD'] = os.getenv("MAIL_PASSWORD")  # app password or real pass
+application.config['MAIL_DEFAULT_SENDER'] = application.config['MAIL_USERNAME']
+
+mail = Mail(application)
 
 application.config['SECRET_KEY'] = os.environ.get("SECRET_KEY") or "your-secret-key-here"
 
