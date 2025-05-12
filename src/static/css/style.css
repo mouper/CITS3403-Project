@@ -1085,8 +1085,8 @@ html, body {
     font-weight: 500;
     line-height: 1.5rem; 
     letter-spacing: 0.0125rem;
-    padding-top: 3rem;
-    padding-bottom: 2rem;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
 }
 
 .tournament-name {
@@ -1179,7 +1179,7 @@ html, body {
 
 .action-row {
     display: flex;
-    justify-content: space-between !important;
+    justify-content: space-between !;
     align-items: center;
     margin-top: 1rem;
     width: 100%;
@@ -1204,6 +1204,7 @@ html, body {
     font-weight: 500;
     line-height: 1.25rem; 
     letter-spacing: 0.025rem;
+    cursor: pointer;
 }
 
 .Dialog button.accept {
@@ -1215,39 +1216,59 @@ html, body {
     font-weight: 500;
     line-height: 1.25rem; 
     letter-spacing: 0.025rem;
+    cursor: pointer;
 }
 
 .status-indicator {
     display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 2rem;
+}
+
+.status-and-edit {
+    display: flex;
+    justify-content: space-between;
     align-items: center;
     gap: 1rem;
+    height: 2rem;
 }
 
-.status-button {
-    background-color: var(--overlay-primary1);
-    color: var(--primary-shade1);
-    border: none;
-    border-radius: 2rem;
-    padding: 0.5rem 1.5rem;
+.status-button.accepted {
+    background-color: var(--primary-shade1);
+    color: var(--background-shade1);
+    border: 1.5px solid var(--primary-shade1);    /* ← was transparent */
+    border-radius: 0.8rem;
+    padding: 0.4rem 1rem;
+    transition: background-color 0.3s ease, color 0.3s ease, border 0.3s ease;
+    color: var(--Background-Shade1, #121212);
     font-size: 0.875rem;
-    cursor: pointer;
-}
+    font-style: normal;
+    font-weight: 500;
+    line-height: 1.25rem;
+    letter-spacing: 0.025rem;
+}   
 
 .edit-button {
-    background: none;
-    border: none;
+    padding-top: 1rem;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    padding-left: 0rem;
 }
 
 .edit-button svg {
-    width: 20px;
-    height: 20px;
+    width: 1rem;
+    height: 1rem;
+    flex-shrink: 0;
+    stroke-width: 1.3px;
+    stroke: var(--Primary-Shade2, #D6D6EE);
 }
 
 .status-time {
+    color: var(--Primary-Shade2, #D6D6EE);
+    font-size: 0.875rem;
+    font-style: italic;
+    font-weight: 300;
+    line-height: 1.5rem; 
     text-align: right;
 }
 

@@ -100,32 +100,10 @@ def analytics():
 @application.route('/requests')
 @login_required
 def view_requests():
-    incoming = Invite.query.filter_by(recipient_id=current_user.id).all()
-    requests = []
-    for inv in incoming:
-        sender = inv.sender
-        t      = inv.tournament
-
-        accepted_count = TournamentPlayer.query\
-            .filter_by(tournament_id=t.id, is_confirmed=True)\
-            .count()
-        total_count = TournamentPlayer.query\
-            .filter_by(tournament_id=t.id)\
-            .count()
-
-        requests.append({
-            'id':                inv.id,
-            'tournament_name':   t.title,
-            'requestor_name':    sender.display_name,
-            'requestor_username':sender.username,
-            'requestor_avatar':  sender.avatar_path,
-            'accepted':          accepted_count,
-            'total':             total_count,
-            'game_name':         t.game_type,
-            'type_name':         t.format
-        })
-    return render_template('requests.html', requests=requests)
-
+    incoming = Friend.query.filter_by(
+        friend_id=current_user.id
+    ).all()  
+    return render_template('requests.html', incoming=incoming)
 
 @application.route('/account')
 @login_required
@@ -381,9 +359,9 @@ def send_invite():
     flash("Invite sent!", "success")
     return redirect(url_for('dashboard'))
 
-@application.route('/respond_request/<int:invite_id>', methods=['POST'])
+@application.route('/friends/respond/<int:request_id>', methods=['POST'])
 @login_required
-def respond_request(invite_id):
+def respond_friend_request(request_id):
     fr = Friend.query.filter_by(
         user_id=request_id,
         friend_id=current_user.id,
@@ -393,13 +371,13 @@ def respond_request(invite_id):
     resp = request.form.get('response')
     if resp == 'accept':
         fr.status = 'accepted'
-        flash("Friend request accepted.", "success")
-    else:
-        fr.status = 'declined'
-        flash("Friend request declined.", "info")
+    else:  
+        db.session.delete(fr)
 
     db.session.commit()
     return redirect(url_for('view_requests'))
+
+
 
 @application.route('/friends/request', methods=['POST'])
 @login_required
@@ -428,3 +406,15 @@ def send_friend_request():
     db.session.add(fr)
     db.session.commit()
     return jsonify(success=True)
+
+@application.route('/friends/edit/<int:request_id>', methods=['POST'])
+@login_required
+def edit_friend_request(request_id):
+    fr = Friend.query.filter_by(
+        user_id   = request_id,
+        friend_id = current_user.id
+    ).first_or_404()
+
+    fr.status = 'pending'
+    db.session.commit()
+    return redirect(url_for('view_requests'))
