@@ -73,13 +73,41 @@ function initTournamentForm() {
     }, 100);
   }
 
-  // Error message container
-  const errorContainer = document.createElement('div');
-  errorContainer.className = 'error-container mt-2';
-  playersContainer.parentNode.insertBefore(errorContainer, playersContainer.nextSibling);
+  // Error message container setup
+  let errorContainer;
+  if (!document.querySelector('.error-container')) {
+    errorContainer = document.createElement('div');
+    errorContainer.className = 'error-container mt-2';
+    errorContainer.style.display = 'none';
+    
+    // Find the appropriate container based on the current view
+    const container = document.querySelector('.tournament-round') || 
+                     document.querySelector('.tournament-results') || 
+                     document.querySelector('.tournament-container');
+    if (container) {
+      // Insert at the beginning of the container
+      container.insertBefore(errorContainer, container.firstChild);
+    }
+  } else {
+    errorContainer = document.querySelector('.error-container');
+  }
 
   // Show error message function
   function showError(message) {
+    if (!errorContainer) {
+      // If error container doesn't exist, create it
+      errorContainer = document.createElement('div');
+      errorContainer.className = 'error-container mt-2';
+      errorContainer.style.display = 'none';
+      
+      const container = document.querySelector('.tournament-round') || 
+                       document.querySelector('.tournament-results') || 
+                       document.querySelector('.tournament-container');
+      if (container) {
+        container.insertBefore(errorContainer, container.firstChild);
+      }
+    }
+    
     errorContainer.innerHTML = message;
     errorContainer.style.display = 'block';
     
@@ -1357,456 +1385,349 @@ function initTournamentForm() {
 // TOURNAMENT MANAGEMENT FUNCTIONALITY
 // =============================================
 function initTournamentManager() {
+  // First check if we're on a tournament page
+  const tournamentIdElement = document.getElementById('tournamentId');
+  if (!tournamentIdElement) {
+    console.log('Not on a tournament page, skipping tournament manager initialization');
+    return; // Exit early if we're not on a tournament page
+  }
+
   // Get tournament information
-  const tournamentId = document.getElementById('tournamentId').value;
-  const tournamentFormat = document.getElementById('tournamentFormat').value;
-  const roundState = document.getElementById('roundState').value;
-  const roundTimeMinutes = parseInt(document.getElementById('roundTime').value) || 50; // Default to 50 minutes if not set
-  const viewState = document.getElementById('viewState').value; // Get the view state
+  const tournamentId = tournamentIdElement.value;
+  console.log('Tournament ID:', tournamentId); // Debug log
+  
+  // These elements only exist in the active tournament view
+  const tournamentFormat = document.getElementById('tournamentFormat')?.value;
+  const roundState = document.getElementById('roundState')?.value;
+  const roundTimeMinutes = parseInt(document.getElementById('roundTime')?.value) || 50;
+  const viewState = document.getElementById('viewState')?.value;
   
   let timerInterval;
-  let timeRemaining = roundTimeMinutes * 60; // Convert to seconds
-  
-  // Error message container setup
-  let errorContainer;
-  if (!document.querySelector('.error-container')) {
-    errorContainer = document.createElement('div');
-    errorContainer.className = 'error-container mt-2';
-    errorContainer.style.display = 'none';
-    
-    // Insert after the pairings table
-    const pairingsTableContainer = document.querySelector('.pairings-table-container');
-    if (pairingsTableContainer) {
-      pairingsTableContainer.parentNode.insertBefore(errorContainer, pairingsTableContainer.nextSibling);
-    }
-  } else {
-    errorContainer = document.querySelector('.error-container');
-  }
+  let timeRemaining = roundTimeMinutes * 60;
 
-  // Show error message function
-  function showError(message) {
-    errorContainer.innerHTML = message;
-    errorContainer.style.display = 'block';
-    
-    // Scroll to error
-    errorContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }
-
-  // Clear error message function
-  function clearError() {
-    errorContainer.innerHTML = '';
-    errorContainer.style.display = 'none';
-  }
-  
-  // Error handling function for tournament operations
-  function handleTournamentError(error, buttonElement, defaultButtonText) {
-    console.error('Error:', error);
-    
-    // Reset button state if provided
-    if (buttonElement) {
-      buttonElement.disabled = false;
-      buttonElement.textContent = defaultButtonText;
-    }
-    
-    // Handle different error responses
-    if (error.json) {
-      error.json().then(data => {
-        if (data.message) {
-          showError(data.message);
-        } else if (data.detailed_errors && data.detailed_errors.length) {
-          showError(data.detailed_errors.join('<br>'));
+  // Function to clean up flash messages
+  function cleanupFlashMessages() {
+    // Remove both client-side and server-side flash messages
+    const flashMessages = document.querySelectorAll('.flash-message-send-results, .alert-success, .flashes .alert');
+    flashMessages.forEach(flash => {
+      // Add fade out animation
+      flash.style.opacity = '0';
+      flash.style.transition = 'opacity 0.15s ease-out';
+      // Remove after animation completes
+      setTimeout(() => {
+        if (flash.parentElement && flash.parentElement.classList.contains('flashes')) {
+          // If it's a server-side flash message, remove the entire flashes container
+          flash.parentElement.remove();
         } else {
-          showError('An error occurred while processing your request. Please try again.');
+          flash.remove();
         }
-      }).catch(() => {
-        showError('An error occurred while processing your request. Please try again.');
-      });
-    } else if (error.data) {
-      if (error.data.message) {
-        showError(error.data.message);
-      } else if (error.data.detailed_errors && error.data.detailed_errors.length) {
-        showError(error.data.detailed_errors.join('<br>'));
-      } else {
-        showError('Failed to process tournament operation. Please try again.');
-      }
-    } else {
-      showError('An error occurred. Please try again.');
-    }
-  }
-  
-  // Initialize timer if round is in progress and not in confirm results view
-  if (roundState === 'in progress' && viewState !== 'confirm_results') {
-      startTimer();
+      }, 150);
+    });
   }
 
-  // Handle tournament results viewing
-  const viewResultsBtn = document.getElementById('viewResultsBtn');
-  if (viewResultsBtn) {
-      viewResultsBtn.addEventListener('click', () => {
-          // Redirect to the tournament completed view since results are already saved
-          window.location.href = `/tournament/${tournamentId}/completed`;
-      });
-  }
-  
-  // Handle automatic selection for bye matches
-  document.querySelectorAll('.match-row').forEach(row => {
-      if (row.dataset.isBye === 'true') {
-          const radioButton = row.querySelector('input[value="player1"]');
-          if (radioButton) {
-              radioButton.checked = true;
-              radioButton.disabled = true;
-          }
-      }
-  });
-  
-  // Validation function to check if all winners are selected
-  function validateAllSelectionsComplete() {
-      clearError();
-      
-      const matchRows = document.querySelectorAll('.match-row');
-      const incompleteMatches = [];
-      
-      matchRows.forEach(row => {
-          const matchId = row.dataset.matchId;
-          const isBye = row.dataset.isBye === 'true';
-          
-          // Skip validation for bye matches
-          if (isBye) {
-              return;
-          }
-          
-          const player1Radio = row.querySelector(`input[name="winner${matchId}"][value="player1"]`);
-          const player2Radio = row.querySelector(`input[name="winner${matchId}"][value="player2"]`);
-          
-          // Check if a winner has been selected
-          if ((!player1Radio || !player1Radio.checked) && (!player2Radio || !player2Radio.checked)) {
-              // Get table number
-              const tableCell = row.querySelector('td:first-child');
-              const tableNumber = tableCell ? tableCell.textContent.trim() : matchId;
-              incompleteMatches.push(tableNumber);
-          }
-      });
-      
-      if (incompleteMatches.length > 0) {
-          showError(`Please select winners for all matches before proceeding. Missing selections for table(s): ${incompleteMatches.join(', ')}`);
-          return false;
-      }
-      
-      return true;
-  }
-  
-  // Timer functions
-  function startTimer() {
-      updateTimerDisplay();
-      timerInterval = setInterval(() => {
-          timeRemaining--;
-          updateTimerDisplay();
-          
-          if (timeRemaining <= 0) {
-              clearInterval(timerInterval);
-              // Instead of ending the round directly, transition to confirm results view
-              transitionToConfirmResultsView();
-          }
-      }, 1000);
-  }
-  
-  function updateTimerDisplay() {
-      const minutes = Math.floor(timeRemaining / 60);
-      const seconds = timeRemaining % 60;
-      const display = document.getElementById('timerDisplay');
-      
-      if (display) {
-          display.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-      }
-  }
-  
-  function resetTimer() {
-      clearInterval(timerInterval);
-      timeRemaining = roundTimeMinutes * 60;
-      updateTimerDisplay();
-      timerInterval = setInterval(() => {
-          timeRemaining--;
-          updateTimerDisplay();
-          
-          if (timeRemaining <= 0) {
-              clearInterval(timerInterval);
-              // Instead of ending the round directly, transition to confirm results view
-              transitionToConfirmResultsView();
-          }
-      }, 1000);
-  }
-  
-  // Transition to confirm results view
-  function transitionToConfirmResultsView() {
-      // Navigate to confirm results view while preserving current selections
-      window.location.href = `/tournament/${tournamentId}?view_state=confirm_results`;
-  }
-  
-  // Button event listeners
-  const startRoundBtn = document.getElementById('startRoundBtn');
-  if (startRoundBtn) {
-      startRoundBtn.addEventListener('click', () => {
-          const defaultText = startRoundBtn.textContent;
-          startRoundBtn.textContent = 'Starting...';
-          startRoundBtn.disabled = true;
-          
-          fetch(`/tournament/${tournamentId}/start_round`, {
-              method: 'POST',
-              headers: {
-                  'Content-Type': 'application/json',
-              }
-          })
-          .then(response => {
-              if (!response.ok) {
-                  throw response;
-              }
-              return response.json();
-          })
-          .then(data => {
-              if (data.success) {
-                  window.location.reload();
-              } else {
-                  handleTournamentError({ data }, startRoundBtn, defaultText);
-              }
-          })
-          .catch(error => {
-              handleTournamentError(error, startRoundBtn, defaultText);
-          });
-      });
-  }
-  
-  const resetRoundBtn = document.getElementById('resetRoundBtn');
-  if (resetRoundBtn) {
-      resetRoundBtn.addEventListener('click', () => {
-          clearError(); // Clear any existing errors
-          
-          // Reset all radio selections except for bye matches
-          document.querySelectorAll('.match-row').forEach(row => {
-              if (row.dataset.isBye !== 'true') {
-                  const inputs = row.querySelectorAll('input[type="radio"]');
-                  inputs.forEach(input => {
-                      if (!input.disabled) {
-                          input.checked = false;
-                      }
-                  });
-              }
-          });
-          
-          // Reset timer
-          resetTimer();
-      });
-  }
-  
-  const endRoundEarlyBtn = document.getElementById('endRoundEarlyBtn');
-  if (endRoundEarlyBtn) {
-      endRoundEarlyBtn.addEventListener('click', () => {
-          clearInterval(timerInterval);
-          
-          const defaultText = endRoundEarlyBtn.textContent;
-          endRoundEarlyBtn.textContent = 'Processing...';
-          endRoundEarlyBtn.disabled = true;
-          
-          // Instead of ending the round directly, save current state and transition to confirm results view
-          saveResults()
-          .then(data => {
-              if (data.success) {
-                  transitionToConfirmResultsView();
-              } else {
-                  handleTournamentError({ data }, endRoundEarlyBtn, defaultText);
-              }
-          })
-          .catch(error => {
-              handleTournamentError(error, endRoundEarlyBtn, defaultText);
-              endRoundEarlyBtn.textContent = defaultText;
-              endRoundEarlyBtn.disabled = false;
-          });
-      });
-  }
-  
-  // New confirm results button handler
-  const confirmResultsBtn = document.getElementById('confirmResultsBtn');
-  if (confirmResultsBtn) {
-      confirmResultsBtn.addEventListener('click', () => {
-          // Validate before proceeding
-          if (!validateAllSelectionsComplete()) {
-              return;
-          }
-          
-          const defaultText = confirmResultsBtn.textContent;
-          confirmResultsBtn.textContent = 'Processing...';
-          confirmResultsBtn.disabled = true;
-          
-          // Save results and complete the round
-          saveResults()
-          .then(data => {
-              if (!data.success) {
-                  handleTournamentError({ data }, confirmResultsBtn, defaultText);
-                  return;
-              }
-              
-              return fetch(`/tournament/${tournamentId}/complete_round`, {
-                  method: 'POST',
-                  headers: {
-                      'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify({
-                      match_results: collectMatchResults()
-                  })
-              })
-              .then(response => {
-                  if (!response.ok) {
-                      throw response;
-                  }
-                  return response.json();
-              })
-              .then(data => {
-                  if (data.success) {
-                      // Reload to show the completed round state
-                      window.location.href = `/tournament/${tournamentId}`;
-                  } else {
-                      handleTournamentError({ data }, confirmResultsBtn, defaultText);
-                  }
-              });
-          })
-          .catch(error => {
-              handleTournamentError(error, confirmResultsBtn, defaultText);
-          });
-      });
-  }
-  
-  const proceedNextRoundBtn = document.getElementById('proceedNextRoundBtn');
-  if (proceedNextRoundBtn) {
-      proceedNextRoundBtn.addEventListener('click', () => {
-          const defaultText = proceedNextRoundBtn.textContent;
-          proceedNextRoundBtn.textContent = 'Processing...';
-          proceedNextRoundBtn.disabled = true;
-          
-          // Results should already be saved at this point, just navigate to the next round
-          fetch(`/tournament/${tournamentId}/next_round`, {
-              method: 'POST',
-              headers: {
-                  'Content-Type': 'application/json',
-              }
-          })
-          .then(response => {
-              if (!response.ok) {
-                  throw response;
-              }
-              return response.json();
-          })
-          .then(data => {
-              if (data.success) {
-                  window.location.reload();
-              } else {
-                  handleTournamentError({ data }, proceedNextRoundBtn, defaultText);
-              }
-          })
-          .catch(error => {
-              handleTournamentError(error, proceedNextRoundBtn, defaultText);
-          });
-      });
-  }
-  
+  // Add event listeners for all tournament buttons
   const saveExitBtn = document.getElementById('saveExitBtn');
+  const resetRoundBtn = document.getElementById('resetRoundBtn');
+  const sendPairingsBtn = document.getElementById('sendPairingsBtn');
+  const startRoundBtn = document.getElementById('startRoundBtn');
+  const confirmResultsBtn = document.getElementById('confirmResultsBtn');
+  const endRoundEarlyBtn = document.getElementById('endRoundEarlyBtn');
+  const viewResultsBtn = document.getElementById('viewResultsBtn');
+  const proceedNextRoundBtn = document.getElementById('proceedNextRoundBtn');
+  const sendResultsBtn = document.getElementById('sendResultsBtn');
+
+  // Save & Exit button
   if (saveExitBtn) {
-      saveExitBtn.addEventListener('click', () => {
-          const defaultText = saveExitBtn.textContent;
-          saveExitBtn.textContent = 'Saving...';
-          saveExitBtn.disabled = true;
-          
-          saveResults()
-          .then(data => {
-              if (data.success) {
-                  window.location.href = '/tournaments';
-              } else {
-                  handleTournamentError({ data }, saveExitBtn, defaultText);
-              }
-          })
-          .catch(error => {
-              handleTournamentError(error, saveExitBtn, defaultText);
-          });
-      });
+    saveExitBtn.addEventListener('click', () => {
+      window.location.href = '/dashboard';
+    });
   }
-  
-  // Helper functions
-  function saveResults() {
-      return fetch(`/tournament/${tournamentId}/save_results`, {
+
+  // Reset Round button
+  if (resetRoundBtn) {
+    resetRoundBtn.addEventListener('click', () => {
+      if (confirm('Are you sure you want to reset this round? All results will be cleared.')) {
+        fetch(`/tournament/${tournamentId}/reset_round`, {
           method: 'POST',
           headers: {
-              'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-              match_results: collectMatchResults()
-          })
-      })
-      .then(response => {
-          if (!response.ok) {
-              throw response;
+            'Content-Type': 'application/json'
           }
-          return response.json();
-      });
-  }
-  
-  function collectMatchResults() {
-      const results = [];
-      document.querySelectorAll('.match-row').forEach(row => {
-          const matchId = row.dataset.matchId;
-          const player1Id = row.dataset.player1Id;
-          const player2Id = row.dataset.player2Id;
-          const isBye = row.dataset.isBye === 'true';
-          
-          let winnerId = null;
-          
-          if (isBye) {
-              // For bye matches, player1 automatically wins
-              winnerId = player1Id;
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            window.location.reload();
           } else {
-              // For regular matches, check which radio button is selected
-              const player1Radio = row.querySelector(`input[name="winner${matchId}"][value="player1"]`);
-              const player2Radio = row.querySelector(`input[name="winner${matchId}"][value="player2"]`);
-              
-              if (player1Radio && player1Radio.checked) {
-                  winnerId = player1Id;
-              } else if (player2Radio && player2Radio.checked) {
-                  winnerId = player2Id;
-              }
+            alert(data.message || 'Failed to reset round');
           }
-          
-          if (winnerId) {
-              results.push({
-                  match_id: matchId,
-                  winner_id: winnerId
-              });
-          }
-      });
-      
-      return results;
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('Failed to reset round');
+        });
+      }
+    });
   }
 
-  // Completed Tournament Page
-  // Round tabs functionality
-  const roundTabs = document.querySelectorAll('.round-tab');
-  roundTabs.forEach(tab => {
-      tab.addEventListener('click', function() {
-          // Remove active class from all tabs
-          roundTabs.forEach(t => t.classList.remove('active'));
-          
-          // Add active class to clicked tab
-          this.classList.add('active');
-          
-          // Hide all round content
-          const roundContents = document.querySelectorAll('.round-content');
-          roundContents.forEach(content => {
-              content.style.display = 'none';
-          });
-          
-          // Show selected round content
-          const roundNum = this.getAttribute('data-round');
-          document.getElementById(`round-content-${roundNum}`).style.display = 'block';
-      });
-  });
-}
+  // Send Pairings button
+  if (sendPairingsBtn) {
+    sendPairingsBtn.addEventListener('click', () => {
+      const button = sendPairingsBtn;
+      const defaultText = button.innerHTML;
+      button.disabled = true;
+      button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
 
+      fetch(`/tournament/${tournamentId}/send_pairings`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          alert('Pairings sent successfully!');
+        } else {
+          alert(data.message || 'Failed to send pairings');
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to send pairings');
+      })
+      .finally(() => {
+        button.disabled = false;
+        button.innerHTML = defaultText;
+      });
+    });
+  }
+
+  // Start Round button
+  if (startRoundBtn) {
+    startRoundBtn.addEventListener('click', () => {
+      fetch(`/tournament/${tournamentId}/start_round`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          window.location.reload();
+        } else {
+          alert(data.message || 'Failed to start round');
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to start round');
+      });
+    });
+  }
+
+  // Confirm Results button
+  if (confirmResultsBtn) {
+    confirmResultsBtn.addEventListener('click', () => {
+      // Collect all match results
+      const matchResults = [];
+      document.querySelectorAll('.pairings-table tbody tr').forEach(row => {
+        const matchId = row.dataset.matchId;
+        const winnerRadio = row.querySelector('input[type="radio"]:checked');
+        if (matchId && winnerRadio) {
+          matchResults.push({
+            match_id: matchId,
+            winner: winnerRadio.value
+          });
+        }
+      });
+
+      // Send results to server
+      fetch(`/tournament/${tournamentId}/confirm_results`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ matches: matchResults })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          window.location.reload();
+        } else {
+          alert(data.message || 'Failed to confirm results');
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to confirm results');
+      });
+    });
+  }
+
+  // End Round Early button
+  if (endRoundEarlyBtn) {
+    endRoundEarlyBtn.addEventListener('click', () => {
+      if (confirm('Are you sure you want to end this round early?')) {
+        fetch(`/tournament/${tournamentId}/end_round_early`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            window.location.reload();
+          } else {
+            alert(data.message || 'Failed to end round early');
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('Failed to end round early');
+        });
+      }
+    });
+  }
+
+  // View Results button
+  if (viewResultsBtn) {
+    viewResultsBtn.addEventListener('click', () => {
+      window.location.href = `/tournament/${tournamentId}/completed`;
+    });
+  }
+
+  // Proceed to Next Round button
+  if (proceedNextRoundBtn) {
+    proceedNextRoundBtn.addEventListener('click', () => {
+      fetch(`/tournament/${tournamentId}/next_round`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          window.location.reload();
+        } else {
+          alert(data.message || 'Failed to proceed to next round');
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to proceed to next round');
+      });
+    });
+  }
+
+  // Send Results button (for completed tournament)
+  if (sendResultsBtn) {
+    sendResultsBtn.addEventListener('click', () => {
+      const button = sendResultsBtn;
+      const defaultText = button.innerHTML;
+      button.disabled = true;
+      button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+
+      fetch(`/tournament/${tournamentId}/send_results`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Remove any existing flash messages
+          cleanupFlashMessages();
+          
+          // Create success message
+          const flashMessage = document.createElement('div');
+          flashMessage.className = 'flash-message-send-results alert alert-success alert-dismissible fade show mb-3';
+          flashMessage.innerHTML = `
+            <i class="fas fa-check-circle"></i>
+            ${data.message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          `;
+          
+          // Find the tournament-results container which is the parent of the round controls
+          const tournamentResults = document.querySelector('.tournament-results');
+          if (tournamentResults) {
+            // Find the last round-controls container within tournament-results
+            const roundControls = tournamentResults.querySelector('.round-controls:last-of-type');
+            if (roundControls) {
+              // Insert the flash message before the round controls container
+              roundControls.parentNode.insertBefore(flashMessage, roundControls);
+            } else {
+              // Fallback: insert at the end of tournament-results
+              tournamentResults.appendChild(flashMessage);
+            }
+          } else {
+            // Fallback: insert near the send results button
+            const buttonContainer = sendResultsBtn.closest('.SendJoinBtn');
+            if (buttonContainer) {
+              buttonContainer.parentNode.insertBefore(flashMessage, buttonContainer);
+            }
+          }
+          
+          // Remove flash message after 5 seconds
+          setTimeout(() => {
+            flashMessage.style.opacity = '0';
+            setTimeout(() => flashMessage.remove(), 150);
+          }, 5000);
+        } else {
+          const errorMessage = data.message || 'Failed to send results';
+          const errorContainer = document.createElement('div');
+          errorContainer.className = 'alert alert-danger alert-dismissible fade show mb-3';
+          errorContainer.innerHTML = `
+            <i class="fas fa-exclamation-circle"></i>
+            ${errorMessage}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          `;
+          sendResultsBtn.parentNode.insertBefore(errorContainer, sendResultsBtn);
+          setTimeout(() => {
+            errorContainer.style.opacity = '0';
+            setTimeout(() => errorContainer.remove(), 150);
+          }, 5000);
+        }
+      })
+      .catch(error => {
+        const errorMessage = error.message && error.message.includes('email') 
+          ? 'Failed to send results: Email configuration is missing. Please contact the administrator.'
+          : 'Failed to send results. Please try again.';
+        const errorContainer = document.createElement('div');
+        errorContainer.className = 'alert alert-danger alert-dismissible fade show mb-3';
+        errorContainer.innerHTML = `
+          <i class="fas fa-exclamation-circle"></i>
+          ${errorMessage}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        sendResultsBtn.parentNode.insertBefore(errorContainer, sendResultsBtn);
+        setTimeout(() => {
+          errorContainer.style.opacity = '0';
+          setTimeout(() => errorContainer.remove(), 150);
+        }, 5000);
+      })
+      .finally(() => {
+        button.innerHTML = defaultText;
+        button.disabled = false;
+      });
+    });
+  }
+
+  // Add cleanup for navigation
+  document.querySelectorAll('a[href]').forEach(link => {
+    link.addEventListener('click', (e) => {
+      if (!link.getAttribute('href').startsWith('#')) {
+        cleanupFlashMessages();
+      }
+    });
+  });
+
+  // Add cleanup for page unload
+  window.addEventListener('beforeunload', cleanupFlashMessages);
+}
 
 // =============================================
 // NAVBAR FUNCTIONALITY
@@ -1990,47 +1911,30 @@ function closeModal() {
 // =============================================
 
 document.addEventListener('DOMContentLoaded', function() {
-  // Initialize all components
-  initNavbar();
-  initTournamentForm();
-  initTournamentManager();
-  initAnalytics();
-
-  // Initialize any charts on page load
-  const winRateChart = document.getElementById('winRateChart');
-  if (winRateChart) {
-    renderPieChart('winRateChart', 40, 73);
-  }
-
-  // Add event listeners to statcard captions
-  document.querySelectorAll('.statcard .caption').forEach(link => {
-    link.addEventListener('click', function(event) {
-      event.preventDefault();
-      document.getElementById('modalBackdrop').style.display = 'block';
+  // Clean up any existing flash messages after a delay
+  setTimeout(() => {
+    const flashMessages = document.querySelectorAll('.flashes .alert');
+    flashMessages.forEach(flash => {
+      flash.style.opacity = '0';
+      flash.style.transition = 'opacity 0.15s ease-out';
+      setTimeout(() => {
+        if (flash.parentElement && flash.parentElement.classList.contains('flashes')) {
+          flash.parentElement.remove();
+        }
+      }, 150);
     });
-  });
+  }, 5000); // Auto-remove flash messages after 5 seconds
 
-  // Add event listener to close button if you prefer to use event listeners instead of inline onclick
-  const closeButton = document.querySelector('.close-button');
-  if (closeButton) {
-    closeButton.addEventListener('click', closeModal);
-  }
-  const params    = new URLSearchParams(window.location.search);
-  const viewParam = params.get('view');
-  const limParam  = params.get('limit');
-  if (viewParam) {
-    const vs = document.getElementById('viewSelector');
-    vs.value = viewParam;
-    vs.dispatchEvent(new Event('change'));
-  }
-  if (limParam) {
-    const ls = document.getElementById('adminLimitSelector');
-    if (ls) ls.value = limParam;
+  // Only initialize tournament manager if we're on a tournament page
+  if (document.getElementById('tournamentId')) {
+    initTournamentManager();
   }
   
-  // finally, show the right panel
-  viewSelector.dispatchEvent(new Event('change'));
-  requestAnimationFrame(() => {
-    initAnalytics();
-  });
+  // Initialize other components as needed
+  if (document.querySelector('.tournament-form-container')) {
+    initTournamentForm();
+  }
+  
+  // Always initialize navbar
+  initNavbar();
 });

@@ -637,7 +637,8 @@ def view_tournament(tournament_id):
             current_matches=current_matches,
             ranked_players=ranked_players,
             player_stats=player_stats,  # Add back player_stats for pairings table
-            view_state=view_state
+            view_state=view_state,
+            is_creator=current_user.id == tournament.created_by  # Add is_creator variable
         )
     
 @application.route('/tournament/<int:tournament_id>/completed', methods=['GET'])
@@ -807,166 +808,256 @@ def next_round(tournament_id):
 @login_required
 def send_results_to_players(tournament_id):
     tournament = Tournament.query.get_or_404(tournament_id)
+    
+    # Check if user is tournament creator
+    if tournament.created_by != current_user.id:
+        return jsonify({'success': False, 'message': 'Only the tournament creator can send results'}), 403
+    
+    # Get all tournament players and their emails
     players = TournamentPlayer.query.filter_by(tournament_id=tournament_id).all()
-
-    ranked_players = compute_rankings(tournament_id, tournament.format)
-    total_matches = Match.query.join(Round, Match.round_id == Round.id).filter(Round.tournament_id == tournament.id).count()
-    total_byes = Match.query.join(Round, Match.round_id == Round.id).filter(
-        Round.tournament_id == tournament.id,
-        Match.is_bye == True
-    ).count()
-
+    player_emails = set()
+    player_users = {}  # Store user information separately
+    
     for player in players:
-        if not player.email:
-            continue
-
-        html_body = render_template(
-            "components/tournament_results_email.html",
-            tournament=tournament,
-            ranked_players=ranked_players,
-            total_matches=total_matches,
-            total_byes=total_byes
+        if player.user_id:
+            user = User.query.get(player.user_id)
+            if user and user.email:
+                player_users[player.id] = user
+                player_emails.add(user.email)
+        elif player.email:
+            player_emails.add(player.email)
+    
+    if not player_emails:
+        return jsonify({'success': False, 'message': 'No player emails found'}), 400
+    
+    # Get tournament stats
+    total_matches = Match.query.join(Round).filter(Round.tournament_id == tournament_id).count()
+    total_byes = Match.query.join(Round).filter(Round.tournament_id == tournament_id, Match.is_bye == True).count()
+    
+    # Get ranked players
+    ranked_players = compute_rankings(tournament_id, tournament.format)
+    
+    # Render email template
+    email_html = render_template(
+        'components/tournament_results_email.html',
+        tournament=tournament,
+        ranked_players=ranked_players,
+        total_matches=total_matches,
+        total_byes=total_byes
+    )
+    
+    try:
+        # Send email to all players
+        msg = Message(
+            f'{tournament.title} - Tournament Results',
+            sender=application.config['MAIL_DEFAULT_SENDER'],
+            recipients=list(player_emails),
+            html=email_html
         )
-
-        msg = Message(subject=f"Tournament Results: {tournament.title}",
-                      recipients=[player.email])
-        msg.html = html_body
-
-        # Guest attachment
-        if not player.user_id:
-            player_matches = Match.query.join(Round, Match.round_id == Round.id).filter(
-                ((Match.player1_id == player.id) | (Match.player2_id == player.id)) &
-                (Round.tournament_id == tournament.id)
-            ).all()
-
-            wins = sum(1 for m in player_matches if m.winner_id == player.id)
-            losses = sum(1 for m in player_matches if m.winner_id and m.winner_id != player.id)
-
-            result = {
-                "user_id": None,
-                "tournament_id": tournament_id,
-                "game_type": tournament.game_type,
-                "games_won": wins,
-                "games_lost": losses,
-                "opponent_win_percentage": None,
-                "opp_opp_win_percentage": None
-            }
-
-            buffer = io.BytesIO()
-            buffer.write(json.dumps(result).encode('utf-8'))
-            buffer.seek(0)
-            msg.attach(f"tournament_{tournament_id}_results.json", "application/json", buffer.read())
-
         mail.send(msg)
+        flash('Tournament results have been sent to all players!', 'success')
+        return jsonify({'success': True, 'message': 'Tournament results have been sent to all players!'})
+    except Exception as e:
+        application.logger.error(f"Failed to send results email: {str(e)}")
+        flash('Failed to send tournament results. Please try again.', 'error')
+        return jsonify({'success': False, 'message': 'Failed to send results email'}), 500
 
-    flash("Results sent to all players!", "success")
-    return redirect(url_for('dashboard'))
+@application.route('/tournament/<int:tournament_id>/send_pairings', methods=['POST'])
+@login_required
+def send_pairings_to_players(tournament_id):
+    tournament = Tournament.query.get_or_404(tournament_id)
+    
+    # Check if user is tournament creator
+    if tournament.created_by != current_user.id:
+        return jsonify({'success': False, 'message': 'Only the tournament creator can send pairings'}), 403
+    
+    # Get current round
+    current_round = Round.query.filter_by(
+        tournament_id=tournament_id,
+        status='not started'
+    ).order_by(Round.round_number).first()
+    
+    if not current_round:
+        return jsonify({'success': False, 'message': 'No current round found'}), 400
+    
+    # Get matches for current round
+    matches = Match.query.filter_by(round_id=current_round.id).all()
+    
+    # Get player stats and emails
+    players = {}
+    player_emails = set()
+    player_users = {}  # Store user information separately
+    
+    for match in matches:
+        # Get player 1 info
+        player1 = TournamentPlayer.query.get(match.player1_id)
+        if player1:
+            if player1.user_id:
+                user = User.query.get(player1.user_id)
+                if user:
+                    player_users[player1.id] = user
+                    if user.email:
+                        player_emails.add(user.email)
+            elif player1.email:
+                player_emails.add(player1.email)
+            players[match.player1_id] = player1
+        
+        # Get player 2 info if not a bye
+        if match.player2_id:
+            player2 = TournamentPlayer.query.get(match.player2_id)
+            if player2:
+                if player2.user_id:
+                    user = User.query.get(player2.user_id)
+                    if user:
+                        player_users[player2.id] = user
+                        if user.email:
+                            player_emails.add(user.email)
+                elif player2.email:
+                    player_emails.add(player2.email)
+                players[match.player2_id] = player2
+    
+    if not player_emails:
+        return jsonify({'success': False, 'message': 'No player emails found'}), 400
+    
+    # Get player stats for records
+    player_stats = {}
+    for player_id in players:
+        stats = TournamentResult.query.filter_by(
+            tournament_id=tournament_id,
+            player_id=player_id
+        ).first()
+        if stats:
+            player_stats[player_id] = {
+                'wins': stats.wins,
+                'losses': stats.losses
+            }
+        else:
+            player_stats[player_id] = {'wins': 0, 'losses': 0}
+    
+    # Render email template
+    email_html = render_template(
+        'components/round_pairings_email.html',
+        tournament=tournament,
+        current_round=current_round,
+        matches=matches,
+        players=players,
+        player_users=player_users,  # Pass the user information separately
+        player_stats=player_stats
+    )
+    
+    try:
+        # Send email to all players
+        msg = Message(
+            f'{tournament.title} - Round {current_round.round_number} Pairings',
+            sender=application.config['MAIL_DEFAULT_SENDER'],
+            recipients=list(player_emails),
+            html=email_html
+        )
+        mail.send(msg)
+        return jsonify({'success': True})
+    except Exception as e:
+        application.logger.error(f"Failed to send pairings email: {str(e)}")
+        return jsonify({'success': False, 'message': 'Failed to send pairings email'}), 500
 
 def compute_rankings(tournament_id, format):
     # Get all tournament players
     players = TournamentPlayer.query.filter_by(tournament_id=tournament_id).all()
-
-    # Initialize stats for each player
-    player_stats = {p.id: {"player": p, "wins": 0, "losses": 0, "opponents": []} for p in players}
-
-    # Get the matches for this tournament
-    matches = Match.query.join(Round, Match.round_id == Round.id)\
-        .filter(Round.tournament_id == tournament_id).all()
-
-    # Process each match
-    for match in matches:
-        p1 = match.player1_id
-        p2 = match.player2_id
-        winner = match.winner_id
-
-        # Handle bye: Player2 is None, meaning player 1 got a bye
-        if match.is_bye:
-            if p1:
-                # Player 1 gets the win
-                player_stats[p1]["wins"] += 1
-                player_stats[p1]["opponents"].append(None)  # No opponent for player1 in bye
-            if p2:
-                # Player 2 got a bye, they don't get the loss
-                player_stats[p2]["wins"] += 1
-                player_stats[p2]["opponents"].append(None)  # No opponent for player2 in bye
-            continue
-
-        # Track the players' opponents if it's a real match (i.e., no bye)
-        if p1 and p2:  # Ensure both players exist
-            player_stats[p1]["opponents"].append(p2)
-            player_stats[p2]["opponents"].append(p1)
-
-        # Track wins and losses
-        if winner == p1:
-            player_stats[p1]["wins"] += 1
-            if p2:
-                player_stats[p2]["losses"] += 1
-        elif winner == p2:
-            player_stats[p2]["wins"] += 1
-            player_stats[p1]["losses"] += 1
-
-    # Calculate OWP (Opponent Win Percentage) and OOWP (Opponents' Opponent Win Percentage)
-    standings = []
-
-    for player_id, stats in player_stats.items():
-        opponents = stats["opponents"]
+    player_records = {}
+    player_users = {}  # Store user information separately
+    
+    # Initialize records for all players
+    for player in players:
+        if player.user_id:
+            user = User.query.get(player.user_id)
+            if user:
+                player_users[player.id] = user
+        
+        record = TournamentResult.query.filter_by(
+            tournament_id=tournament_id,
+            player_id=player.id
+        ).first()
+        
+        if record:
+            player_records[player.id] = {
+                'id': player.id,
+                'name': f"{player_users.get(player.id).first_name} {player_users.get(player.id).last_name}" if player.user_id and player.id in player_users else f"{player.guest_firstname} {player.guest_lastname}",
+                'wins': record.wins,
+                'losses': record.losses,
+                'owp': 0.0,  # Initialize OWP
+                'oowp': 0.0  # Initialize OOWP
+            }
+    
+    # Calculate OWP for each player
+    for player_id, record in player_records.items():
         opp_wp_list = []
-
-        # Calculate OWP: Average win percentage of the player's opponents
-        for opp_id in opponents:
-            if opp_id:  # Skip None (bye)
-                opp_results = TournamentResult.query.filter_by(player_id=opp_id, tournament_id=tournament_id).first()
-                if opp_results:
-                    total_games = opp_results.wins + opp_results.losses
-                    if total_games > 0:
-                        opp_win_pct = opp_results.wins / total_games
-                    else:
-                        opp_win_pct = 0.0
-                    
-                    opp_wp_list.append(opp_win_pct)
-            
-            # Calculate average opponent win percentage
-            if opp_wp_list:
-                record['owp'] = sum(opp_wp_list) / len(opp_wp_list)
-            else:
-                record['owp'] = 0.0
+        # Get all matches for this player
+        matches = Match.query.join(Round).filter(
+            Round.tournament_id == tournament_id,
+            (Match.player1_id == player_id) | (Match.player2_id == player_id)
+        ).all()
         
-        # Calculate OOWP: Average OWP of the player's opponents
-        oowp_list = []
-        for opp_id in opponents:
-            if opp_id:  # Skip None (bye)
-                opp_results = TournamentResult.query.filter_by(player_id=opp_id, tournament_id=tournament_id).first()
-                if opp_results:
-                    oowp_list.append(opp_results.opponent_win_percentage or 0)
-            
-            # Calculate opponents' opponent win percentage (OOWP)
-            if oowp_list:
-                record['oowp'] = sum(oowp_list) / len(oowp_list)
-            else:
-                record['oowp'] = 0.0
+        for match in matches:
+            if match.winner_id is None:
+                continue
+                
+            # Get opponent's ID
+            opp_id = match.player2_id if match.player1_id == player_id else match.player1_id
+            if opp_id is None:  # Skip bye matches
+                continue
+                
+            # Get opponent's record
+            opp_record = player_records.get(opp_id)
+            if opp_record:
+                opp_wp = opp_record['wins'] / (opp_record['wins'] + opp_record['losses']) if (opp_record['wins'] + opp_record['losses']) > 0 else 0
+                opp_wp_list.append(opp_wp)
         
-        # Add player's data to the standings
-        p = stats["player"]
+        # Calculate OWP
+        if opp_wp_list:
+            record['owp'] = sum(opp_wp_list) / len(opp_wp_list)
+    
+    # Calculate OOWP for each player
+    for player_id, record in player_records.items():
+        opp_owp_list = []
+        matches = Match.query.join(Round).filter(
+            Round.tournament_id == tournament_id,
+            (Match.player1_id == player_id) | (Match.player2_id == player_id)
+        ).all()
         
-        # Use the guest's name if user_id is None
-        if p.user_id:
-            user = User.query.get(p.user_id)
-            player_name = f"{user.first_name} {user.last_name}" if user else f"{p.guest_firstname} {p.guest_lastname}"
-        else:
-            player_name = f"{p.guest_firstname} {p.guest_lastname}"
-
-        standings.append({
-            "name": player_name,
-            "wins": stats["wins"],
-            "losses": stats["losses"],
-            "owp": round(record['owp'], 3),
-            "oowp": round(record['oowp'], 3)
-        })
-
-    # Sort the standings: by wins, then OWP, then OOWP
-    standings.sort(key=lambda x: (-x["wins"], -x["owp"], -x["oowp"]))
-
-    return standings
+        for match in matches:
+            if match.winner_id is None:
+                continue
+                
+            opp_id = match.player2_id if match.player1_id == player_id else match.player1_id
+            if opp_id is None:  # Skip bye matches
+                continue
+                
+            opp_record = player_records.get(opp_id)
+            if opp_record:
+                opp_owp_list.append(opp_record['owp'])
+        
+        # Calculate OOWP
+        if opp_owp_list:
+            record['oowp'] = sum(opp_owp_list) / len(opp_owp_list)
+    
+    # Sort players based on format
+    if format == 'swiss':
+        # Sort by wins, then OWP, then OOWP
+        sorted_players = sorted(
+            player_records.values(),
+            key=lambda x: (-x['wins'], -x['owp'], -x['oowp'])
+        )
+    else:
+        # For other formats, just sort by wins
+        sorted_players = sorted(
+            player_records.values(),
+            key=lambda x: -x['wins']
+        )
+    
+    # Add rank to each player
+    for i, player in enumerate(sorted_players, 1):
+        player['rank'] = i
+    
+    return sorted_players
 
 
 def create_pairings_for_round(tournament, current_round):
@@ -1645,3 +1736,47 @@ def upload_tournament_data():
         flash("Failed to process the uploaded file.", "error")
 
     return redirect(url_for('dashboard'))
+
+@application.route('/tournament/<int:tournament_id>/end_round_early', methods=['POST'])
+@login_required
+def end_round_early(tournament_id):
+    """End the current round early and mark it as completed."""
+    tournament = Tournament.query.get_or_404(tournament_id)
+    
+    # Check if user is tournament creator
+    if tournament.created_by != current_user.id:
+        return jsonify({'success': False, 'message': 'Only the tournament creator can end the round early'}), 403
+    
+    # Get the current round
+    current_round = Round.query.filter_by(
+        tournament_id=tournament_id, 
+        status='in progress'
+    ).first()
+    
+    if not current_round:
+        return jsonify({'success': False, 'message': 'No round in progress'}), 400
+    
+    try:
+        # Mark all incomplete matches as completed with no winner
+        incomplete_matches = Match.query.filter_by(
+            round_id=current_round.id,
+            status='not started'
+        ).all()
+        
+        for match in incomplete_matches:
+            match.status = 'completed'
+            # Don't set a winner for incomplete matches
+        
+        # Mark round as completed
+        current_round.status = 'completed'
+        db.session.commit()
+        
+        # Update tournament results and tiebreakers
+        update_tournament_results(tournament_id)
+        
+        return jsonify({'success': True, 'message': 'Round ended successfully'})
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error ending round early: {str(e)}")
+        return jsonify({'success': False, 'message': f'Error ending round early: {str(e)}'}), 500
