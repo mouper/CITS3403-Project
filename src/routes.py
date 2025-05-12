@@ -84,6 +84,48 @@ def signup():
         db.session.add(user)
         db.session.commit()
 
+        # Re-fetch user to ensure ID is available after commit
+        user = db.session.query(User).filter_by(email=email).first()
+
+        # Find guest tournament entries with the same email
+        guest_players = db.session.query(TournamentPlayer).filter_by(email=email, user_id=None).all()
+
+        if guest_players:
+            flash(f'We found {len(guest_players)} past result(s) linked to this email. Adding them to your account now.', 'success')
+
+            for guest in guest_players:
+                guest.user_id = user.id  # Link guest player record to new user
+                guest.email = None      # Optional: clear guest email since it's now linked
+                db.session.add(guest)
+
+                # Fetch corresponding tournament result if exists
+                result = db.session.query(TournamentResult).filter_by(player_id=guest.id).first()
+                if result:
+                    # Look for existing user stat or create one
+                    user_stat = db.session.query(UserStat).filter_by(user_id=user.id, game_type=result.game_type).first()
+                    if not user_stat:
+                        user_stat = UserStat(
+                            user_id=user.id,
+                            game_type=result.game_type,
+                            games_played=0,
+                            games_won=0,
+                            games_lost=0,
+                            win_percentage=0.0
+                        )
+                        db.session.add(user_stat)
+
+                    # Update the user's stats
+                    user_stat.games_played += result.wins + result.losses
+                    user_stat.games_won += result.wins
+                    user_stat.games_lost += result.losses
+                    if user_stat.games_played > 0:
+                        user_stat.win_percentage = user_stat.games_won / user_stat.games_played
+
+            db.session.commit()
+            flash('Past results have been successfully added to your account.', 'success')
+        else:
+            flash('No past results found for this email.', 'info')
+
         flash('Account created! Please login.', 'success')
         return redirect(url_for('login', fresh=1))
 
