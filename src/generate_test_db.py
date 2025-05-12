@@ -36,7 +36,8 @@ def add_users():
             "show_win_rate": True,
             "show_total_wins_played": True,
             "show_last_three": False,
-            "show_best_three": True
+            "show_best_three": True,
+            "show_admin": False
         },
         {
             "username": "SamTheGamer",
@@ -47,7 +48,8 @@ def add_users():
             "show_win_rate": True,
             "show_total_wins_played": True,
             "show_last_three": True,
-            "show_best_three": False
+            "show_best_three": False,
+            "show_admin": False
         },
         {
             "username": "ChrisL",
@@ -58,7 +60,8 @@ def add_users():
             "show_win_rate": False,
             "show_total_wins_played": True,
             "show_last_three": True,
-            "show_best_three": True
+            "show_best_three": True,
+            "show_admin": False
         },
         {
             "username": "TayB",
@@ -69,7 +72,8 @@ def add_users():
             "show_win_rate": True,
             "show_total_wins_played": False,
             "show_last_three": False,
-            "show_best_three": False
+            "show_best_three": False,
+            "show_admin": False
         },
         {
             "username": "JD",
@@ -80,7 +84,8 @@ def add_users():
             "show_win_rate": True,
             "show_total_wins_played": True,
             "show_last_three": True,
-            "show_best_three": True
+            "show_best_three": True,
+            "show_admin": False
         },
         {
             "username": "MorganW",
@@ -91,7 +96,8 @@ def add_users():
             "show_win_rate": False,
             "show_total_wins_played": False,
             "show_last_three": True,
-            "show_best_three": True
+            "show_best_three": True,
+            "show_admin": False
         },
         {
             "username": "CM",
@@ -102,7 +108,8 @@ def add_users():
             "show_win_rate": True,
             "show_total_wins_played": False,
             "show_last_three": False,
-            "show_best_three": True
+            "show_best_three": True,
+            "show_admin": False
         },
         {
             "username": "RileyG",
@@ -113,7 +120,8 @@ def add_users():
             "show_win_rate": False,
             "show_total_wins_played": True,
             "show_last_three": True,
-            "show_best_three": False
+            "show_best_three": False,
+            "show_admin": False
         },
         {
             "username": "EventMaster",
@@ -121,10 +129,11 @@ def add_users():
             "first_name": "Jamie",
             "last_name": "Williams",
             "password": "password123",
-            "show_win_rate": True,
-            "show_total_wins_played": True,
-            "show_last_three": True,
-            "show_best_three": True
+            "show_win_rate": False,
+            "show_total_wins_played": False,
+            "show_last_three": False,
+            "show_best_three": False,
+            "show_admin": True
         },
         {
             "username": "TourneyQ",
@@ -132,10 +141,11 @@ def add_users():
             "first_name": "Quinn",
             "last_name": "Martinez",
             "password": "password123",
-            "show_win_rate": True,
-            "show_total_wins_played": True,
+            "show_win_rate": False,
+            "show_total_wins_played": False,
             "show_last_three": False,
-            "show_best_three": False
+            "show_best_three": False,
+            "show_admin": True
         }
     ]
 
@@ -149,6 +159,7 @@ def add_users():
             show_total_wins_played=user_info["show_total_wins_played"],
             show_last_three=user_info["show_last_three"],
             show_best_three=user_info["show_best_three"],
+            show_admin=user_info["show_admin"],
             avatar_path=f"avatars/{user_info['username']}.png"
         )
         new_user.set_password(user_info["password"])
