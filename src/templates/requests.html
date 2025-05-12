@@ -24,31 +24,6 @@
                     <div class="request-content">
                         <div class="request-info">
                             <h2 class="headline user-username">{{ u.username }}</h2>
-                            <p class="regular3 requestor-name">
-                                Win Rate: {{ card.win_rate }}%
-                            </p>
-                            <p class="caption">
-                                Total Wins: {{ card.total_wins_played }}
-                            </p>
-                            <p class="caption">
-                                Last 3:
-                                {% for res in card.last_three %}
-                                {{ res.w }}-W/ {{ res.l }}-L ({{ res.label }})
-                                {% if not loop.last %},
-                                {% endif %}
-                                {% else %}
-                                — 
-                                {% endfor %}
-                            </p>
-                            <p class="caption">
-                                Best 3:
-                                {% for res in card.best_three %}
-                                {{ res.w }}-W/ {{ res.l }}-L ({{ res.label }})
-                                {% if not loop.last %}, {% endif %}
-                                {% else %}
-                                — 
-                                {% endfor %}
-                            </p>
                         </div>
                         <div class="request-image">
                             <img src="{{ url_for('static', filename=u.avatar_path or 'avatars/default.png') }}" alt="{{ u.username }}’s avatar"/>
