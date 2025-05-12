@@ -96,13 +96,17 @@ def dashboard():
 
     sent_accepted = Friend.query.filter_by(user_id=current_user.id, status='accepted').all()
     recv_accepted = Friend.query.filter_by(friend_id=current_user.id, status='accepted').all()
+
     accepted_friends = [f.recipient for f in sent_accepted] + [f.sender for f in recv_accepted]
 
+    accepted_friend_usernames = [friend.username for friend in accepted_friends]
+
     return render_template(
-      'dashboard.html',
-      tournaments=my_tournaments,
-      accepted_friends=accepted_friends
+        'dashboard.html',
+        tournaments=my_tournaments,
+        accepted_friend_usernames=accepted_friend_usernames
     )
+
     
 @application.route('/analytics')
 @login_required
@@ -1472,33 +1476,21 @@ def upload_tournament_data():
 
 @application.route('/search_players')
 def search_players():
-    """Search for players based on a query string"""
     query = request.args.get('query', '')
     
     if not query or len(query) < 1:
         return jsonify({'players': []})
-    
-    # Search for players matching the query in username, email, first_name, last_name, or display_name
-    # Using case-insensitive search with LIKE
+
     search_term = f"%{query}%"
     players = User.query.filter(
-        (User.username.ilike(search_term)) |
-        (User.email.ilike(search_term)) |
-        (User.first_name.ilike(search_term)) |
-        (User.last_name.ilike(search_term)) |
-        (User.display_name.ilike(search_term))
-    ).limit(10).all()  # Limit to 10 results
+        User.username.ilike(search_term)
+    ).limit(10).all()
     
-    # Format the results for the frontend
     results = []
     for player in players:
         results.append({
             'id': player.id,
             'username': player.username,
-            'email': player.email,
-            'display_name': player.display_name,
-            'first_name': player.first_name,
-            'last_name': player.last_name
         })
     
     return jsonify({'players': results})
@@ -1550,8 +1542,6 @@ def respond_friend_request(request_id):
 
     db.session.commit()
     return redirect(url_for('view_requests'))
-
-
 
 @application.route('/friends/request', methods=['POST'])
 @login_required

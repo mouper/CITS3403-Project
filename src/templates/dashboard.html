@@ -92,8 +92,10 @@
           class="friend-dropdown-input"
         >
         <ul id="friendDropdownList" class="friend-dropdown-list">
-          {% for friend in accepted_friends %}
-            <li class="friend-dropdown-item">{{ friend.username }}</li>
+          {% for username in accepted_friend_usernames %}
+            <li class="friend-dropdown-item">{{ username }}</li>
+          {% else %}
+            <li class="friend-dropdown-item">No accepted friends found</li>
           {% endfor %}
         </ul>
       </div>

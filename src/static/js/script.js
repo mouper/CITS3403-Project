@@ -1927,19 +1927,36 @@ function closeModal() {
 document.addEventListener('DOMContentLoaded', function() {
   const searchInput = document.getElementById('playerSearch');
   const searchResults = document.getElementById('searchResults');
+  const friendDropdownList = document.getElementById('friendDropdownList');
   const sendInviteBtn = document.getElementById('sendInviteBtn');
   let selectedPlayerId = null;
 
-  // Function to handle search input
+  // Function to handle search input for accepted friends (filter by username)
   searchInput.addEventListener('input', function() {
-    const query = this.value.trim();
-    
+    const query = this.value.trim().toLowerCase();  // Make query case insensitive
+
     if (query.length < 1) {
       searchResults.style.display = 'none';
+      friendDropdownList.style.display = 'none'; // Hide the friends list when input is empty
       return;
     }
 
-    // Make AJAX request to search endpoint
+    // Filter the accepted friends list based on the search query
+    const filteredFriends = Array.from(friendDropdownList.children).filter(friendItem => {
+      const friendUsername = friendItem.textContent.toLowerCase(); // Match only by username
+      return friendUsername.includes(query);
+    });
+
+    // Show the filtered friends in the dropdown
+    if (filteredFriends.length > 0) {
+      friendDropdownList.innerHTML = ''; // Clear previous search results
+      filteredFriends.forEach(item => friendDropdownList.appendChild(item)); // Re-add the filtered items
+      friendDropdownList.style.display = 'block'; // Show the dropdown list
+    } else {
+      friendDropdownList.style.display = 'none'; // Hide if no friends match
+    }
+
+    // Make AJAX request for player search if needed
     fetch(`/search_players?query=${encodeURIComponent(query)}`)
       .then(response => response.json())
       .then(data => {
@@ -1952,8 +1969,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const resultItem = document.createElement('div');
             resultItem.className = 'search-result-item';
             resultItem.innerHTML = `${player.username}`;
-            
-            // No inline styles - using CSS classes instead
             
             // Select player when clicked
             resultItem.addEventListener('click', function() {
@@ -1977,10 +1992,11 @@ document.addEventListener('DOMContentLoaded', function() {
       });
   });
 
-  // Close search results when clicking outside
+  // Close search results and dropdown when clicking outside
   document.addEventListener('click', function(event) {
-    if (!searchInput.contains(event.target) && !searchResults.contains(event.target)) {
+    if (!searchInput.contains(event.target) && !searchResults.contains(event.target) && !friendDropdownList.contains(event.target)) {
       searchResults.style.display = 'none';
+      friendDropdownList.style.display = 'none';
     }
   });
 
@@ -2000,7 +2016,6 @@ document.addEventListener('DOMContentLoaded', function() {
     .then(data => {
       if (data.success) {
         alert('Friend request sent!');
-        // reset the UI
         searchInput.value = '';
         selectedPlayerId = null;
         sendInviteBtn.disabled = true;
