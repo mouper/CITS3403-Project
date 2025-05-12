@@ -130,7 +130,7 @@ def analytics():
         standings = []
         for player, result, user in rows:
             if user:
-                display_name = user.display_name
+                display_name = getattr(user, 'display_name', None) or user.username
             else:
                 first = player.guest_firstname or ""
                 last_initial = player.guest_lastname[0] if player.guest_lastname else ""
@@ -271,7 +271,7 @@ def account():
         standings = []
         for player, result, user in rows:
             if user:
-                display_name = user.display_name or user.username
+                display_name = getattr(user, 'display_name', None) or user.username
             else:
                 first = player.guest_firstname or ""
                 last_initial = player.guest_lastname[0] if player.guest_lastname else ""
@@ -310,7 +310,8 @@ def account():
         last_3_results=last_3_results,
         hosted_rankings_by_game=hosted_rankings_by_game,
         hosted_game_types=hosted_game_types,
-        hosted_by_game=hosted_by_game  # ✅ 新增变量，供 admin-hosted-section 使用
+        hosted_by_game=hosted_by_game,  # ✅ 新增变量，供 admin-hosted-section 使用
+        recent_tournaments=recent_tournaments
     )
 
 @application.route('/account/save_display_settings', methods=['POST'])

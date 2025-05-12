@@ -145,12 +145,30 @@
             </div>
         </div>
 
-        <div class="admin-hosted-section" data-section="hosted" style="display: none;">
-          <div class="top3-header">
-            <span class="top3-title">Recent Tournaments Hosted</span>
+        <div class="admin-hosted-section hosted-preview-section" data-section="hosted" style="display: none;">
+          <div class="admin-header">
+            <h2 class="subheadline purple-text">Recent Tournaments Hosted</h2>
+            <div class="game-dropdown">
+              <select id="adminGameFilter">
+                <option value="all">All Games</option>
+                {% for g in hosted_game_types %}
+                  <option value="{{ g }}">{{ g }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="count-buttons">
+              <button class="show-count-btn selected" data-count="3">Show 3</button>
+              <button class="show-count-btn" data-count="5">Show 5</button>
+              <button class="show-count-btn" data-count="10">Show 10</button>
+            </div>
           </div>
-          {{ admincards(recent_tournaments) }}
+          <div id="adminView">
+            <div class="statcard-container" id="adminStatcards">
+              {{ admincards(recent_tournaments) }}
+            </div>
+          </div>  
         </div>
+
         
         {% if current_user.show_last_three %}
         <div class="last3-section" data-section="last3">
