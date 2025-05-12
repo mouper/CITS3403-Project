@@ -420,10 +420,6 @@ html, body {
     border-radius: 1rem;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
-  
-.friend-search-text {
-    margin-bottom: 1.3rem;
-}
 
 .friend-search-text .subheadline {
     margin-bottom: 0.8rem;
@@ -435,7 +431,72 @@ html, body {
     flex-wrap: wrap;
 }
 
-/* Add position relative to search container */
+.friend-list-section {
+    margin-top: 1.5rem;
+}
+  
+.friend-list ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 200px;           
+    overflow-y: auto;
+}
+  
+.friend-list .friend-item {
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+}
+
+.friend-list .friend-item:hover {
+    background-color: var(--Primary-Shade-1, #BBB2FF);
+    color: var(--Off-White, #FAFAFA);
+}
+
+.friend-dropdown-section {
+    background-color: var(--background-shade3);
+    border: 1px solid var(--primary-shade1);
+    border-radius: 0.75rem;
+    font-size: 1rem;
+    color: var(--off-white);
+    width: 100%; 
+    box-sizing: border-box;
+}
+
+.friend-search-section p.regular3 {
+    margin-top: 1.5rem; 
+    margin-bottom: 0.5rem;
+}
+  
+.friend-dropdown-input {
+    width: 100%;
+    border-radius: 0.75rem;
+    padding: 0.75rem 1rem;
+}
+  
+.friend-dropdown-list {
+    position: absolute;
+    top: calc(100% + 0.25rem);
+    left: 0;
+    right: 0;
+    background: var(--Off-White,  #1a1a1a);
+    border: 1px solid #333;
+    border-radius: 0.25rem;
+    max-height: 200px;
+    overflow-y: auto;
+    display: none;
+    z-index: 10;
+}
+  
+.friend-dropdown-item {
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+}
+  
+.friend-dropdown-item:hover {
+    background-color: #333
+}
+  
 .search-container {
     position: relative;
     flex: 2;

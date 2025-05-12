@@ -82,7 +82,22 @@
   <div class="friend-search-section">
     <div class="friend-search-text">
       <h2 class="subheadline">Find Friends</h2>
-      <p class="regular3">Search for other players to invite to your tournaments.</p>
+      <p class="regular3">Friends List:</p>
+      <div class="friend-dropdown-section">
+        <input
+          id="friendDropdownInput"
+          type="text"
+          placeholder="Search your friends"
+          autocomplete="off"
+          class="friend-dropdown-input"
+        >
+        <ul id="friendDropdownList" class="friend-dropdown-list">
+          {% for friend in accepted_friends %}
+            <li class="friend-dropdown-item">{{ friend.username }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      <p class="regular3">Or search for other players to invite to your tournaments.</p>
     </div>
 
     <div class="friend-search-bar">

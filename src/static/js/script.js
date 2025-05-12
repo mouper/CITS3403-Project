@@ -688,6 +688,10 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
+// =============================================
+// FRIEND SEARCH BAR FUNCTIONALITY
+// =============================================
+
 document.addEventListener('DOMContentLoaded', function() {
   const searchInput = document.getElementById('playerSearch');
   const searchResults = document.getElementById('searchResults');
@@ -775,6 +779,42 @@ document.addEventListener('DOMContentLoaded', function() {
     .catch(err => {
       console.error(err);
       alert('Failed to send request.');
+    });
+  });
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  const input = document.getElementById('friendDropdownInput');
+  const list  = document.getElementById('friendDropdownList');
+  const items = Array.from(list.children);
+
+  // Show dropdown on focus
+  input.addEventListener('focus', () => {
+    if (items.length) list.style.display = 'block';
+  });
+  // Hide it just after blur (allow click to register)
+  input.addEventListener('blur', () => {
+    setTimeout(() => list.style.display = 'none', 150);
+  });
+
+  // Filter on each keystroke
+  input.addEventListener('input', () => {
+    const q = input.value.toLowerCase();
+    let anyVisible = false;
+    items.forEach(li => {
+      const match = li.textContent.toLowerCase().includes(q);
+      li.style.display = match ? '' : 'none';
+      if (match) anyVisible = true;
+    });
+    list.style.display = anyVisible ? 'block' : 'none';
+  });
+
+  // When you click a friend, populate the input
+  items.forEach(li => {
+    li.addEventListener('click', () => {
+      input.value = li.textContent;
+      list.style.display = 'none';
+      // optionally, trigger an invite or other action here
     });
   });
 });
