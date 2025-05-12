@@ -750,31 +750,31 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Handle invite button click
   sendInviteBtn.addEventListener('click', function() {
-    if (selectedPlayerId) {
-      // Send the invite (you'll need to implement this endpoint)
-      fetch('/send_invite', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ player_id: selectedPlayerId })
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          alert('Invite sent successfully!');
-          searchInput.value = '';
-          selectedPlayerId = null;
-        } else {
-          alert('Failed to send invite: ' + data.message);
-        }
-      })
-      .catch(error => {
-        console.error('Error sending invite:', error);
-        alert('An error occurred while sending the invite.');
-      });
-    } else {
+    if (!selectedPlayerId) {
       alert('Please select a player first');
+      return;
     }
+  
+    fetch('/friends/request', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ friend_id: selectedPlayerId })
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        alert('Friend request sent!');
+        // reset the UI
+        searchInput.value = '';
+        selectedPlayerId = null;
+        sendInviteBtn.disabled = true;
+      } else {
+        alert('Error: ' + data.message);
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      alert('Failed to send request.');
+    });
   });
 });

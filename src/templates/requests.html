@@ -2,58 +2,60 @@
 
 {% block content %}
 <div class="dashboard-container">
-    <div class="requests-container">
-        <h1 class="title2 my-requests-title">My Requests</h1>
-    </div>
-    <div class="incoming-container">
-        <p class="medium4">Incoming</p>
-    </div>
+  <div>
+    <h1 class="title2">My Requests</h1>
+  </div>
+  <div>
+    <p class="medium4">Incoming</p>
+  </div>
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
+  {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
-    <div class="flashes">
+      <div class="flashes">
         {% for category, message in messages %}
-        <div class="alert alert-{{ category }}">{{ message }}</div>
+          <div class="alert alert-{{ category }}">{{ message }}</div>
         {% endfor %}
-    </div>
+      </div>
     {% endif %}
-    {% endwith %}
+  {% endwith %}
 
-    {% if requests %}
-        {% for request in requests %}
-        <div class="request-card-container">
-            <div class="request-card">
-                <div class="request-content">
-                    <div class="request-name">
-                        <h2 class="title2">{{ request.tournament_name }}</h2>
-                        <p class="regular3">Requestor: {{ request.requestor_name }}</p>
-                        <div class="info-line">
-                            <p class="caption">{{ request.accepted }}/{{ request.total }} Competitors Accepted</p>
-                            <div class="game-details">
-                                <span class="medium4">{{ request.game_name }}</span>
-                                <span class="medium4">{{ request.type_name }}</span>
-                            </div>
-                        </div>                
-                    </div>
-                    <div class="request-image-and-accept">
-                        <div class="request-image">
-                            <img src="https://via.placeholder.com/150x100" alt="Placeholder Image" />
-                        </div>
-                        <div class="action-buttons">
-                            <div class="Dialog">
-                                <button class="cancel medium4">Decline</button>
-                                <button class="accept medium4">Accept</button>
-                            </div>
-                        </div>
-                    </div>
+  <div>
+    {% for req in incoming %}
+      <div class="request-card-container">
+        <div class="request-card">
+          <div class="request-content">
+            <div class="request-info">
+              <h2 class="headline tournament-name">{{ req.sender.display_name }}</h2>
+              <p class="regular3 requestor-name">Requestor: {{ req.sender.username }}</p>
+              <div class="info-container">
+                <p class="caption">{{ req.accepted }}/{{ req.total }} Competitors Accepted</p>
+                <div class="game-details">
+                  <span class="regular3">{{ req.game_name }} Game Name </span>
+                  <span class="regular3">{{ req.type_name }} Type Name </span>
                 </div>
+              </div>
             </div>
+            <div class="request-image">
+              <img
+                src="{{ url_for('static', filename=req.sender.avatar_path or 'avatars/default.png') }}"
+                alt="{{ req.sender.display_name }}’s avatar"
+              />
+            </div>
+          </div>
+          <div class="action-row">
+            <div class="Dialog">
+              <form action="{{ url_for('respond_request', invite_id=req.user_id) }}"
+                    method="POST">
+                <button class="cancel">Decline</button>
+                <button class="accept">Accept</button>
+              </form>
+            </div>
+          </div>
         </div>
-        {% endfor %}
+      </div>
     {% else %}
-    <div class="request-card-container">
-        <p class="no-requests-message">There are no current requests.</p>
-    </div>
-    {% endif %}
+      <p class="caption">You have no incoming requests.</p>
+    {% endfor %}
+  </div>
 </div>
 {% endblock %}

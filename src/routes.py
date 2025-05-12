@@ -1,7 +1,7 @@
 from flask import render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_user, logout_user, current_user, login_required
 from app import application
-from models import User, UserStat, Tournament, TournamentPlayer, TournamentResult
+from models import User, UserStat, Tournament, TournamentPlayer, TournamentResult, Friend, Invite
 from db import db  # Use the centralized db object from db.py
 import json
 
@@ -87,7 +87,9 @@ def signup():
 @application.route('/dashboard')
 @login_required
 def dashboard():
-    return render_template("dashboard.html", title="Dashboard")
+    my_tournaments = Tournament.query.filter_by(created_by=current_user.id).all()
+    return render_template('dashboard.html',
+                           tournaments=my_tournaments)
 
 @application.route('/analytics')
 @login_required
@@ -97,8 +99,33 @@ def analytics():
 
 @application.route('/requests')
 @login_required
-def requests():
-    return render_template("requests.html", title="My Requests")
+def view_requests():
+    incoming = Invite.query.filter_by(recipient_id=current_user.id).all()
+    requests = []
+    for inv in incoming:
+        sender = inv.sender
+        t      = inv.tournament
+
+        accepted_count = TournamentPlayer.query\
+            .filter_by(tournament_id=t.id, is_confirmed=True)\
+            .count()
+        total_count = TournamentPlayer.query\
+            .filter_by(tournament_id=t.id)\
+            .count()
+
+        requests.append({
+            'id':                inv.id,
+            'tournament_name':   t.title,
+            'requestor_name':    sender.display_name,
+            'requestor_username':sender.username,
+            'requestor_avatar':  sender.avatar_path,
+            'accepted':          accepted_count,
+            'total':             total_count,
+            'game_name':         t.game_type,
+            'type_name':         t.format
+        })
+    return render_template('requests.html', requests=requests)
+
 
 @application.route('/account')
 @login_required
@@ -325,20 +352,79 @@ def search_players():
     return jsonify({'players': results})
 
 @application.route('/send_invite', methods=['POST'])
+@login_required
 def send_invite():
-    """Send an invite to a player"""
     data = request.get_json()
-    player_id = data.get('player_id')
-    
-    if not player_id:
-        return jsonify({'success': False, 'message': 'Player ID is required'})
-    
-    # Check if player exists
-    player = User.query.get(player_id)
-    if not player:
-        return jsonify({'success': False, 'message': 'Player not found'})
-    
-    # Here you would implement your invite logic
-    # For now, we'll just return success
-    
-    return jsonify({'success': True, 'message': 'Invite sent successfully'})
+    recipient_id  = data.get('recipient_id')
+    tournament_id = data.get('tournament_id')
+    recipient = User.query.get(recipient_id)
+    tournament = Tournament.query.get(tournament_id)
+    if not recipient or not tournament:
+        flash("Invalid user or tournament.", "error")
+        return jsonify(success=True)
+
+    exists = Invite.query.filter_by(
+        recipient_id=recipient.id,
+        tournament_id=tournament.id
+    ).first()
+    if exists:
+        flash("You’ve already invited that player to this tournament.", "warning")
+        return redirect(url_for('dashboard'))
+
+    inv = Invite(
+        sender_id=current_user.id,
+        recipient_id=recipient.id,
+        tournament_id=tournament.id
+    )
+    db.session.add(inv)
+    db.session.commit()
+    flash("Invite sent!", "success")
+    return redirect(url_for('dashboard'))
+
+@application.route('/respond_request/<int:invite_id>', methods=['POST'])
+@login_required
+def respond_request(invite_id):
+    fr = Friend.query.filter_by(
+        user_id=request_id,
+        friend_id=current_user.id,
+        status='pending'
+    ).first_or_404()
+
+    resp = request.form.get('response')
+    if resp == 'accept':
+        fr.status = 'accepted'
+        flash("Friend request accepted.", "success")
+    else:
+        fr.status = 'declined'
+        flash("Friend request declined.", "info")
+
+    db.session.commit()
+    return redirect(url_for('view_requests'))
+
+@application.route('/friends/request', methods=['POST'])
+@login_required
+def send_friend_request():
+    data = request.get_json() or {}
+    friend_id = data.get('friend_id')
+    if not friend_id:
+        return jsonify(success=False, message="No user selected"), 400
+
+    if User.query.get(friend_id) is None:
+        return jsonify(success=False, message="User not found"), 404
+
+    existing = Friend.query.filter_by(
+        user_id=current_user.id,
+        friend_id=friend_id
+    ).first()
+    if existing:
+        return jsonify(success=False,
+                       message="Already requested or you’re already friends"), 409
+
+    fr = Friend(
+        user_id=current_user.id,
+        friend_id=friend_id,
+        status='pending'
+    )
+    db.session.add(fr)
+    db.session.commit()
+    return jsonify(success=True)

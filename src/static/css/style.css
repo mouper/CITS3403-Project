@@ -1068,112 +1068,118 @@ html, body {
         grid-template-columns: 1fr;
       }
 }
-.request-name {
-    color: var(--primary-shade1);
+
+.dashboard-container .title2{
+    color: var(--Primary-Shade-1, #BBB2FF);
+    text-shadow: 6px 6px 25px #0E0E0E;
+    font-size: 2.1875rem;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+}
+.dashboard-container .medium4 {
+    color: var(--Off-White, #FAFAFA);
     text-align: left;
-    width: 100%;
+    font-size: 1rem;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 1.5rem; 
+    letter-spacing: 0.0125rem;
+    padding-top: 3rem;
+    padding-bottom: 2rem;
 }
 
-.info-line {
+.tournament-name {
+    color: var(--Primary-Shade-1, #BBB2FF);
+    font-size: 1.625rem;
+    font-style: normal;
+    font-weight: 500;
+    line-height: normal;
+}
+
+.requestor-name {
+    color: var(--Off-White, #FAFAFA);
+    font-size: 1rem;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 1.5rem; /* 150% */
+    margin-top: 1rem;
+}
+
+.info-container {
     display: flex;
-    align-items: flex-end;
-    gap: 6.875rem;
-    margin-top: 3rem;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-top: 0.5rem;
 }
 
 .caption {
-    color: var--(--off-white);
+    color: var(--Primary-Shade2, #D6D6EE);
+    font-size: 0.875rem;
+    font-style: italic;
+    font-weight: 300;
+    line-height: 1.5rem;
+    margin-top: 3rem;
 }
 
 .game-details {
     display: flex;
-    gap: 7rem;
-    margin-right: 6rem;
-    color: var(--primary-shade1);
+    gap: 3rem;
 }
 
-.requests-container {
-    width: 100%;
-    flex-direction: column;
-    align-items: center;
+.medium4 {
+    color: var(--Primary-Shade-1, #BBB2FF);
+    font-size: 1rem;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 1.5rem; 
 }
 
-.incoming-container {
+.request-card-container {
     width: 100%;
-    max-width: 75rem;
-    display: flex;
-    justify-content: flex-start;
-    margin-top: 3rem;
-    margin-bottom: 1.2rem;
+    margin-bottom: 1.5rem;
 }
 
 .request-card {
     width: 100%;
-    max-width: 70rem;
     background-color: var(--background-shade2);
     border: 1px solid var(--primary-shade1);
     border-radius: 0.75rem;
-    padding: 2rem 3rem;
-    display: flex;
-    flex-direction: column;
+    padding: 1.875rem 2.1875rem;
     transition: border-color 0.3s ease;
-    position: relative;
-    padding-bottom: 2rem;
 }
 
 .request-content {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    gap: 1.5rem;
+    align-items: flex-start;
+    margin-bottom: 1rem;
 }
 
-.request-name {
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
-    flex-grow: 1;
-}
-
-.request-name h2 {
-    margin-bottom: -1rem;
-    color: var(--primary-shade1);
-}
-
-.request-name p {
-    color: var(--off-white);
-}
-
-.request-image-and-accept {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 13rem;
-    gap: 1rem;
-    flex-shrink: 0;     
+.request-info {
+    flex: 1;
 }
 
 .request-image {
-    width:100%;
-    aspect-ratio: 3 / 2;
-    background-color: var(--overlay-primary1);
-    border: 1px solid var(--primary-shade1);
-    border-radius: 0.2rem;
-    overflow: hidden;
     display: flex;
+    width: 15.75rem;
+    height: 9.875rem;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
+    gap: 0.625rem;
 }
 
 .request-image img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    border-radius: 0.5rem;
 }
+
 .action-row {
     display: flex;
-    justify-content: space-between;
+    justify-content: space-between !important;
     align-items: center;
     margin-top: 1rem;
     width: 100%;
@@ -1185,41 +1191,94 @@ html, body {
     align-items: center !important;
     width: 100% !important;
     justify-content: space-between !important;
-    padding-bottom: 1rem;
+    margin-top: 0.7rem;;
 }
 
 /* Custom button styles with !important for overriding */
 .Dialog button.cancel {
     margin-right: auto !important;
-    padding: 0.5rem 1rem !important;
+    padding: 0.4rem 1rem;
+    color: var(--Primary-Shade2, #D6D6EE);
+    font-size: 0.875rem;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 1.25rem; 
+    letter-spacing: 0.025rem;
 }
 
 .Dialog button.accept {
     margin-left: auto !important;
-    padding: 0.5rem 1rem !important;
+    padding: 0.4rem 1rem;
+    color: var(--Background-Shade1, #121212);
+    font-size: 0.875rem;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 1.25rem; 
+    letter-spacing: 0.025rem;
 }
 
+.status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.status-button {
+    background-color: var(--overlay-primary1);
+    color: var(--primary-shade1);
+    border: none;
+    border-radius: 2rem;
+    padding: 0.5rem 1.5rem;
+    font-size: 0.875rem;
+    cursor: pointer;
+}
+
+.edit-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.edit-button svg {
+    width: 20px;
+    height: 20px;
+}
+
+.status-time {
+    text-align: right;
+}
+
+.time-info {
+    margin: 0;
+    font-style: italic;
+    font-size: 0.75rem;
+}
+
+/* Alert Styles */
 .flashes {
     width: 100%;
-    max-width: 60rem;
-    margin: 2rem auto;
+    margin: 1rem 0;
 }
 
 .alert {
     padding: 1rem;
     border-radius: 0.5rem;
     margin-bottom: 1rem;
-    font-size: 1rem;
 }
 
 .alert-success {
-    background-color: #d4edda;
-    color: #155724;
+    background-color: rgba(76, 175, 80, 0.2);
+    color: #4CAF50;
+    border: 1px solid #4CAF50;
 }
 
 .alert-danger {
-    background-color: #f8d7da;
-    color: #721c24;
+    background-color: rgba(244, 67, 54, 0.2);
+    color: #F44336;
+    border: 1px solid #F44336;
 }
 
 /* Media Queries */
