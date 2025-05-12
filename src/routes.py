@@ -88,9 +88,17 @@ def signup():
 @login_required
 def dashboard():
     my_tournaments = Tournament.query.filter_by(created_by=current_user.id).all()
-    return render_template('dashboard.html',
-                           tournaments=my_tournaments)
 
+    sent_accepted = Friend.query.filter_by(user_id=current_user.id, status='accepted').all()
+    recv_accepted = Friend.query.filter_by(friend_id=current_user.id, status='accepted').all()
+    accepted_friends = [f.recipient for f in sent_accepted] + [f.sender for f in recv_accepted]
+
+    return render_template(
+      'dashboard.html',
+      tournaments=my_tournaments,
+      accepted_friends=accepted_friends
+    )
+    
 @application.route('/analytics')
 @login_required
 def analytics():
@@ -102,57 +110,12 @@ def analytics():
 def view_requests():
     incoming_rels = Friend.query.filter_by(friend_id=current_user.id).all()
 
-    cards = []
-    for fr in incoming_rels:
-        user = fr.sender  
-        
-        stats = UserStat.query.filter_by(user_id=user.id).all()
-        total_played = sum(s.games_played for s in stats)
-        total_won    = sum(s.games_won for s in stats)
-        win_rate     = round((total_won / total_played) * 100, 1) if total_played else 0
+    incoming = [
+        { "fr": fr, "user": fr.sender }
+        for fr in incoming_rels
+    ]
 
-        last_three_q = (
-            db.session.query(TournamentResult)
-                      .join(TournamentPlayer)
-                      .join(Tournament)
-                      .filter(TournamentPlayer.user_id == user.id)
-                      .order_by(Tournament.start_time.desc())
-                      .limit(3)
-                      .all()
-        )
-        last_three = []
-        for res in last_three_q:
-            tour = Tournament.query.get(res.tournament_id)
-            last_three.append({
-            "label": tour.title if tour else "Unknown",
-            "w":     res.wins,
-            "l":     res.losses
-            })
-
-        best_three_q = (
-            db.session.query(TournamentResult)
-                      .join(TournamentPlayer)
-                      .filter(TournamentPlayer.user_id == user.id)
-                      .order_by(TournamentResult.wins.desc())
-                      .limit(3)
-                      .all()
-        )
-        best_three = [
-            { "label": res.tournament.title, "w": res.wins, "l": res.losses }
-            for res in best_three_q
-        ]
-
-        cards.append({
-            "fr": fr,
-            "user": user,
-            "win_rate": win_rate,
-            "total_wins_played": total_won,
-            "last_three": last_three,
-            "best_three": best_three
-        })
-
-    return render_template('requests.html', incoming=cards)
-
+    return render_template('requests.html', incoming=incoming)
 
 @application.route('/account')
 @login_required
