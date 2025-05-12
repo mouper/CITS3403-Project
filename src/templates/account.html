@@ -4,34 +4,55 @@
 <h1 class="account-page-heading">My Account</h1>
 <div class="account-page-container">
   <div class="top-section">
+    <div class="left-column">
     <div class="ProfileSection">
       <div class="profile-top"></div>
-      <div class="profile-avatar">
-        <img id="avatarPreview" src="https://via.placeholder.com/150" alt="Avatar">
-        <input type="file" id="avatarUpload" accept="image/*">
-        <button class="edit-avatar-btn"><div class="EditIcon"></div></button>
-      </div>
+      <!-- ✅ Avatar Upload Form -->
+      <form method="POST" action="{{ url_for('upload_avatar') }}" enctype="multipart/form-data" class="avatar-upload-form">
+        <div class="profile-avatar">
+          <label for="avatarUpload">
+            <img id="avatarPreview" src="{{ url_for('static', filename=current_user.avatar_path or 'default-avatar.png') }}" alt="Avatar" class="clickable-avatar">
+          </label>
+          <input type="file" id="avatarUpload" name="avatar" accept="image/*" style="display:none" onchange="this.form.submit()">
+          <button type="button" class="edit-avatar-btn" onclick="document.getElementById('avatarUpload').click();">
+            <div class="EditIcon"></div>
+          </button>
+        </div>
+      </form>
+
       <div class="profile-info">
         <h2 class="title2">{{ current_user.username }}</h2>
-        <div class="email-display-line">
-          <input type="email" class="email-input" value="{{ current_user.email }}" readonly>
-          <button class="edit-icon-btn"><div class="EditIcon"></div></button>
-        </div>
+        <!-- ✅ Email 可编辑并自动提交 -->
+        <form method="POST" action="{{ url_for('update_profile') }}">
+          <div class="email-display-line">
+            <input type="email" class="email-input" name="email" id="emailInput" value="{{ current_user.email }}" readonly>
+            <button type="button" class="edit-icon-btn" onclick="enableAndSubmit('emailInput', this)"><div class="EditIcon"></div></button>
+          </div>
+        </form>
       </div>
+
       <div class="profile-bottom">
         <div class="player-details">
-          <div class="AccountTextForm with-edit">
-            <input type="text" value="{{ current_user.first_name }}" placeholder="First Name">
-            <button class="edit-icon-btn"><div class="EditIcon"></div></button>
-          </div>
-          <div class="AccountTextForm with-edit">
-            <input type="text" value="{{ current_user.last_name }}" placeholder="Last Name">
-            <button class="edit-icon-btn"><div class="EditIcon"></div></button>
-          </div>
+          <!-- ✅ First Name -->
+          <form method="POST" action="{{ url_for('update_profile') }}">
+            <div class="AccountTextForm with-edit">
+              <input type="text" name="first_name" id="firstNameInput" value="{{ current_user.first_name }}" readonly>
+              <button type="button" class="edit-icon-btn" onclick="enableAndSubmit('firstNameInput', this)"><div class="EditIcon"></div></button>
+            </div>
+          </form>
+          <!-- ✅ Last Name -->
+          <form method="POST" action="{{ url_for('update_profile') }}">
+            <div class="AccountTextForm with-edit">
+              <input type="text" name="last_name" id="lastNameInput" value="{{ current_user.last_name }}" readonly>
+              <button type="button" class="edit-icon-btn" onclick="enableAndSubmit('lastNameInput', this)"><div class="EditIcon"></div></button>
+            </div>
+          </form>
         </div>
       </div>
     </div>
-
+    </div>
+    
+    <div class="right-column">
     <div class="settings-panel">
         <div class="settings-header">
           <h2 class="subheadline settings-title">Stats Displayed On My Profile:</h2>
@@ -90,10 +111,11 @@
                     <option value="{{ game_type }}">{{ game_type }}</option>
                   {% endfor %}
                 </select>
-            </div>   
+            </div>  
+          </div>
         </div>
+      </div> 
     </div>
-  </div>
 
   <!-- PROFILE PREVIEW -->
   <div class="bottom-section">
@@ -101,7 +123,7 @@
     <div class="profile-preview-wrapper">
       <div class="preview-upper">
         <div class="preview-avatar-wrapper">
-          <img src="https://via.placeholder.com/150" alt="Avatar" class="preview-avatar-img">
+          <img src="{{ url_for('static', filename=current_user.avatar_path or 'default-avatar.png') }}" alt="Avatar" class="avatar-preview-img">
         </div>
       </div>
 
@@ -115,6 +137,30 @@
               <span class="totalcount" data-section="totalcount">{{ total_wins }}/{{ total_played }}</span>
             </div>
         </div>
+
+        <div class="admin-hosted-section" data-section="hosted" style="display: none;">
+          <div class="top3-header">
+            <span class="top3-title">Last Tournaments Hosted</span>
+          </div>
+          {% for game_type, tournaments in hosted_by_game.items() %}
+          <div class="hosted-group" data-game="{{ game_type }}">
+            <span class="top3-game">{{ game_type }}</span>
+            <div class="statcard-container">
+              {% for tournament in tournaments %}
+              <div class="statcard hosted-card">
+                <div class="placement"><i>1st</i><span><i class="fas fa-crown"></i> Username1</span></div>
+                <div class="placement"><i>2nd</i><span>Username2</span></div>
+                <div class="placement"><i>3rd</i><span class="primary-text">Username3</span></div>
+                <div class="tournament-footer">
+                  <span>{{ tournament.title }}</span>
+                  <a href="/tournament/{{ tournament.id }}" class="view-link">View</a>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>   
         
         <div class="last3-section" data-section="last3">
           <div class="top3-header">
@@ -146,6 +192,8 @@
         </div>
         
         <div class="statcard-wrapper" data-section="top3">
+
+            <!-- Highest Win Count -->
             {% for game_type, entries in grouped_results.items() %}
             <div class="top3-section" data-type="wins" data-game-type="{{ game_type }}">
               <div class="top3-header">
@@ -208,12 +256,60 @@
               </div>
             </div>
             {% endfor %} 
+
+            <!-- LeaderBoard Rank -->
+            {% for game_type, entries in grouped_by_rank.items() %}
+            <div class="top3-section" data-type="rank" data-game-type="{{ game_type }}" style="display: none;">
+              <div class="top3-header">
+                <span class="top3-title">TOP 3 TOURNAMENTS: LEADERBOARD RANK</span>
+                <span class="top3-game">{{ game_type }}</span>
+              </div>
+              <div class="statcard-container">
+              {% for result, tournament in entries[:3] %}
+                <div class="statcard">
+                  <div class="statcard-top-row">
+                    <p class="subheadline">
+                      {% if loop.index == 1 %}1st
+                      {% elif loop.index == 2 %}2nd
+                      {% elif loop.index == 3 %}3rd
+                      {% else %}{{ loop.index }}th
+                      {% endif %}
+                    </p>
+                    <p class="title2 purple-text">{{ result.wins }} WINS</p>
+                  </div>
+                  <div class="statcard-middle-row">
+                    <p class="medium5">
+                      {{ (result.wins / (result.wins + result.losses) * 100) | round(1) if (result.wins + result.losses) > 0 else 0 }}% WR
+                    </p>
+                    <p class="medium5">{{ result.opponent_win_percentage or 0 }}% OPWR%</p>
+                    <p class="medium5">{{ result.opp_opp_win_percentage or 0 }}% OPOWR%</p>
+                  </div>
+                  <p class="medium4 italic tournament-type">{{ tournament.format }}</p>
+                  <p class="medium4">{{ tournament.title }}</p>
+                  <p class="caption italic">
+                    {% if tournament.format == 'swiss' %}
+                      Ranked by Swiss score (WR + OPWR + OPOWR)
+                    {% else %}
+                      Ranked by Win Count only
+                    {% endif %}
+                  </p>
+                </div>
+              {% endfor %}
+              </div> 
+            </div>
+            {% endfor %}
+
         </div>
       </div>
     </div>
   </div>
 </div>
 {% endblock %}
+
+<script>
+        window.hostedGameTypes = {{ hosted_game_types|tojson }};
+</script>
+
 
 
 

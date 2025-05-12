@@ -689,6 +689,8 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 document.addEventListener('DOMContentLoaded', () => {
+    initAdminHostedFilters();
+
     const switchGroup = document.querySelector('.switch-group');
     const top3Card = document.querySelector('.top3-card');
     const dropdown = document.querySelector('.player-dropdown select');
@@ -756,56 +758,61 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Toggle between Player and Admin view
     dropdown.addEventListener('change', () => {
-        const isAdmin = dropdown.value === 'Admin';
+      const isAdmin = dropdown.value === 'Admin';
 
-        // 隐藏除 top3 外所有 switch 卡片
-        document.querySelectorAll('.switch-card:not(.top3-card)').forEach(card => {
-            card.style.display = isAdmin ? 'none' : 'flex';
-        });
+    // 隐藏除 top3 外所有 switch 卡片
+      document.querySelectorAll('.switch-card:not(.top3-card)').forEach(card => {
+        card.style.display = isAdmin ? 'none' : 'flex';
+      });
 
-        if (isAdmin) {
-            // 设置 admin 的卡片内容
-            top3Card.innerHTML = `
-                <div class="top3-row">
-                  <span class="medium4">Recent Tournaments Hosted</span>
-                  <label class="switch">
-                    <input type="checkbox" checked>
-                    <span class="slider"></span>
-                  </label>
-                </div>
-            `;
-            setupSwitch(top3Card);
+      if (isAdmin) {
+        top3Card.innerHTML = `
+            <div class="top3-row">
+              <span class="medium4">Recent Tournaments Hosted</span>
+              <label class="switch">
+                <input type="checkbox" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+        `;
+        setupSwitch(top3Card);
 
-            // 显示 Admin 专属板块，隐藏 Player 模式的显示内容
-            document.querySelector('.hosted-preview-section')?.style?.setProperty('display', 'block');
-            document.querySelector('[data-section="last3"]')?.style?.setProperty('display', 'none');
-            document.querySelector('[data-section="top3"]')?.style?.setProperty('display', 'none');
-        } else {
-            location.reload(); // 切回 Player 模式时直接刷新还原
-        }
+        document.querySelector('.hosted-preview-section')?.style?.setProperty('display', 'block');
+        document.querySelector('[data-section="last3"]')?.style?.setProperty('display', 'none');
+        document.querySelector('[data-section="top3"]')?.style?.setProperty('display', 'none');
+      } else {
+        location.reload();
+      }
     });
+
 
     // Game type selection handler
     const gameTypeSelect = document.getElementById('gameTypeSelect');
     const top3Sections = document.querySelectorAll('.top3-section');
 
     if (gameTypeSelect) {
-        function updateVisibleGameType(selectedType) {
-            const activeTab = document.querySelector('.top3-tab.active');
-            const selectedTypeTab = activeTab?.textContent.includes('Win Rate') ? 'winrate' : 'wins';
+      function updateVisibleGameType(selectedType) {
+        const activeTab = document.querySelector('.top3-tab.active');
 
-            document.querySelectorAll('.top3-section').forEach(section => {
-                const matchesType = section.dataset.type === selectedTypeTab;
-                const matchesGame = section.dataset.gameType === selectedType;
-                section.style.display = (matchesType && matchesGame) ? 'block' : 'none';
-            });
+        let selectedTypeTab = 'wins';
+        if (activeTab) {
+            const tabText = activeTab.textContent;
+            if (tabText.includes('Win Rate')) selectedTypeTab = 'winrate';
+            else if (tabText.includes('Leaderboard')) selectedTypeTab = 'rank';
         }
 
-        updateVisibleGameType(gameTypeSelect.value);
-
-        gameTypeSelect.addEventListener('change', () => {
-            updateVisibleGameType(gameTypeSelect.value);
+        document.querySelectorAll('.top3-section').forEach(section => {
+            const matchesType = section.dataset.type === selectedTypeTab;
+            const matchesGame = section.dataset.gameType === selectedType;
+            section.style.display = (matchesType && matchesGame) ? 'block' : 'none';
         });
+      }
+
+      updateVisibleGameType(gameTypeSelect.value);
+
+      gameTypeSelect.addEventListener('change', () => {
+        updateVisibleGameType(gameTypeSelect.value);
+      });
     }
 
     // Editable email field
@@ -827,5 +834,65 @@ document.addEventListener('DOMContentLoaded', () => {
     const defaultTab = document.querySelector('.top3-tab:first-child');
     if (defaultTab) defaultTab.click();
 });
+
+
+
+
+
+
+document.addEventListener('DOMContentLoaded', () => {
+    const avatarInput = document.getElementById('avatarUpload');
+    const avatarPreview = document.getElementById('avatarPreview');
+
+    if (avatarInput && avatarPreview) {
+        avatarInput.addEventListener('change', function () {
+            const file = this.files[0];
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    avatarPreview.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+});
+
+function initAdminHostedFilters() {
+  const countButtons = document.querySelectorAll('.show-count-btn');
+  const gameSelect = document.getElementById('adminGameFilter');
+  let showCount = 3;
+
+  function updateAdminVisibleCards() {
+    const selectedGame = gameSelect?.value || 'all';
+    document.querySelectorAll('.hosted-group').forEach(group => {
+      const matchesGame = selectedGame === 'all' || group.dataset.game === selectedGame;
+      group.style.display = matchesGame ? 'block' : 'none';
+
+      if (matchesGame) {
+        const cards = group.querySelectorAll('.hosted-card');
+        cards.forEach((card, idx) => {
+          card.style.display = idx < showCount ? 'block' : 'none';
+        });
+      }
+    });
+  }
+
+  countButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      showCount = parseInt(btn.dataset.count);
+      countButtons.forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      updateAdminVisibleCards();
+    });
+  });
+
+  if (gameSelect) {
+    gameSelect.addEventListener('change', updateAdminVisibleCards);
+  }
+
+  updateAdminVisibleCards();
+}
+
 
 
