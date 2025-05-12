@@ -28,124 +28,124 @@ def add_users():
     """Add sample users to the database"""
     users_info = [
         {
-            "username": "player1",
+            "username": "AlexJ",
             "email": "player1@example.com",
             "first_name": "Alex",
             "last_name": "Johnson",
-            "display_name": "AlexJ",
             "password": "password123",
             "show_win_rate": True,
             "show_total_wins_played": True,
             "show_last_three": False,
-            "show_best_three": True
+            "show_best_three": True,
+            "show_admin": False
         },
         {
-            "username": "player2",
+            "username": "SamTheGamer",
             "email": "player2@example.com",
             "first_name": "Sam",
             "last_name": "Smith",
-            "display_name": "SamTheGamer",
             "password": "password123",
             "show_win_rate": True,
             "show_total_wins_played": True,
             "show_last_three": True,
-            "show_best_three": False
+            "show_best_three": False,
+            "show_admin": False
         },
         {
-            "username": "player3",
+            "username": "ChrisL",
             "email": "player3@example.com",
             "first_name": "Chris",
             "last_name": "Lee",
-            "display_name": "ChrisL",
             "password": "password123",
             "show_win_rate": False,
             "show_total_wins_played": True,
             "show_last_three": True,
-            "show_best_three": True
+            "show_best_three": True,
+            "show_admin": False
         },
         {
-            "username": "player4",
+            "username": "TayB",
             "email": "player4@example.com",
             "first_name": "Taylor",
             "last_name": "Brown",
-            "display_name": "TayB",
             "password": "password123",
             "show_win_rate": True,
             "show_total_wins_played": False,
             "show_last_three": False,
-            "show_best_three": False
+            "show_best_three": False,
+            "show_admin": False
         },
         {
-            "username": "player5",
+            "username": "JD",
             "email": "player5@example.com",
             "first_name": "Jordan",
             "last_name": "Davis",
-            "display_name": "JD",
             "password": "password123",
             "show_win_rate": True,
             "show_total_wins_played": True,
             "show_last_three": True,
-            "show_best_three": True
+            "show_best_three": True,
+            "show_admin": False
         },
         {
-            "username": "player6",
+            "username": "MorganW",
             "email": "player6@example.com",
             "first_name": "Morgan",
             "last_name": "Wilson",
-            "display_name": "MorganW",
             "password": "password123",
             "show_win_rate": False,
             "show_total_wins_played": False,
             "show_last_three": True,
-            "show_best_three": True
+            "show_best_three": True,
+            "show_admin": False
         },
         {
-            "username": "player7",
+            "username": "CM",
             "email": "player7@example.com",
             "first_name": "Casey",
             "last_name": "Miller",
-            "display_name": "CM",
             "password": "password123",
             "show_win_rate": True,
             "show_total_wins_played": False,
             "show_last_three": False,
-            "show_best_three": True
+            "show_best_three": True,
+            "show_admin": False
         },
         {
-            "username": "player8",
+            "username": "RileyG",
             "email": "player8@example.com",
             "first_name": "Riley",
             "last_name": "Garcia",
-            "display_name": "RileyG",
             "password": "password123",
             "show_win_rate": False,
             "show_total_wins_played": True,
             "show_last_three": True,
-            "show_best_three": False
+            "show_best_three": False,
+            "show_admin": False
         },
         {
-            "username": "organizer1",
+            "username": "EventMaster",
             "email": "organizer1@example.com",
             "first_name": "Jamie",
             "last_name": "Williams",
-            "display_name": "EventMaster",
             "password": "password123",
-            "show_win_rate": True,
-            "show_total_wins_played": True,
-            "show_last_three": True,
-            "show_best_three": True
+            "show_win_rate": False,
+            "show_total_wins_played": False,
+            "show_last_three": False,
+            "show_best_three": False,
+            "show_admin": True
         },
         {
-            "username": "organizer2",
+            "username": "TourneyQ",
             "email": "organizer2@example.com",
             "first_name": "Quinn",
             "last_name": "Martinez",
-            "display_name": "TourneyQ",
             "password": "password123",
-            "show_win_rate": True,
-            "show_total_wins_played": True,
+            "show_win_rate": False,
+            "show_total_wins_played": False,
             "show_last_three": False,
-            "show_best_three": False
+            "show_best_three": False,
+            "show_admin": True
         }
     ]
 
@@ -155,11 +155,11 @@ def add_users():
             email=user_info["email"],
             first_name=user_info["first_name"],
             last_name=user_info["last_name"],
-            display_name=user_info["display_name"],
             show_win_rate=user_info["show_win_rate"],
             show_total_wins_played=user_info["show_total_wins_played"],
             show_last_three=user_info["show_last_three"],
             show_best_three=user_info["show_best_three"],
+            show_admin=user_info["show_admin"],
             avatar_path=f"avatars/{user_info['username']}.png"
         )
         new_user.set_password(user_info["password"])
@@ -498,47 +498,133 @@ def add_rounds_and_matches(created_tournaments):
     db.session.commit()
 
 def add_tournament_results(created_tournaments):
-    """Generate tournament results for completed tournaments"""
+    """Generate tournament results for completed tournaments with accurate ranking"""
     for tournament_id, tournament_info in created_tournaments:
         if tournament_info["status"] == "completed":
-            # Get confirmed players
+            tournament = Tournament.query.get(tournament_id)
             players = TournamentPlayer.query.filter_by(tournament_id=tournament_id, is_confirmed=True).all()
-            
-            for player in players:
-                # Calculate wins and losses
-                wins = 0
-                losses = 0
-                
-                # Get all matches where this player participated
-                rounds = Round.query.filter_by(tournament_id=tournament_id).all()
-                for round_obj in rounds:
-                    matches = Match.query.filter(
-                        Match.round_id == round_obj.id,
-                        ((Match.player1_id == player.id) | (Match.player2_id == player.id)),
-                        Match.status == "completed"
-                    ).all()
-                    
-                    for match in matches:
-                        if match.winner_id == player.id:
-                            wins += 1
+            player_ids = [p.id for p in players]
+
+            # Gather all completed matches
+            rounds = Round.query.filter_by(tournament_id=tournament_id).all()
+            round_ids = [r.id for r in rounds]
+            matches = Match.query.filter(Match.round_id.in_(round_ids), Match.status == "completed").all()
+
+            # Build stats for each player
+            stats = {pid: {"wins": 0, "losses": 0, "opponents": [], "head_to_head": {}} for pid in player_ids}
+            for match in matches:
+                p1, p2, winner = match.player1_id, match.player2_id, match.winner_id
+                # Byes: only p1 gets a win
+                if match.is_bye:
+                    if p1:
+                        stats[p1]["wins"] += 1
+                    continue
+                # Track opponents
+                if p1 and p2:
+                    stats[p1]["opponents"].append(p2)
+                    stats[p2]["opponents"].append(p1)
+                # Track wins/losses
+                if winner == p1:
+                    stats[p1]["wins"] += 1
+                    if p2:
+                        stats[p2]["losses"] += 1
+                        stats[p1]["head_to_head"][p2] = stats[p1]["head_to_head"].get(p2, 0) + 1
+                elif winner == p2:
+                    stats[p2]["wins"] += 1
+                    stats[p1]["losses"] += 1
+                    stats[p2]["head_to_head"][p1] = stats[p2]["head_to_head"].get(p1, 0) + 1
+
+            # Calculate OWP and OOWP for Swiss
+            owp = {}
+            oowp = {}
+            if tournament.format == "swiss":
+                for pid in player_ids:
+                    opps = stats[pid]["opponents"]
+                    opp_wp = []
+                    for opp in opps:
+                        if opp in stats:
+                            opp_wins = stats[opp]["wins"]
+                            opp_losses = stats[opp]["losses"]
+                            total = opp_wins + opp_losses
+                            if total > 0:
+                                opp_wp.append(opp_wins / total)
+                    owp[pid] = sum(opp_wp) / len(opp_wp) if opp_wp else 0.0
+                for pid in player_ids:
+                    opps = stats[pid]["opponents"]
+                    opp_owp = [owp[opp] for opp in opps if opp in owp]
+                    oowp[pid] = sum(opp_owp) / len(opp_owp) if opp_owp else 0.0
+
+            # Prepare ranking list
+            ranking = []
+            for pid in player_ids:
+                entry = {
+                    "player_id": pid,
+                    "wins": stats[pid]["wins"],
+                    "losses": stats[pid]["losses"],
+                    "owp": owp[pid] if tournament.format == "swiss" else 0.0,
+                    "oowp": oowp[pid] if tournament.format == "swiss" else 0.0,
+                    "head_to_head": stats[pid]["head_to_head"]
+                }
+                ranking.append(entry)
+
+            # Sort ranking
+            if tournament.format == "swiss":
+                ranking.sort(key=lambda x: (-x["wins"], -x["owp"], -x["oowp"]))
+            elif tournament.format == "round robin":
+                # First by wins, then head-to-head if only two tied, else OWP/OOWP
+                def rr_sort_key(x):
+                    return (-x["wins"],)
+                ranking.sort(key=rr_sort_key)
+                # Now resolve ties by head-to-head if only two tied
+                i = 0
+                while i < len(ranking) - 1:
+                    j = i
+                    # Find group of tied players
+                    while j + 1 < len(ranking) and ranking[j]["wins"] == ranking[j+1]["wins"]:
+                        j += 1
+                    if j > i:
+                        tied = ranking[i:j+1]
+                        if len(tied) == 2:
+                            a, b = tied[0], tied[1]
+                            # If a beat b, a stays ahead; if b beat a, swap
+                            if a["head_to_head"].get(b["player_id"], 0) > b["head_to_head"].get(a["player_id"], 0):
+                                pass  # a stays ahead
+                            elif b["head_to_head"].get(a["player_id"], 0) > a["head_to_head"].get(b["player_id"], 0):
+                                ranking[i], ranking[i+1] = b, a
+                        # If more than two tied, use OWP/OOWP as fallback
                         else:
-                            losses += 1
-                
-                # Calculate opponent win percentage (random for this example)
-                opponent_win_percentage = random.uniform(0.2, 0.8)
-                opp_opp_win_percentage = random.uniform(0.3, 0.7)
-                
+                            # Calculate OWP/OOWP for these players
+                            for entry in tied:
+                                opps = stats[entry["player_id"]]["opponents"]
+                                opp_wp = []
+                                for opp in opps:
+                                    if opp in stats:
+                                        opp_wins = stats[opp]["wins"]
+                                        opp_losses = stats[opp]["losses"]
+                                        total = opp_wins + opp_losses
+                                        if total > 0:
+                                            opp_wp.append(opp_wins / total)
+                                entry["owp"] = sum(opp_wp) / len(opp_wp) if opp_wp else 0.0
+                            tied.sort(key=lambda x: -x["owp"])
+                            ranking[i:j+1] = tied
+                    i = j + 1
+            else:
+                ranking.sort(key=lambda x: -x["wins"])
+
+            # Assign ranks and create TournamentResult
+            for idx, entry in enumerate(ranking, 1):
+                pid = entry["player_id"]
                 new_result = TournamentResult(
                     tournament_id=tournament_id,
-                    player_id=player.id,
+                    player_id=pid,
                     game_type=tournament_info["game_type"],
-                    wins=wins,
-                    losses=losses,
-                    opponent_win_percentage=opponent_win_percentage,
-                    opp_opp_win_percentage=opp_opp_win_percentage
+                    rank=idx,
+                    wins=entry["wins"],
+                    losses=entry["losses"],
+                    opponent_win_percentage=entry["owp"],
+                    opp_opp_win_percentage=entry["oowp"]
                 )
                 db.session.add(new_result)
-    
     print("Added tournament results successfully.")
     db.session.commit()
 

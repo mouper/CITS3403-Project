@@ -11,12 +11,12 @@ class User(UserMixin, db.Model):
     email = db.Column(db.Text, unique=True, nullable=False)
     first_name = db.Column(db.Text, nullable=False)
     last_name = db.Column(db.Text, nullable=False)
-    display_name = db.Column(db.Text)
     password_hash = db.Column(db.Text, nullable=False)
     show_win_rate = db.Column(db.Boolean, default=False)
     show_total_wins_played = db.Column(db.Boolean, default=False)
     show_last_three = db.Column(db.Boolean, default=False)
     show_best_three = db.Column(db.Boolean, default=False)
+    show_admin = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, server_default=func.now())
     avatar_path = db.Column(db.String(120))
 
@@ -65,7 +65,6 @@ class Tournament(db.Model):
         db.CheckConstraint("format IN ('round robin', 'swiss', 'single elimination')", name='format_check'),
     )
 
-
 class TournamentPlayer(db.Model):
     __tablename__ = 'tournament_players'
     id = db.Column(db.Integer, primary_key=True)
@@ -108,6 +107,7 @@ class TournamentResult(db.Model):
     tournament_id = db.Column(db.Integer, db.ForeignKey('tournaments.id', ondelete='CASCADE'), nullable=False)
     player_id = db.Column(db.Integer, db.ForeignKey('tournament_players.id'), nullable=False)
     game_type = db.Column(db.Text, nullable=False)
+    rank = db.Column(db.Integer, nullable=False)
     wins = db.Column(db.Integer, default=0)
     losses = db.Column(db.Integer, default=0)
     opponent_win_percentage = db.Column(db.Float)
