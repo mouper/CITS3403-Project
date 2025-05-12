@@ -16,6 +16,7 @@ class User(UserMixin, db.Model):
     show_total_wins_played = db.Column(db.Boolean, default=False)
     show_last_three = db.Column(db.Boolean, default=False)
     show_best_three = db.Column(db.Boolean, default=False)
+    show_admin = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, server_default=func.now())
     avatar_path = db.Column(db.String(120))
 
