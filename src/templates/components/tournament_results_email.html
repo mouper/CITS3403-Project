@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-bottom: 1em;
+    }
+    th, td {
+      border: 1px solid #dddddd;
+      text-align: left;
+      padding: 8px;
+    }
+    th {
+      background-color: #f3f3f3;
+    }
+    .champion {
+      font-weight: bold;
+      color: #2e86de;
+    }
+  </style>
+</head>
+<body>
+  <h2>{{ tournament.title }} — Final Results</h2>
+
+  {% if ranked_players %}
+    <p>🏆 <strong>Champion:</strong> {{ ranked_players[0].name }} ({{ ranked_players[0].wins }}-{{ ranked_players[0].losses }})</p>
+  {% endif %}
+
+  <h3>Final Standings:</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Rank</th>
+        <th>Player</th>
+        <th>Record</th>
+        {% if tournament.format == 'swiss' %}
+          <th>OWP</th>
+          <th>OOWP</th>
+        {% endif %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for player in ranked_players %}
+        <tr {% if loop.index == 1 %}class="champion"{% endif %}>
+          <td>{{ loop.index }}</td>
+          <td>{{ player.name }}</td>
+          <td>{{ player.wins }}-{{ player.losses }}</td>
+          {% if tournament.format == 'swiss' %}
+            <td>{{ "%.1f"|format(player.owp * 100) }}%</td>
+            <td>{{ "%.1f"|format(player.oowp * 100) }}%</td>
+          {% endif %}
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <h3>Total Stats:</h3>
+  <ul>
+    <li>Total Matches: {{ total_matches }}</li>
+    <li>Total Byes: {{ total_byes }}</li>
+  </ul>
+</body>
+</html>

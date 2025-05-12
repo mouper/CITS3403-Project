@@ -11,7 +11,6 @@ class User(UserMixin, db.Model):
     email = db.Column(db.Text, unique=True, nullable=False)
     first_name = db.Column(db.Text, nullable=False)
     last_name = db.Column(db.Text, nullable=False)
-    display_name = db.Column(db.Text)
     password_hash = db.Column(db.Text, nullable=False)
     show_win_rate = db.Column(db.Boolean, default=False)
     show_total_wins_played = db.Column(db.Boolean, default=False)
@@ -59,13 +58,13 @@ class Tournament(db.Model):
         db.CheckConstraint("format IN ('round robin', 'swiss', 'single elimination')", name='format_check'),
     )
 
-
 class TournamentPlayer(db.Model):
     __tablename__ = 'tournament_players'
     id = db.Column(db.Integer, primary_key=True)
     tournament_id = db.Column(db.Integer, db.ForeignKey('tournaments.id', ondelete='CASCADE'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='SET NULL'))
-    guest_name = db.Column(db.Text)
+    guest_firstname = db.Column(db.Text)
+    guest_lastname = db.Column(db.Text)
     email = db.Column(db.Text)
     is_confirmed = db.Column(db.Boolean, default=False)
 
@@ -74,10 +73,10 @@ class Round(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     tournament_id = db.Column(db.Integer, db.ForeignKey('tournaments.id', ondelete='CASCADE'), nullable=False)
     round_number = db.Column(db.Integer, nullable=False)
-    status = db.Column(db.Text, nullable=False, default='in progress')
+    status = db.Column(db.Text, nullable=False, default='not started')
 
     __table_args__ = (
-        db.CheckConstraint("status IN ('in progress', 'completed')", name='round_status_check'),
+        db.CheckConstraint("status IN ('not started', 'in progress', 'completed')", name='round_status_check'),
     )
 
 class Match(db.Model):
@@ -85,13 +84,14 @@ class Match(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     round_id = db.Column(db.Integer, db.ForeignKey('rounds.id', ondelete='CASCADE'), nullable=False)
     player1_id = db.Column(db.Integer, db.ForeignKey('tournament_players.id'), nullable=False)
-    player2_id = db.Column(db.Integer, db.ForeignKey('tournament_players.id'), nullable=False)
+    player2_id = db.Column(db.Integer, db.ForeignKey('tournament_players.id'))
     winner_id = db.Column(db.Integer, db.ForeignKey('tournament_players.id'))
-    status = db.Column(db.Text, default='in progress')
+    status = db.Column(db.Text, default='not started', nullable=False)
     notes = db.Column(db.Text)
+    is_bye = db.Column(db.Boolean, default=False)
     
     __table_args__ = (
-        db.CheckConstraint("status IN ('in progress', 'completed')", name='match_status_check'),
+        db.CheckConstraint("status IN ('not started', 'in progress', 'completed')", name='match_status_check'),
     )
 
 class TournamentResult(db.Model):
@@ -100,6 +100,7 @@ class TournamentResult(db.Model):
     tournament_id = db.Column(db.Integer, db.ForeignKey('tournaments.id', ondelete='CASCADE'), nullable=False)
     player_id = db.Column(db.Integer, db.ForeignKey('tournament_players.id'), nullable=False)
     game_type = db.Column(db.Text, nullable=False)
+    rank = db.Column(db.Integer, nullable=False)
     wins = db.Column(db.Integer, default=0)
     losses = db.Column(db.Integer, default=0)
     opponent_win_percentage = db.Column(db.Float)

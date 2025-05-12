@@ -28,11 +28,10 @@ def add_users():
     """Add sample users to the database"""
     users_info = [
         {
-            "username": "player1",
+            "username": "AlexJ",
             "email": "player1@example.com",
             "first_name": "Alex",
             "last_name": "Johnson",
-            "display_name": "AlexJ",
             "password": "password123",
             "show_win_rate": True,
             "show_total_wins_played": True,
@@ -40,11 +39,10 @@ def add_users():
             "show_best_three": True
         },
         {
-            "username": "player2",
+            "username": "SamTheGamer",
             "email": "player2@example.com",
             "first_name": "Sam",
             "last_name": "Smith",
-            "display_name": "SamTheGamer",
             "password": "password123",
             "show_win_rate": True,
             "show_total_wins_played": True,
@@ -52,11 +50,10 @@ def add_users():
             "show_best_three": False
         },
         {
-            "username": "player3",
+            "username": "ChrisL",
             "email": "player3@example.com",
             "first_name": "Chris",
             "last_name": "Lee",
-            "display_name": "ChrisL",
             "password": "password123",
             "show_win_rate": False,
             "show_total_wins_played": True,
@@ -64,11 +61,10 @@ def add_users():
             "show_best_three": True
         },
         {
-            "username": "player4",
+            "username": "TayB",
             "email": "player4@example.com",
             "first_name": "Taylor",
             "last_name": "Brown",
-            "display_name": "TayB",
             "password": "password123",
             "show_win_rate": True,
             "show_total_wins_played": False,
@@ -76,11 +72,10 @@ def add_users():
             "show_best_three": False
         },
         {
-            "username": "player5",
+            "username": "JD",
             "email": "player5@example.com",
             "first_name": "Jordan",
             "last_name": "Davis",
-            "display_name": "JD",
             "password": "password123",
             "show_win_rate": True,
             "show_total_wins_played": True,
@@ -88,11 +83,10 @@ def add_users():
             "show_best_three": True
         },
         {
-            "username": "player6",
+            "username": "MorganW",
             "email": "player6@example.com",
             "first_name": "Morgan",
             "last_name": "Wilson",
-            "display_name": "MorganW",
             "password": "password123",
             "show_win_rate": False,
             "show_total_wins_played": False,
@@ -100,11 +94,10 @@ def add_users():
             "show_best_three": True
         },
         {
-            "username": "player7",
+            "username": "CM",
             "email": "player7@example.com",
             "first_name": "Casey",
             "last_name": "Miller",
-            "display_name": "CM",
             "password": "password123",
             "show_win_rate": True,
             "show_total_wins_played": False,
@@ -112,11 +105,10 @@ def add_users():
             "show_best_three": True
         },
         {
-            "username": "player8",
+            "username": "RileyG",
             "email": "player8@example.com",
             "first_name": "Riley",
             "last_name": "Garcia",
-            "display_name": "RileyG",
             "password": "password123",
             "show_win_rate": False,
             "show_total_wins_played": True,
@@ -124,11 +116,10 @@ def add_users():
             "show_best_three": False
         },
         {
-            "username": "organizer1",
+            "username": "EventMaster",
             "email": "organizer1@example.com",
             "first_name": "Jamie",
             "last_name": "Williams",
-            "display_name": "EventMaster",
             "password": "password123",
             "show_win_rate": True,
             "show_total_wins_played": True,
@@ -136,11 +127,10 @@ def add_users():
             "show_best_three": True
         },
         {
-            "username": "organizer2",
+            "username": "TourneyQ",
             "email": "organizer2@example.com",
             "first_name": "Quinn",
             "last_name": "Martinez",
-            "display_name": "TourneyQ",
             "password": "password123",
             "show_win_rate": True,
             "show_total_wins_played": True,
@@ -155,7 +145,6 @@ def add_users():
             email=user_info["email"],
             first_name=user_info["first_name"],
             last_name=user_info["last_name"],
-            display_name=user_info["display_name"],
             show_win_rate=user_info["show_win_rate"],
             show_total_wins_played=user_info["show_total_wins_played"],
             show_last_three=user_info["show_last_three"],
@@ -244,7 +233,7 @@ def add_tournaments():
             "status": "in progress",
             "num_players": 6,
             "round_time_minutes": 45,
-            "total_rounds": 2,
+            "total_rounds": 3,  # Increased from 2 to 3
             "include_creator_as_player": True,
             "start_time": datetime.datetime.now() - datetime.timedelta(days=1)
         },
@@ -253,24 +242,60 @@ def add_tournaments():
             "game_type": "YuGiOh",
             "format": "round robin",
             "created_by": 10,
-            "status": "draft",
+            "status": "in progress",  # Changed from draft to in progress
             "num_players": 4,
             "round_time_minutes": 40,
             "total_rounds": 3,
             "include_creator_as_player": False,
-            "start_time": datetime.datetime.now() + datetime.timedelta(days=7)
+            "start_time": datetime.datetime.now() - datetime.timedelta(days=2)
         },
         {
             "title": "One Piece Card Game Tournament",
             "game_type": "One Piece Card Game",
             "format": "swiss",
             "created_by": 9,
-            "status": "draft",
+            "status": "in progress",  # Changed from draft to in progress
             "num_players": 12,
             "round_time_minutes": 45,
             "total_rounds": 4,
             "include_creator_as_player": True,
-            "start_time": datetime.datetime.now() + datetime.timedelta(days=14)
+            "start_time": datetime.datetime.now() - datetime.timedelta(days=1)
+        },
+        {
+            "title": "Checkers Invitational",
+            "game_type": "Checkers",
+            "format": "swiss",
+            "created_by": 10,
+            "status": "completed",  # Added a new completed tournament
+            "num_players": 8,
+            "round_time_minutes": 30,
+            "total_rounds": 3,
+            "include_creator_as_player": True,
+            "start_time": datetime.datetime.now() - datetime.timedelta(days=21)
+        },
+        {
+            "title": "Magic Standard Tournament",
+            "game_type": "Magic: The Gathering",
+            "format": "single elimination",
+            "created_by": 9,
+            "status": "completed",  # Added a new completed tournament
+            "num_players": 16,
+            "round_time_minutes": 45,
+            "total_rounds": 4,
+            "include_creator_as_player": False,
+            "start_time": datetime.datetime.now() - datetime.timedelta(days=28)
+        },
+        {
+            "title": "Upcoming Pokémon TCG Draft Tournament",
+            "game_type": "Pokémon TCG",
+            "format": "swiss",
+            "created_by": 10,
+            "status": "draft",  # This is our new draft tournament
+            "num_players": 8,
+            "round_time_minutes": 40,
+            "total_rounds": 3,
+            "include_creator_as_player": True,
+            "start_time": datetime.datetime.now() + datetime.timedelta(days=7)  # Future date
         }
     ]
     
@@ -349,11 +374,14 @@ def add_tournament_players(created_tournaments):
         
         # Fill remaining slots with guests
         for i in range(players_to_add):
-            guest_name = f"Guest {i+1}"
+            # Generate a complete name for guests
+            guest_firstname = random.choice(["Jamie", "Pat", "Robin", "Jordan", "Casey", "Taylor", "Alex", "Morgan"])
+            guest_lastname = random.choice(["Smith", "Johnson", "Lee", "Garcia", "Wilson", "Brown", "Taylor", "Martinez"])
             guest_email = f"guest{i+1}@example.com"
             new_player = TournamentPlayer(
                 tournament_id=tournament_id,
-                guest_name=guest_name,
+                guest_firstname=guest_firstname,
+                guest_lastname=guest_lastname,
                 email=guest_email,
                 is_confirmed=random.choice([True, False])
             )
@@ -363,21 +391,44 @@ def add_tournament_players(created_tournaments):
     db.session.commit()
 
 def add_rounds_and_matches(created_tournaments):
-    """Create rounds and matches for tournaments"""
+    """Create rounds and matches for tournaments with proper round status logic"""
     for tournament_id, tournament_info in created_tournaments:
         if tournament_info["status"] in ["in progress", "completed"]:
             # Get players for this tournament
             players = TournamentPlayer.query.filter_by(tournament_id=tournament_id, is_confirmed=True).all()
             
-            # Calculate how many rounds to create based on tournament status
-            if tournament_info["status"] == "completed":
-                rounds_to_create = tournament_info["total_rounds"]
-            else:  # in progress
-                rounds_to_create = random.randint(1, tournament_info["total_rounds"] - 1)
+            # Calculate how many rounds to create and their statuses based on tournament status
+            total_rounds = tournament_info["total_rounds"]
             
-            for round_num in range(1, rounds_to_create + 1):
+            # For completed tournaments, all rounds are completed
+            if tournament_info["status"] == "completed":
+                round_statuses = ["completed"] * total_rounds
+            else:  # For in-progress tournaments
+                # Select a tournament to have a "not started" round
+                if tournament_info["title"] in ["Pokémon TCG League", "One Piece Card Game Tournament"] and random.random() < 0.5:
+                    # This is one of our chosen tournaments that will have "not started" rounds
+                    
+                    # Decide how many rounds are complete or in progress
+                    active_rounds = random.randint(1, total_rounds - 1)
+                    
+                    # All rounds before "active_rounds" are completed
+                    round_statuses = ["completed"] * (active_rounds - 1)
+                    
+                    # The active_rounds position is "in progress"
+                    round_statuses.append("in progress")
+                    
+                    # All remaining rounds are "not started"
+                    round_statuses.extend(["not started"] * (total_rounds - active_rounds))
+                else:
+                    # Regular in-progress tournament with no "not started" rounds
+                    active_rounds = random.randint(1, total_rounds - 1)
+                    round_statuses = ["completed"] * active_rounds
+                    round_statuses.append("in progress")
+                    round_statuses.extend(["not started"] * (total_rounds - active_rounds - 1))
+            
+            # Create rounds and matches for this tournament
+            for round_num, round_status in enumerate(round_statuses, start=1):
                 # Create round
-                round_status = "completed" if round_num < rounds_to_create or tournament_info["status"] == "completed" else "in progress"
                 new_round = Round(
                     tournament_id=tournament_id,
                     round_number=round_num,
@@ -394,11 +445,17 @@ def add_rounds_and_matches(created_tournaments):
                     player1 = available_players.pop()
                     player2 = available_players.pop()
                     
-                    match_status = "completed" if round_status == "completed" else "in progress"
-                    winner_id = None
-                    
-                    if match_status == "completed":
+                    # Determine match status based on round status
+                    if round_status == "completed":
+                        match_status = "completed"
                         winner_id = random.choice([player1.id, player2.id])
+                    elif round_status == "in progress":
+                        # Some matches in an in-progress round may be completed
+                        match_status = random.choice(["in progress", "completed"] + ["in progress"] * 3)
+                        winner_id = player1.id if match_status == "completed" and random.random() > 0.5 else None
+                    else:  # not started
+                        match_status = "not started"
+                        winner_id = None
                     
                     new_match = Match(
                         round_id=new_round.id,
@@ -406,60 +463,157 @@ def add_rounds_and_matches(created_tournaments):
                         player2_id=player2.id,
                         winner_id=winner_id,
                         status=match_status,
-                        notes=f"Round {round_num} match between {player1.id} and {player2.id}"
+                        notes=f"Round {round_num} match between {player1.id} and {player2.id}",
+                        is_bye=False
                     )
                     db.session.add(new_match)
                 
                 # If there's an odd player left, they get a bye
                 if available_players:
-                    # In a real system, you'd handle byes differently
-                    pass
+                    bye_player = available_players.pop()
+                    
+                    bye_match = Match(
+                        round_id=new_round.id,
+                        player1_id=bye_player.id,
+                        player2_id=None,
+                        winner_id=bye_player.id if round_status != "not started" else None,
+                        status="completed" if round_status != "not started" else "not started",
+                        notes=f"Round {round_num} bye for player {bye_player.id}",
+                        is_bye=True
+                    )
+                    db.session.add(bye_match)
     
     print("Added rounds and matches successfully.")
     db.session.commit()
 
 def add_tournament_results(created_tournaments):
-    """Generate tournament results for completed tournaments"""
+    """Generate tournament results for completed tournaments with accurate ranking"""
     for tournament_id, tournament_info in created_tournaments:
         if tournament_info["status"] == "completed":
-            # Get confirmed players
+            tournament = Tournament.query.get(tournament_id)
             players = TournamentPlayer.query.filter_by(tournament_id=tournament_id, is_confirmed=True).all()
-            
-            for player in players:
-                # Calculate wins and losses
-                wins = 0
-                losses = 0
-                
-                # Get all matches where this player participated
-                rounds = Round.query.filter_by(tournament_id=tournament_id).all()
-                for round_obj in rounds:
-                    matches = Match.query.filter(
-                        Match.round_id == round_obj.id,
-                        ((Match.player1_id == player.id) | (Match.player2_id == player.id)),
-                        Match.status == "completed"
-                    ).all()
-                    
-                    for match in matches:
-                        if match.winner_id == player.id:
-                            wins += 1
+            player_ids = [p.id for p in players]
+
+            # Gather all completed matches
+            rounds = Round.query.filter_by(tournament_id=tournament_id).all()
+            round_ids = [r.id for r in rounds]
+            matches = Match.query.filter(Match.round_id.in_(round_ids), Match.status == "completed").all()
+
+            # Build stats for each player
+            stats = {pid: {"wins": 0, "losses": 0, "opponents": [], "head_to_head": {}} for pid in player_ids}
+            for match in matches:
+                p1, p2, winner = match.player1_id, match.player2_id, match.winner_id
+                # Byes: only p1 gets a win
+                if match.is_bye:
+                    if p1:
+                        stats[p1]["wins"] += 1
+                    continue
+                # Track opponents
+                if p1 and p2:
+                    stats[p1]["opponents"].append(p2)
+                    stats[p2]["opponents"].append(p1)
+                # Track wins/losses
+                if winner == p1:
+                    stats[p1]["wins"] += 1
+                    if p2:
+                        stats[p2]["losses"] += 1
+                        stats[p1]["head_to_head"][p2] = stats[p1]["head_to_head"].get(p2, 0) + 1
+                elif winner == p2:
+                    stats[p2]["wins"] += 1
+                    stats[p1]["losses"] += 1
+                    stats[p2]["head_to_head"][p1] = stats[p2]["head_to_head"].get(p1, 0) + 1
+
+            # Calculate OWP and OOWP for Swiss
+            owp = {}
+            oowp = {}
+            if tournament.format == "swiss":
+                for pid in player_ids:
+                    opps = stats[pid]["opponents"]
+                    opp_wp = []
+                    for opp in opps:
+                        if opp in stats:
+                            opp_wins = stats[opp]["wins"]
+                            opp_losses = stats[opp]["losses"]
+                            total = opp_wins + opp_losses
+                            if total > 0:
+                                opp_wp.append(opp_wins / total)
+                    owp[pid] = sum(opp_wp) / len(opp_wp) if opp_wp else 0.0
+                for pid in player_ids:
+                    opps = stats[pid]["opponents"]
+                    opp_owp = [owp[opp] for opp in opps if opp in owp]
+                    oowp[pid] = sum(opp_owp) / len(opp_owp) if opp_owp else 0.0
+
+            # Prepare ranking list
+            ranking = []
+            for pid in player_ids:
+                entry = {
+                    "player_id": pid,
+                    "wins": stats[pid]["wins"],
+                    "losses": stats[pid]["losses"],
+                    "owp": owp[pid] if tournament.format == "swiss" else 0.0,
+                    "oowp": oowp[pid] if tournament.format == "swiss" else 0.0,
+                    "head_to_head": stats[pid]["head_to_head"]
+                }
+                ranking.append(entry)
+
+            # Sort ranking
+            if tournament.format == "swiss":
+                ranking.sort(key=lambda x: (-x["wins"], -x["owp"], -x["oowp"]))
+            elif tournament.format == "round robin":
+                # First by wins, then head-to-head if only two tied, else OWP/OOWP
+                def rr_sort_key(x):
+                    return (-x["wins"],)
+                ranking.sort(key=rr_sort_key)
+                # Now resolve ties by head-to-head if only two tied
+                i = 0
+                while i < len(ranking) - 1:
+                    j = i
+                    # Find group of tied players
+                    while j + 1 < len(ranking) and ranking[j]["wins"] == ranking[j+1]["wins"]:
+                        j += 1
+                    if j > i:
+                        tied = ranking[i:j+1]
+                        if len(tied) == 2:
+                            a, b = tied[0], tied[1]
+                            # If a beat b, a stays ahead; if b beat a, swap
+                            if a["head_to_head"].get(b["player_id"], 0) > b["head_to_head"].get(a["player_id"], 0):
+                                pass  # a stays ahead
+                            elif b["head_to_head"].get(a["player_id"], 0) > a["head_to_head"].get(b["player_id"], 0):
+                                ranking[i], ranking[i+1] = b, a
+                        # If more than two tied, use OWP/OOWP as fallback
                         else:
-                            losses += 1
-                
-                # Calculate opponent win percentage (random for this example)
-                opponent_win_percentage = random.uniform(0.2, 0.8)
-                opp_opp_win_percentage = random.uniform(0.3, 0.7)
-                
+                            # Calculate OWP/OOWP for these players
+                            for entry in tied:
+                                opps = stats[entry["player_id"]]["opponents"]
+                                opp_wp = []
+                                for opp in opps:
+                                    if opp in stats:
+                                        opp_wins = stats[opp]["wins"]
+                                        opp_losses = stats[opp]["losses"]
+                                        total = opp_wins + opp_losses
+                                        if total > 0:
+                                            opp_wp.append(opp_wins / total)
+                                entry["owp"] = sum(opp_wp) / len(opp_wp) if opp_wp else 0.0
+                            tied.sort(key=lambda x: -x["owp"])
+                            ranking[i:j+1] = tied
+                    i = j + 1
+            else:
+                ranking.sort(key=lambda x: -x["wins"])
+
+            # Assign ranks and create TournamentResult
+            for idx, entry in enumerate(ranking, 1):
+                pid = entry["player_id"]
                 new_result = TournamentResult(
                     tournament_id=tournament_id,
-                    player_id=player.id,
+                    player_id=pid,
                     game_type=tournament_info["game_type"],
-                    wins=wins,
-                    losses=losses,
-                    opponent_win_percentage=opponent_win_percentage,
-                    opp_opp_win_percentage=opp_opp_win_percentage
+                    rank=idx,
+                    wins=entry["wins"],
+                    losses=entry["losses"],
+                    opponent_win_percentage=entry["owp"],
+                    opp_opp_win_percentage=entry["oowp"]
                 )
                 db.session.add(new_result)
-    
     print("Added tournament results successfully.")
     db.session.commit()
 
@@ -494,6 +648,30 @@ def add_user_stats():
                     game_type_stats[tournament.game_type]['played'] += result.wins + result.losses
                     game_type_stats[tournament.game_type]['won'] += result.wins
                     game_type_stats[tournament.game_type]['lost'] += result.losses
+                
+                # For in-progress tournaments, add some match data
+                if tournament.status == "in progress":
+                    # Get completed matches
+                    completed_matches = 0
+                    wins = 0
+                    
+                    rounds = Round.query.filter_by(tournament_id=tournament.id).all()
+                    for round_obj in rounds:
+                        matches = Match.query.filter(
+                            Match.round_id == round_obj.id,
+                            ((Match.player1_id == player_entry.id) | (Match.player2_id == player_entry.id)),
+                            Match.status == "completed"
+                        ).all()
+                        
+                        for match in matches:
+                            completed_matches += 1
+                            if match.winner_id == player_entry.id:
+                                wins += 1
+                    
+                    if completed_matches > 0:
+                        game_type_stats[tournament.game_type]['played'] += completed_matches
+                        game_type_stats[tournament.game_type]['won'] += wins
+                        game_type_stats[tournament.game_type]['lost'] += (completed_matches - wins)
         
         # Also add some random game types that might not be in tournaments
         for game_type in random.sample(GAME_TYPES, 3):
