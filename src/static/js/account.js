@@ -193,7 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
         show_total_wins_played: document.querySelector('.switch-card:nth-child(2) input')?.checked || false,
         show_last_three: document.querySelector('.switch-card:nth-child(3) input')?.checked || false,
         show_best_three: document.querySelector('.top3-card input[type="checkbox"]')?.checked || false,
-        show_admin: document.querySelector('.player-dropdown select')?.value === 'Admin'
+        show_admin: document.querySelector('[data-section="hosted"] input[type="checkbox"]')?.checked || false
       };
 
       fetch('/account/save_display_settings', {
