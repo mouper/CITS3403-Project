@@ -38,11 +38,6 @@ function injectAdminControls(settingsPanel, switchGroup) {
   const adminControls = document.createElement('div');
   adminControls.className = 'admin-controls';
   adminControls.innerHTML = `
-    <div class="toggle-count">
-      <button class="show-count-btn selected" data-count="3">Show 3</button>
-      <button class="show-count-btn" data-count="5">Show 5</button>
-      <button class="show-count-btn" data-count="10">Show 10</button>
-    </div>
     <div class="game-dropdown">
       <select id="adminGameFilter">
         <option value="all">All Games</option>
@@ -120,36 +115,59 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (!window.hostedGameTypes) window.hostedGameTypes = [];
 
-  dropdown.addEventListener('change', () => {
-    const isAdmin = dropdown.value === 'Admin';
 
-    document.querySelector('.admin-controls')?.remove();
-    document.querySelectorAll('.switch-card:not(.top3-card)').forEach(card => {
-      card.style.display = isAdmin ? 'none' : 'flex';
+
+  dropdown.addEventListener('change', () => {
+  const isAdmin = dropdown.value === 'Admin';
+
+  // ✅ 自动保存 admin 显示设置
+  if (isAdmin) {
+    fetch('/account/save_display_settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        show_win_rate: false,
+        show_total_wins_played: false,
+        show_last_three: false,
+        show_best_three: false,
+        show_admin: true
+      })
+    }).then(res => res.json()).then(data => {
+      if (!data.success) {
+        alert('Failed to set admin display settings.');
+      }
+    }).catch(err => {
+      console.error('Error saving admin view settings:', err);
     });
 
-    if (isAdmin) {
-      top3Card.innerHTML = `
-        <div class="top3-row">
-          <span class="medium4">Recent Tournaments Hosted</span>
-          <label class="switch">
-            <input type="checkbox" checked>
-            <span class="slider"></span>
-          </label>
-        </div>
-      `;
-      setupSwitch(top3Card);
+    // ✅ 显示 admin 卡片和控件
+    document.querySelector('.admin-controls')?.remove();
+    document.querySelectorAll('.switch-card:not(.top3-card)').forEach(card => {
+      card.style.display = 'none';
+    });
 
-      injectAdminControls(settingsPanel, switchGroup);
-      initAdminHostedFilters();
+    top3Card.innerHTML = `
+      <div class="top3-row">
+        <span class="medium4">Recent Tournaments Hosted</span>
+        <label class="switch">
+          <input type="checkbox" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+    `;
+    setupSwitch(top3Card);
+    injectAdminControls(settingsPanel, switchGroup);
+    initAdminHostedFilters();
 
-      document.querySelector('.hosted-preview-section')?.style?.setProperty('display', 'block');
-      document.querySelector('[data-section="last3"]')?.style?.setProperty('display', 'none');
-      document.querySelector('[data-section="top3"]')?.style?.setProperty('display', 'none');
-    } else {
-      location.reload();
-    }
-  });
+    document.querySelector('.hosted-preview-section')?.style?.setProperty('display', 'block');
+    document.querySelector('[data-section="last3"]')?.style?.setProperty('display', 'none');
+    document.querySelector('[data-section="top3"]')?.style?.setProperty('display', 'none');
+  } else {
+    location.reload();
+  }
+});
+
+
 
   const gameTypeSelect = document.getElementById('gameTypeSelect');
   if (gameTypeSelect) {
@@ -187,6 +205,37 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const defaultTab = document.querySelector('.top3-tab:first-child');
   if (defaultTab) defaultTab.click();
+
+  // ✅ 新增：保存 Stats 设置按钮逻辑
+  const saveStatsBtn = document.getElementById('save-stats-btn');
+  if (saveStatsBtn) {
+    saveStatsBtn.addEventListener('click', () => {
+      const data = {
+        show_win_rate: document.querySelector('.switch-card:nth-child(1) input')?.checked || false,
+        show_total_wins_played: document.querySelector('.switch-card:nth-child(2) input')?.checked || false,
+        show_last_three: document.querySelector('.switch-card:nth-child(3) input')?.checked || false,
+        show_best_three: document.querySelector('.top3-card input[type="checkbox"]')?.checked || false,
+      };
+
+      fetch('/account/save_display_settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      })
+        .then(res => res.json())
+        .then(response => {
+          if (response.success) {
+            alert('Settings saved!');
+          } else {
+            alert('Failed to save settings.');
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          alert('Error saving settings.');
+        });
+    });
+  }
 });
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -217,4 +266,3 @@ function enableAndSubmit(inputId, buttonEl) {
     }, { once: true });
   }
 }
-

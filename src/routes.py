@@ -204,23 +204,7 @@ def account():
             reverse=True
         )
         grouped_by_winrate[game_type] = sorted_entries
-    # ✅ Leaderboard 排名（综合得分）
-    grouped_by_rank = {}
-    for game_type, entries in grouped_results.items():
-        def ranking_score(result, tournament):
-            if tournament.format == "swiss":
-                wr = result.wins / (result.wins + result.losses) if (result.wins + result.losses) > 0 else 0
-                opwr = result.opponent_win_percentage or 0
-                opowr = result.opp_opp_win_percentage or 0
-                return 0.5 * wr + 0.3 * (opwr / 100) + 0.2 * (opowr / 100)
-            else:
-                return result.wins
-        sorted_entries = sorted(
-            entries,
-            key=lambda x: ranking_score(x[0], x[1]),
-            reverse=True
-        )
-        grouped_by_rank[game_type] = sorted_entries
+
     # ✅ 总胜率
     total_stats = (
         db.session.query(
@@ -265,6 +249,53 @@ def account():
     for t in hosted_tournaments:
         hosted_by_game[t.game_type].append(t)
     hosted_game_types = list(hosted_by_game.keys())
+
+    # ✅ recent_tournaments for admincards（直接复用 analytics 的逻辑）
+    recent_tournaments = []
+    base_q = (
+        db.session.query(Tournament)
+        .filter_by(created_by=current_user.id)
+        .order_by(Tournament.created_at.desc())
+    )
+    recent = base_q.limit(6).all()  # 可以固定 6，也可以用 request.args.get('limit')
+
+    for tourney in recent:
+        rows = (
+            db.session.query(TournamentPlayer, TournamentResult, User)
+            .join(TournamentResult, TournamentResult.player_id == TournamentPlayer.id)
+            .outerjoin(User, TournamentPlayer.user_id == User.id)
+            .filter(TournamentPlayer.tournament_id == tourney.id)
+            .all()
+        )
+
+        standings = []
+        for player, result, user in rows:
+            if user:
+                display_name = user.display_name or user.username
+            else:
+                first = player.guest_firstname or ""
+                last_initial = player.guest_lastname[0] if player.guest_lastname else ""
+                display_name = f"{first} {last_initial}".strip() or "Unknown"
+
+            standings.append({
+                'username': display_name,
+                'wins': result.wins,
+                'losses': result.losses,
+                'owp': round(result.opponent_win_percentage * 100, 2),
+                'opp_owp': round(result.opp_opp_win_percentage * 100, 2)
+            })
+
+        if len(standings) < 3:
+            continue
+
+        standings.sort(key=lambda p: (p['wins'], p['opp_owp']), reverse=True)
+
+        recent_tournaments.append({
+            'id': tourney.id,
+            'title': tourney.title,
+            'standings': standings
+        })
+
     # ✅ 用户统计
     user_stats = db.session.query(UserStat).filter_by(user_id=current_user.id).all()
     return render_template(
@@ -273,7 +304,6 @@ def account():
         results=all_results,
         grouped_results=grouped_results,
         grouped_by_winrate=grouped_by_winrate,
-        grouped_by_rank=grouped_by_rank,
         user_stats=user_stats,
         total_winrate=total_winrate,
         game_types=list(grouped_results.keys()),
@@ -282,6 +312,18 @@ def account():
         hosted_game_types=hosted_game_types,
         hosted_by_game=hosted_by_game  # ✅ 新增变量，供 admin-hosted-section 使用
     )
+
+@application.route('/account/save_display_settings', methods=['POST'])
+@login_required
+def save_display_settings():
+    data = request.json
+    current_user.show_win_rate = data.get('show_win_rate', False)
+    current_user.show_total_wins_played = data.get('show_total_wins_played', False)
+    current_user.show_last_three = data.get('show_last_three', False)
+    current_user.show_best_three = data.get('show_best_three', False)
+    current_user.show_admin = data.get('show_admin', False)
+    db.session.commit()
+    return jsonify(success=True)
 
 
 @application.route('/new_tournament')
