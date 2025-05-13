@@ -100,7 +100,16 @@ def dashboard():
     sent_accepted = Friend.query.filter_by(user_id=current_user.id, status='accepted').all()
     recv_accepted = Friend.query.filter_by(friend_id=current_user.id, status='accepted').all()
 
-    accepted_friends = [f.recipient for f in sent_accepted] + [f.sender for f in recv_accepted]
+    sent_friends = [f.recipient for f in sent_accepted]
+    recv_friends = [f.sender for f in recv_accepted]
+    
+    all_friend_ids = set()
+    accepted_friends = []
+    
+    for friend in sent_friends + recv_friends:
+        if friend.id not in all_friend_ids:
+            all_friend_ids.add(friend.id)
+            accepted_friends.append(friend)
 
     accepted_friend_usernames = [friend.username for friend in accepted_friends]
 
