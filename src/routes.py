@@ -1028,32 +1028,6 @@ def send_results_to_players(tournament_id):
         msg = Message(subject=f"Tournament Results: {tournament.title}",
                       recipients=[player.email])
         msg.html = html_body
-
-        # Guest attachment
-        if not player.user_id:
-            player_matches = Match.query.join(Round, Match.round_id == Round.id).filter(
-                ((Match.player1_id == player.id) | (Match.player2_id == player.id)) &
-                (Round.tournament_id == tournament.id)
-            ).all()
-
-            wins = sum(1 for m in player_matches if m.winner_id == player.id)
-            losses = sum(1 for m in player_matches if m.winner_id and m.winner_id != player.id)
-
-            result = {
-                "user_id": None,
-                "tournament_id": tournament_id,
-                "game_type": tournament.game_type,
-                "games_won": wins,
-                "games_lost": losses,
-                "opponent_win_percentage": None,
-                "opp_opp_win_percentage": None
-            }
-
-            buffer = io.BytesIO()
-            buffer.write(json.dumps(result).encode('utf-8'))
-            buffer.seek(0)
-            msg.attach(f"tournament_{tournament_id}_results.json", "application/json", buffer.read())
-
         mail.send(msg)
 
     flash("Results sent to all players!", "success")
@@ -1106,6 +1080,13 @@ def compute_rankings(tournament_id, format):
     standings = []
 
     for player_id, stats in player_stats.items():
+        record = {
+            'wins': stats['wins'],
+            'losses': stats['losses'],
+            'owp': 0.0,
+            'oowp': 0.0
+        }
+        
         opponents = stats["opponents"]
         opp_wp_list = []
 
@@ -1122,11 +1103,9 @@ def compute_rankings(tournament_id, format):
                     
                     opp_wp_list.append(opp_win_pct)
             
-            # Calculate average opponent win percentage
-            if opp_wp_list:
-                record['owp'] = sum(opp_wp_list) / len(opp_wp_list)
-            else:
-                record['owp'] = 0.0
+        # Calculate average opponent win percentage
+        if opp_wp_list:
+            record['owp'] = sum(opp_wp_list) / len(opp_wp_list)
         
         # Calculate OOWP: Average OWP of the player's opponents
         oowp_list = []
@@ -1136,11 +1115,9 @@ def compute_rankings(tournament_id, format):
                 if opp_results:
                     oowp_list.append(opp_results.opponent_win_percentage or 0)
             
-            # Calculate opponents' opponent win percentage (OOWP)
-            if oowp_list:
-                record['oowp'] = sum(oowp_list) / len(oowp_list)
-            else:
-                record['oowp'] = 0.0
+        # Calculate opponents' opponent win percentage (OOWP)
+        if oowp_list:
+            record['oowp'] = sum(oowp_list) / len(oowp_list)
         
         # Add player's data to the standings
         p = stats["player"]
@@ -1154,8 +1131,8 @@ def compute_rankings(tournament_id, format):
 
         standings.append({
             "name": player_name,
-            "wins": stats["wins"],
-            "losses": stats["losses"],
+            "wins": record['wins'],
+            "losses": record['losses'],
             "owp": round(record['owp'], 3),
             "oowp": round(record['oowp'], 3)
         })
