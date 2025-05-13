@@ -188,12 +188,31 @@ document.addEventListener('DOMContentLoaded', () => {
   const saveStatsBtn = document.getElementById('save-stats-btn');
   if (saveStatsBtn) {
     saveStatsBtn.addEventListener('click', () => {
+      let show_win_rate = document.querySelector('.switch-card:nth-child(1) input')?.checked || false;
+      let show_total_wins_played = document.querySelector('.switch-card:nth-child(2) input')?.checked || false;
+      let show_last_three = document.querySelector('.switch-card:nth-child(3) input')?.checked || false;
+      let show_best_three = document.querySelector('.top3-card input[type="checkbox"]')?.checked || false;
+      let show_admin = document.querySelector('.admin-toggle')?.checked || false;
+
+      // ✅ 互斥逻辑：如果 Admin 开启，则禁用其他选项
+      if (show_admin) {
+        show_win_rate = false;
+        show_total_wins_played = false;
+        show_last_three = false;
+        show_best_three = false;
+      }
+
+      // ✅ 互斥逻辑：如果其他任何一个打开，则强制关闭 Admin
+      if (show_win_rate || show_total_wins_played || show_last_three || show_best_three) {
+        show_admin = false;
+      }
+
       const data = {
-        show_win_rate: document.querySelector('.switch-card:nth-child(1) input')?.checked || false,
-        show_total_wins_played: document.querySelector('.switch-card:nth-child(2) input')?.checked || false,
-        show_last_three: document.querySelector('.switch-card:nth-child(3) input')?.checked || false,
-        show_best_three: document.querySelector('.top3-card input[type="checkbox"]')?.checked || false,
-        show_admin: document.querySelector('.admin-toggle')?.checked || false
+        show_win_rate,
+        show_total_wins_played,
+        show_last_three,
+        show_best_three,
+        show_admin
       };
 
       fetch('/account/save_display_settings', {
