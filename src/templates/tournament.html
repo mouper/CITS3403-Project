@@ -279,6 +279,13 @@
                             Start Round
                         </button>
                     </div>
+                    <div class="SendJoinBtn">
+                        <form method="POST" action="/tournament/{{ tournament.id }}/send_pairings">
+                            <button type="submit">
+                                <i class="fas fa-envelope"></i> Send Pairings to Players
+                            </button>
+                        </form>
+                    </div>
                 {% elif current_round and current_round.status == 'in progress' and view_state == 'confirm_results' %}
                     <!-- Round Timer - Hidden in confirm results state -->
                     <div class="round-timer">

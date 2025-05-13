@@ -1913,4 +1913,74 @@ def update_profile():
     flash("Profile updated successfully!", "success")
     return redirect(url_for('account'))
 
+@application.route('/tournament/<int:tournament_id>/send_pairings', methods=['POST'])
+@login_required
+def send_round_pairings(tournament_id):
+    tournament = Tournament.query.get_or_404(tournament_id)
+    
+    # Get current round
+    current_round = Round.query.filter_by(
+        tournament_id=tournament_id, 
+        status='in progress'
+    ).first()
+    
+    if not current_round:
+        current_round = Round.query.filter_by(
+            tournament_id=tournament_id,
+            status='not started'
+        ).order_by(Round.round_number).first()
+    
+    if not current_round:
+        flash("No active round found.", "error")
+        return redirect(url_for('view_tournament', tournament_id=tournament_id))
+    
+    # Get all players and their matches
+    players = TournamentPlayer.query.filter_by(tournament_id=tournament_id).all()
+    matches = Match.query.filter_by(round_id=current_round.id).all()
+    
+    # Create players dict for template
+    players_dict = {p.id: p for p in players}
+    
+    # Get user info for registered players
+    player_users = {}
+    for player in players:
+        if player.user_id:
+            user = User.query.get(player.user_id)
+            if user:
+                player_users[player.id] = user
+    
+    # Get player stats
+    player_stats = {}
+    tournament_results = TournamentResult.query.filter_by(tournament_id=tournament_id).all()
+    for result in tournament_results:
+        player_stats[result.player_id] = {
+            'wins': result.wins,
+            'losses': result.losses
+        }
+    
+    # Send email to each player
+    for player in players:
+        if not player.email:
+            continue
+            
+        html_body = render_template(
+            "components/round_pairings_email.html",
+            tournament=tournament,
+            current_round=current_round,
+            matches=matches,
+            players=players_dict,
+            player_users=player_users,
+            player_stats=player_stats
+        )
+        
+        msg = Message(
+            subject=f"Round {current_round.round_number} Pairings - {tournament.title}",
+            recipients=[player.email],
+            html=html_body
+        )
+        mail.send(msg)
+    
+    flash("Round pairings sent to all players!", "success")
+    return redirect(url_for('view_tournament', tournament_id=tournament_id, view_state=request.args.get('view_state', 'normal')))
+
 
