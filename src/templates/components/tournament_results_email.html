@@ -34,7 +34,7 @@
       <tr>
         <th>Rank</th>
         <th>Player</th>
-        <th>Record</th>
+        <th>W/L</th>
         {% if tournament.format == 'swiss' %}
           <th>OWP</th>
           <th>OOWP</th>
@@ -46,7 +46,7 @@
         <tr {% if loop.index == 1 %}class="champion"{% endif %}>
           <td>{{ loop.index }}</td>
           <td>{{ player.name }}</td>
-          <td>{{ player.wins }}-{{ player.losses }}</td>
+          <td>{{ player.wins }}/{{ player.losses }}</td>
           {% if tournament.format == 'swiss' %}
             <td>{{ "%.1f"|format(player.owp * 100) }}%</td>
             <td>{{ "%.1f"|format(player.oowp * 100) }}%</td>

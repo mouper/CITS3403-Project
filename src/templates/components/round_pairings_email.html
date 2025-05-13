@@ -36,9 +36,9 @@
       <tr>
         <th>Table</th>
         <th>Player 1</th>
-        <th>Record</th>
+        <th>W/L</th>
         <th>Player 2</th>
-        <th>Record</th>
+        <th>W/L</th>
       </tr>
     </thead>
     <tbody>
@@ -78,7 +78,7 @@
           </td>
           <td>
             {% if match.player2_id %}
-              {{ player_stats.get(match.player2_id, {'wins': 0, 'losses': 0}).wins }}-{{ player_stats.get(match.player2_id, {'wins': 0, 'losses': 0}).losses }}
+              {{ player_stats.get(match.player2_id, {'wins': 0, 'losses': 0}).wins }}/{{ player_stats.get(match.player2_id, {'wins': 0, 'losses': 0}).losses }}
             {% else %}
               -
             {% endif %}
