@@ -2538,7 +2538,13 @@ document.addEventListener('DOMContentLoaded', () => {
       card.style.display = (card.dataset.status === wanted) ? '' : 'none';
     });
   }
-  statusFilter.addEventListener('change', applyFilter);
+  statusFilter.addEventListener('change', () => {
+    const wanted = statusFilter.value;               // "in-progress" or "draft"
+    const normalized = wanted.replace('-', ' ');     // "in progress"
+    document.querySelectorAll('[data-status]').forEach(card => {
+      card.style.display = card.dataset.status === normalized ? '' : 'none';
+    });
+  });
 
   applyFilter();
 });

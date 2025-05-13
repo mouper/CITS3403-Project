@@ -16,10 +16,11 @@
       </div>
       <div class="tournament-footer">
         <span class="regular3">{{ t.title }}</span>
-        <a
-          href="{{ url_for('new_tournament', tournament_id=t.id) }}"
-          class="caption view-tourney"
-        >View</a>
+        {% if t.status == 'draft' %}
+          <a href="{{ url_for('edit_tournament', tournament_id=t.id) }}" class="ViewBtn">View</a>
+        {% else %}
+          <a href="{{ url_for('tournament_detail', tournament_id=t.id) }}" class="ViewBtn">View</a>
+        {% endif %}
       </div>
     </div>
   {% endfor %}

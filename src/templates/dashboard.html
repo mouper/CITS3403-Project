@@ -32,13 +32,23 @@
       <h2 class="subheadline">My Tournaments</h2>
 
       <!-- dropdown filter -->
-      <div class="FilterComponent">
-        <select id="statusFilter" class="filter-dropdown">
-          <option value="in-progress">In Progress</option>
-          <option value="draft">Draft</option>
+      <form method="GET" class="FilterComponent" id="statusFilterForm">
+        <select
+          name="status"
+          id="statusFilter"
+          class="filter-dropdown"
+          onchange="document.getElementById('statusFilterForm').submit()"
+        >
+          <option
+            value="in progress"
+            {% if status_filter == 'in progress' %}selected{% endif %}
+          >In Progress</option>
+          <option
+            value="draft"
+            {% if status_filter == 'draft' %}selected{% endif %}
+          >Draft</option>
         </select>
-      </div>
-    </div>
+      </form>
 
     <div id="myTourneyCards">
       {{ cards.tournament_cards(tournaments) }}

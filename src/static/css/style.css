@@ -398,12 +398,20 @@ html, body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.5rem;   /* space below the header */
     padding: 0 0.5rem;
 }
   
-.tournament-header .subheadline {
-    color: var(--primary-shade1);
+  /* push the cards down and clear any floats */
+#myTourneyCards {
+    clear: both;             /* sit below any floated elements */
+    margin-top: 1rem;        /* extra breathing room under header */
+  
+    /* optional: make your cards lay out in a nice responsive grid */
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+    width: 100%;
 }
 
 .FilterComponent {

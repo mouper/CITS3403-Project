@@ -1,7 +1,7 @@
 import datetime
 import math
 import random
-from flask import render_template, request, redirect, url_for, flash, jsonify
+from flask import render_template, request, redirect, url_for, flash, jsonify, abort
 from flask_login import login_user, logout_user, current_user, login_required
 from flask_mail import Message
 from app import application, mail
@@ -116,7 +116,7 @@ def dashboard():
         accepted_friend_usernames=accepted_usernames,
         status_filter=status
     )
-    
+  
 @application.route('/analytics')
 @login_required
 def analytics():
@@ -1898,4 +1898,61 @@ def update_profile():
     flash("Profile updated successfully!", "success")
     return redirect(url_for('account'))
 
+@application.route('/tournament/<int:tournament_id>')
+@login_required
+def tournament_detail(tournament_id):
+    tournament = Tournament.query.get_or_404(tournament_id)
+    if tournament.status == 'draft':
+        abort(404)
+    return render_template(
+      'tournament.html',
+      tournament=tournament,
+      current_round=current_round,
+      view_state=view_state,
+      completed_rounds=completed_rounds,
+      player_stats=player_stats,
+      players=players,
+      current_matches=current_matches,
+      ranked_players=ranked_players,
+      matches_by_round=matches_by_round,
+      rounds_count=rounds_count
+    )
 
+@application.route('/tournament/<int:tournament_id>/edit')
+@login_required
+def edit_tournament(tournament_id):
+    tournament = Tournament.query.get_or_404(tournament_id)
+    if tournament.created_by != current_user.id:
+        abort(403)
+
+    player_rows = TournamentPlayer.query.filter_by(
+        tournament_id=tournament.id
+    ).all()
+
+    players_data = []
+    for p in player_rows:
+        players_data.append({
+            "id": p.id,
+            "user_id": p.user_id,
+            "guest_firstname": p.guest_firstname,
+            "guest_lastname": p.guest_lastname,
+            "email": p.email,
+            "is_confirmed": p.is_confirmed
+        })
+
+    sent = Friend.query.filter_by(
+        user_id=current_user.id, status='accepted'
+    ).all()
+    recv = Friend.query.filter_by(
+        friend_id=current_user.id, status='accepted'
+    ).all()
+    accepted = [f.recipient for f in sent] + [f.sender for f in recv]
+    accepted_friend_usernames = [u.username for u in accepted]
+
+    return render_template(
+        'new_tournament.html',
+        tournament=tournament,
+        players=players_data,             
+        accepted_friend_usernames=accepted_friend_usernames,
+        accepted_friend_details=[u.username for u in accepted]
+    )
