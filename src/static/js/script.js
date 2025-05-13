@@ -121,6 +121,22 @@ function initTournamentForm() {
     // Clear any previous errors
     clearError();
     
+    // Remove existing confirm details tab if it exists
+    if (confirmDetailsTab) {
+      confirmDetailsTab.remove();
+      confirmDetailsTab = null;
+    }
+    if (confirmDetailsSection) {
+      confirmDetailsSection.remove();
+      confirmDetailsSection = null;
+    }
+    
+    // Hide the Start Tournament button
+    const startTournamentBtnContainer = document.querySelector('.SendJoinBtn');
+    if (startTournamentBtnContainer) {
+      startTournamentBtnContainer.classList.add('hidden');
+    }
+    
     const count = parseInt(competitorCountSelect.value);
     
     // Clear existing players
@@ -320,22 +336,91 @@ function initTournamentForm() {
     usernameGroup.style.display = 'none';
     usernameGroup.id = `usernameGroup${playerId}`;
     
-    const usernameInput = document.createElement('input');
-    usernameInput.type = 'text';
-    usernameInput.placeholder = 'TourneyPro Username';
-    usernameInput.id = `username${playerId}`;
-    
+    const friendDropdownSection = document.createElement('div');
+    friendDropdownSection.className = 'friend-dropdown-section';
+
+    const friendDropdownInput = document.createElement('input');
+    friendDropdownInput.type = 'text';
+    friendDropdownInput.placeholder = 'Search your friends';
+    friendDropdownInput.autocomplete = 'off';
+    friendDropdownInput.className = 'friend-dropdown-input';
+    friendDropdownInput.id = `username${playerId}`;
+
     // Disable for player 1 when user is competitor
     if (playerId === 1 && isCompetitorCheckbox.checked) {
-      usernameInput.disabled = true;
+      friendDropdownInput.disabled = true;
     }
-    
+
+    const friendDropdownList = document.createElement('ul');
+    friendDropdownList.className = 'friend-dropdown-list';
+    friendDropdownList.id = `friendDropdownList${playerId}`;
+
+    // Add accepted friends to the dropdown list
+    if (window.acceptedFriendUsernames && Array.isArray(window.acceptedFriendUsernames)) {
+      window.acceptedFriendUsernames.forEach(username => {
+        const listItem = document.createElement('li');
+        listItem.className = 'friend-dropdown-item';
+        listItem.textContent = username;
+        listItem.addEventListener('click', () => {
+          friendDropdownInput.value = username;
+          friendDropdownList.style.display = 'none';
+          // Trigger change event to update form validation
+          friendDropdownInput.dispatchEvent(new Event('change', { bubbles: true }));
+          friendDropdownInput.dispatchEvent(new Event('input', { bubbles: true }));
+        });
+        friendDropdownList.appendChild(listItem);
+      });
+    } else {
+      const listItem = document.createElement('li');
+      listItem.className = 'friend-dropdown-item';
+      listItem.textContent = 'No accepted friends found';
+      friendDropdownList.appendChild(listItem);
+    }
+
     // Username error message
     const usernameError = document.createElement('div');
     usernameError.className = 'field-error regular4 display-none';
     usernameError.id = `usernameError${playerId}`;
-    
-    usernameGroup.appendChild(usernameInput);
+
+    // Add event listeners for dropdown functionality
+    friendDropdownInput.addEventListener('click', () => {
+      friendDropdownList.style.display = 'block';
+    });
+
+    friendDropdownInput.addEventListener('input', function() {
+      const query = this.value.trim().toLowerCase();
+      const allFriendItems = Array.from(friendDropdownList.querySelectorAll('li'));
+      
+      if (query.length < 1) {
+        allFriendItems.forEach(item => item.style.display = 'block');
+        friendDropdownList.style.display = 'block';
+        return;
+      }
+      
+      let anyVisible = false;
+      allFriendItems.forEach(item => {
+        const friendUsername = item.textContent.toLowerCase();
+        if (friendUsername.includes(query)) {
+          item.style.display = 'block';
+          anyVisible = true;
+        } else {
+          item.style.display = 'none';
+        }
+      });
+      
+      friendDropdownList.style.display = anyVisible ? 'block' : 'none';
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(event) {
+      if (!friendDropdownInput.contains(event.target) && !friendDropdownList.contains(event.target)) {
+        friendDropdownList.style.display = 'none';
+      }
+    });
+
+    friendDropdownSection.appendChild(friendDropdownInput);
+    friendDropdownSection.appendChild(friendDropdownList);
+    usernameGroup.appendChild(friendDropdownSection);
     usernameGroup.appendChild(usernameError);
     
     // Form Grid for name fields (initially hidden)
@@ -352,6 +437,11 @@ function initTournamentForm() {
     firstNameInput.placeholder = 'First Name';
     firstNameInput.id = `firstName${playerId}`;
     
+    // Add change event listener for validation
+    firstNameInput.addEventListener('change', function() {
+        this.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    
     // Disable for player 1 when user is competitor
     if (playerId === 1 && isCompetitorCheckbox.checked) {
       firstNameInput.disabled = true;
@@ -366,6 +456,11 @@ function initTournamentForm() {
     lastNameInput.type = 'text';
     lastNameInput.placeholder = 'Last Name';
     lastNameInput.id = `lastName${playerId}`;
+    
+    // Add change event listener for validation
+    lastNameInput.addEventListener('change', function() {
+        this.dispatchEvent(new Event('input', { bubbles: true }));
+    });
     
     // Disable for player 1 when user is competitor
     if (playerId === 1 && isCompetitorCheckbox.checked) {
@@ -382,6 +477,11 @@ function initTournamentForm() {
     emailInput.type = 'email';
     emailInput.placeholder = 'Email Address';
     emailInput.id = `email${playerId}`;
+    
+    // Add change event listener for validation
+    emailInput.addEventListener('change', function() {
+        this.dispatchEvent(new Event('input', { bubbles: true }));
+    });
     
     // Disable for player 1 when user is competitor
     if (playerId === 1 && isCompetitorCheckbox.checked) {
@@ -415,6 +515,8 @@ function initTournamentForm() {
         clearFieldErrors();
         usernameGroup.style.display = 'block';
         formGrid.style.display = 'none';
+        // Trigger validation check
+        this.dispatchEvent(new Event('input', { bubbles: true }));
       }
     });
     
@@ -423,6 +525,8 @@ function initTournamentForm() {
         clearFieldErrors();
         usernameGroup.style.display = 'none';
         formGrid.style.display = 'grid';
+        // Trigger validation check
+        this.dispatchEvent(new Event('input', { bubbles: true }));
       }
     });
     
@@ -646,8 +750,16 @@ function initTournamentForm() {
         // If player 1 is the current user
         if (playerId === 1 && isCompetitorCheckbox.checked) {
           playerName.textContent = `${currentUser.firstName} ${currentUser.lastName}`.trim();
+        } else if (username && window.acceptedFriendDetails) {
+          // Look up the friend's details by username
+          const friendDetails = window.acceptedFriendDetails.find(friend => friend.username === username);
+          if (friendDetails) {
+            playerName.textContent = `${friendDetails.first_name} ${friendDetails.last_name}`.trim();
+          } else {
+            playerName.textContent = username;
+          }
         } else {
-          playerName.textContent = "Name Hidden";
+          playerName.textContent = username;
         }
         
         playerAccount.textContent = username;
@@ -748,6 +860,22 @@ function initTournamentForm() {
     // Clear any errors
     clearError();
     
+    // Remove existing confirm details tab if it exists
+    if (confirmDetailsTab) {
+      confirmDetailsTab.remove();
+      confirmDetailsTab = null;
+    }
+    if (confirmDetailsSection) {
+      confirmDetailsSection.remove();
+      confirmDetailsSection = null;
+    }
+    
+    // Hide the Start Tournament button
+    const startTournamentBtnContainer = document.querySelector('.SendJoinBtn');
+    if (startTournamentBtnContainer) {
+      startTournamentBtnContainer.classList.add('hidden');
+    }
+    
     // If competitor count is already selected, update player 1
     const count = parseInt(competitorCountSelect.value);
     if (!isNaN(count) && count > 0) {
@@ -756,8 +884,19 @@ function initTournamentForm() {
       } else {
         resetPlayerOneToDefault();
       }
+      
+      // Recheck all players' validation state
+      const allInputs = document.querySelectorAll('input[type="text"], input[type="email"], input[type="radio"]');
+      allInputs.forEach(input => {
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+        if (input.type !== 'radio') {
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      });
+      
+      // Recheck if we can show confirm details
+      checkAndCreateConfirmDetailsTab();
     }
-    checkAndCreateConfirmDetailsTab();
   }
 
   function updatePlayerOneAsMyself() {
@@ -862,21 +1001,33 @@ function initTournamentForm() {
       if (usernameInput) {
         usernameInput.value = '';
         usernameInput.disabled = false;
+        // Trigger validation
+        usernameInput.dispatchEvent(new Event('change', { bubbles: true }));
+        usernameInput.dispatchEvent(new Event('input', { bubbles: true }));
       }
       
       if (firstName) {
         firstName.value = '';
         firstName.disabled = false;
+        // Trigger validation
+        firstName.dispatchEvent(new Event('change', { bubbles: true }));
+        firstName.dispatchEvent(new Event('input', { bubbles: true }));
       }
       
       if (lastName) {
         lastName.value = '';
         lastName.disabled = false;
+        // Trigger validation
+        lastName.dispatchEvent(new Event('change', { bubbles: true }));
+        lastName.dispatchEvent(new Event('input', { bubbles: true }));
       }
       
       if (email) {
         email.value = '';
         email.disabled = false;
+        // Trigger validation
+        email.dispatchEvent(new Event('change', { bubbles: true }));
+        email.dispatchEvent(new Event('input', { bubbles: true }));
       }
       
       // Reset and enable radio buttons
@@ -885,10 +1036,14 @@ function initTournamentForm() {
       if (tourneyProYes) {
         tourneyProYes.checked = false;
         tourneyProYes.disabled = false;
+        // Trigger validation
+        tourneyProYes.dispatchEvent(new Event('change', { bubbles: true }));
       }
       if (tourneyProNo) {
         tourneyProNo.checked = false;
         tourneyProNo.disabled = false;
+        // Trigger validation
+        tourneyProNo.dispatchEvent(new Event('change', { bubbles: true }));
       }
       
       // Hide both form sections
