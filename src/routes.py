@@ -83,6 +83,48 @@ def signup():
         db.session.add(user)
         db.session.commit()
 
+        # Re-fetch user to ensure ID is available after commit
+        user = db.session.query(User).filter_by(email=email).first()
+
+        # Find guest tournament entries with the same email
+        guest_players = db.session.query(TournamentPlayer).filter_by(email=email, user_id=None).all()
+
+        if guest_players:
+            flash(f'We found {len(guest_players)} past result(s) linked to this email. Adding them to your account now.', 'success')
+
+            for guest in guest_players:
+                guest.user_id = user.id  # Link guest player record to new user
+                guest.email = None      # Optional: clear guest email since it's now linked
+                db.session.add(guest)
+
+                # Fetch corresponding tournament result if exists
+                result = db.session.query(TournamentResult).filter_by(player_id=guest.id).first()
+                if result:
+                    # Look for existing user stat or create one
+                    user_stat = db.session.query(UserStat).filter_by(user_id=user.id, game_type=result.game_type).first()
+                    if not user_stat:
+                        user_stat = UserStat(
+                            user_id=user.id,
+                            game_type=result.game_type,
+                            games_played=0,
+                            games_won=0,
+                            games_lost=0,
+                            win_percentage=0.0
+                        )
+                        db.session.add(user_stat)
+
+                    # Update the user's stats
+                    user_stat.games_played += result.wins + result.losses
+                    user_stat.games_won += result.wins
+                    user_stat.games_lost += result.losses
+                    if user_stat.games_played > 0:
+                        user_stat.win_percentage = user_stat.games_won / user_stat.games_played
+
+            db.session.commit()
+            flash('Past results have been successfully added to your account.', 'success')
+        else:
+            flash('No past results found for this email.', 'info')
+
         flash('Account created! Please login.', 'success')
         return redirect(url_for('login', fresh=1))
 
@@ -1553,95 +1595,3 @@ def create_match(tournament_id, round_number, player1_id, player2_id=None, is_by
     )
     db.session.add(new_match)
     return new_match
-
-@application.route('/upload_tournament_data', methods=['POST'])
-@login_required
-def upload_tournament_data():
-    uploaded_file = request.files.get('file')
-    if not uploaded_file or not uploaded_file.filename.endswith('.json'):
-        flash("Please upload a valid .json file.", "error")
-        return redirect(url_for('dashboard'))
-
-    try:
-        data = json.load(uploaded_file)
-        print("Parsed tournament data:", data)
-
-        # Validate required fields
-        required_keys = ["user_id", "tournament_id", "game_type", "games_won", "games_lost"]
-        missing_keys = [key for key in required_keys if key not in data]
-
-        if missing_keys:
-            flash(f"Missing field(s) in upload: {', '.join(missing_keys)}", "error")
-            return redirect(url_for('dashboard'))
-
-        user_id = data["user_id"]
-        tournament_id = data["tournament_id"]
-        game_type = data["game_type"]
-        games_won = data["games_won"]
-        games_lost = data["games_lost"]
-        opponent_win_percentage = data.get("opponent_win_percentage")
-        opp_opp_win_percentage = data.get("opp_opp_win_percentage")
-
-        # Calculate games_played
-        games_played = games_won + games_lost
-
-        # -------- Update UserStat --------
-        stat = db.session.query(UserStat).filter_by(user_id=user_id, game_type=game_type).first()
-
-        if stat:
-            stat.games_played += games_played
-            stat.games_won += games_won
-            stat.games_lost += games_lost
-            stat.win_percentage = round((stat.games_won / stat.games_played) * 100, 2) if stat.games_played > 0 else 0.0
-        else:
-            new_stat = UserStat(
-                user_id       = current_user.id,
-                game_type     = game_type,
-                games_played  = games_played,
-                games_won     = games_won,
-                games_lost    = games_lost,
-                win_percentage= win_percentage
-            )
-            db.session.add(new_stat)
-
-        # -------- Add TournamentResult --------
-        tournament_player = db.session.query(TournamentPlayer).filter_by(
-            tournament_id=tournament_id,
-            user_id=user_id
-        ).first()
-
-        if not tournament_player:
-            flash("Error: User is not a participant in the given tournament.", "error")
-            return redirect(url_for('dashboard'))
-
-        # Prevent duplicate tournament results
-        existing_result = db.session.query(TournamentResult).filter_by(
-            tournament_id=tournament_id,
-            player_id=tournament_player.id
-        ).first()
-
-        if existing_result:
-            flash("Tournament result already uploaded for this user.", "error")
-            return redirect(url_for('dashboard'))
-
-        # Safe to add new result
-        new_result = TournamentResult(
-            tournament_id=tournament_id,
-            player_id=tournament_player.id,
-            game_type=game_type,
-            wins=games_won,
-            losses=games_lost,
-            opponent_win_percentage=opponent_win_percentage,
-            opp_opp_win_percentage=opp_opp_win_percentage
-        )
-        db.session.add(new_result)
-
-        db.session.commit()
-        flash("Tournament data uploaded successfully!", "success")
-
-    except Exception as e:
-        db.session.rollback()
-        print("Error processing file:", e)
-        flash("Failed to process the uploaded file.", "error")
-
-    return redirect(url_for('dashboard'))
