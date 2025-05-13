@@ -1,0 +1,27 @@
+{% macro tournament_cards(tournaments) %}
+<div class="statcard-container" id="adminStatcards">
+  {% for t in tournaments %}
+    <div class="statcard" 
+         data-tourney-id="{{ t.id }}" 
+         data-status="{{ t.status }}">               
+      <div class="statcard-top-row">
+        <p class="subheadline">
+          {{ t.current_round }} / {{ t.total_rounds }}
+        </p>
+      </div>
+      <div class="statcard-middle-row">
+        <p class="subheadline">
+          {{ t.format|title }}
+        </p>
+      </div>
+      <div class="tournament-footer">
+        <span class="regular3">{{ t.title }}</span>
+        <a
+          href="{{ url_for('new_tournament', tournament_id=t.id) }}"
+          class="caption view-tourney"
+        >View</a>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+{% endmacro %}

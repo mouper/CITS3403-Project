@@ -2524,3 +2524,21 @@ function initAdminHostedFilters() {
     initAnalytics();
   });
 
+
+// =============================================
+// DASHBOARD FUNCTIONALITY
+// =============================================
+document.addEventListener('DOMContentLoaded', () => {
+  const statusFilter = document.getElementById('statusFilter');
+  const cards        = document.querySelectorAll('#myTourneyCards .statcard');
+
+  function applyFilter() {
+    const wanted = statusFilter.value; 
+    cards.forEach(card => {
+      card.style.display = (card.dataset.status === wanted) ? '' : 'none';
+    });
+  }
+  statusFilter.addEventListener('change', applyFilter);
+
+  applyFilter();
+});

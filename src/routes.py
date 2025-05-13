@@ -94,21 +94,28 @@ def signup():
 @application.route('/dashboard')
 @login_required
 def dashboard():
-    my_tournaments = Tournament.query.filter_by(created_by=current_user.id).all()
+    sent = Friend.query.filter_by(user_id=current_user.id, status='accepted').all()
+    recv = Friend.query.filter_by(friend_id=current_user.id, status='accepted').all()
+    accepted = [f.recipient for f in sent] + [f.sender for f in recv]
+    accepted_usernames = [u.username for u in accepted]
 
-    sent_accepted = Friend.query.filter_by(user_id=current_user.id, status='accepted').all()
-    recv_accepted = Friend.query.filter_by(friend_id=current_user.id, status='accepted').all()
+    status = request.args.get('status', 'in progress')
+    N = 5
 
-    accepted_friends = [f.recipient for f in sent_accepted] + [f.sender for f in recv_accepted]
-
-    accepted_friend_usernames = [friend.username for friend in accepted_friends]
+    my_tournaments = (
+        Tournament.query
+                  .filter_by(status=status)
+                  .order_by(func.random())
+                  .limit(N)
+                  .all()
+    )
 
     return render_template(
         'dashboard.html',
         tournaments=my_tournaments,
-        accepted_friend_usernames=accepted_friend_usernames
+        accepted_friend_usernames=accepted_usernames,
+        status_filter=status
     )
-
     
 @application.route('/analytics')
 @login_required

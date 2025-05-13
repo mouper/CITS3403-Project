@@ -1,4 +1,6 @@
 {% extends "base.html" %}
+{% import "components/tournament_cards.html" as cards %}
+
 
 {% block content %}
 <div class="dashboard-container">
@@ -29,44 +31,17 @@
     <div class="tournament-header">
       <h2 class="subheadline">My Tournaments</h2>
 
-      <!-- FilterComponent variant -->
+      <!-- dropdown filter -->
       <div class="FilterComponent">
-        <span>In Progress</span>
-        <div class="FilterIcon"></div>
+        <select id="statusFilter" class="filter-dropdown">
+          <option value="in-progress">In Progress</option>
+          <option value="draft">Draft</option>
+        </select>
       </div>
     </div>
 
-    <!-- GameCard Container -->
-    <div class="card-container">
-      <div class="typecard">
-        <div class="card-image">
-          <img src="/static/assets/SwissImg.svg" alt="Swiss Tournament" class="swissimg">
-        </div>
-        <div class="card-content">
-          <h3 class="title medium3">Swiss Showdown</h3>
-          <p class="paragraph regular3">A 6-round swiss tournament currently in progress.</p>
-        </div>
-      </div>
-
-      <div class="typecard">
-        <div class="card-image">
-          <img src="/static/assets/RoundRobinImg.svg" alt="Round Robin Tournament" class="roundrobinimg">
-        </div>
-        <div class="card-content">
-          <h3 class="title medium3">Round Robin Rumble</h3>
-          <p class="paragraph regular3">Every team plays each other once. Two rounds remain.</p>
-        </div>
-      </div>
-
-      <div class="typecard">
-        <div class="card-image">
-          <img src="/static/assets/SingleElimImg.svg" alt="Single Elimination Tournament" class="singleelimimg">
-        </div>
-        <div class="card-content">
-          <h3 class="title medium3">Elimination Royale</h3>
-          <p class="paragraph regular3">Knockout-style bracket. Semi-finals coming up!</p>
-        </div>
-      </div>
+    <div id="myTourneyCards">
+      {{ cards.tournament_cards(tournaments) }}
     </div>
   </div>
   <!-- Friend Search Section -->
