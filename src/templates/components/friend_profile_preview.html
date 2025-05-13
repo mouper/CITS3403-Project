@@ -1,3 +1,5 @@
+{% from "components/admincards_macros.html" import admincards %}
+
 <div class="profile-preview-wrapper">
   <div class="preview-upper">
     <div class="preview-avatar-wrapper">
@@ -86,21 +88,12 @@
     {% endif %}
 
     {% if friend.show_admin %}
-    <div class="admin-hosted-section hosted-preview-section" data-section="hosted">
+    <div class="admin-hosted-section hosted-preview-section" data-section="hosted" id="adminView">
       <div class="top3-header">
         <span class="top3-title">LAST 3 TOURNAMENTS HOSTED</span>
       </div>
       {% if recent_tournaments %}
-      <div class="statcard-container">
-        {% for tourney in recent_tournaments %}
-        <div class="statcard">
-          <p class="title2">{{ tourney.title }}</p>
-          <p class="medium5">{{ tourney.format }}</p>
-          <p class="medium5">{{ tourney.game_type }}</p>
-          <p class="medium4 italic">Created at: {{ tourney.date }}</p>
-        </div>
-        {% endfor %}
-      </div>
+        {{ admincards(recent_tournaments) }}
       {% else %}
         <p class="medium4 italic">No hosted tournaments found.</p>
       {% endif %}
@@ -108,4 +101,5 @@
     {% endif %}
   </div>
 </div>
+
 

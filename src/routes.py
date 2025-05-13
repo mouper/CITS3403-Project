@@ -1987,20 +1987,50 @@ def user_preview(username):
     # 获取统计数据
     user_stats = db.session.query(UserStat).filter_by(user_id=user.id).all()
 
-    # 最近主办比赛（Admin 卡片）
+    # 最近主办比赛（Admin 卡片，复用 account 和 analytics 的逻辑）
     recent_tournaments = []
     base_q = (
         db.session.query(Tournament)
         .filter_by(created_by=user.id)
         .order_by(Tournament.created_at.desc())
     )
-    recent = base_q.limit(3).all()
+    recent = base_q.limit(6).all()
+
     for tourney in recent:
+        rows = (
+            db.session.query(TournamentPlayer, TournamentResult, User)
+            .join(TournamentResult, TournamentResult.player_id == TournamentPlayer.id)
+            .outerjoin(User, TournamentPlayer.user_id == User.id)
+            .filter(TournamentPlayer.tournament_id == tourney.id)
+            .all()
+        )
+
+        standings = []
+        for player, result, u in rows:
+            if u:
+                display_name = u.username
+            else:
+                first = player.guest_firstname or ""
+                last_initial = player.guest_lastname[0] if player.guest_lastname else ""
+                display_name = f"{first} {last_initial}".strip() or "Unknown"
+
+            standings.append({
+                'username': display_name,
+                'wins': result.wins,
+                'losses': result.losses,
+                'owp': round(result.opponent_win_percentage * 100, 2),
+                'opp_owp': round(result.opp_opp_win_percentage * 100, 2)
+            })
+
+        if len(standings) < 3:
+            continue
+
+        standings.sort(key=lambda p: (p['wins'], p['opp_owp']), reverse=True)
+
         recent_tournaments.append({
+            'id': tourney.id,
             'title': tourney.title,
-            'format': tourney.format,
-            'game_type': tourney.game_type,
-            'date': tourney.created_at.strftime('%Y-%m-%d')
+            'standings': standings
         })
 
     return render_template(
@@ -2013,5 +2043,6 @@ def user_preview(username):
         recent_tournaments=recent_tournaments,
         game_types=list(grouped_results.keys())
     )
+
 
 
