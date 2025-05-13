@@ -76,11 +76,13 @@
       <p class="regular3">Friends List:</p>
       <div class="friend-list-section" style="min-height: auto; max-height: none; overflow: visible;">
         <ul class="friend-list" style="max-height: none; overflow: visible;">
-          {% for username in accepted_friend_usernames %}
-            <li class="friend-item">{{ username }}</li>
-          {% else %}
-            <li class="friend-item">No accepted friends found</li>
-          {% endfor %}
+          <ul class="friend-list"></ul>
+            {% for username in accepted_friend_usernames %}
+              <li class="friend-item clickable-friend" data-username="{{ username }}">{{ username }}</li>
+            {% else %}
+              <li class="friend-item">No accepted friends found</li>
+            {% endfor %}
+          </ul>
         </ul>
       </div>
       <p class="regular3">Add new friends to invite them to your tournaments:</p>
@@ -99,5 +101,13 @@
       </div>
     </div>
   </div>
+
+  <div class="modal" id="friendModal" style="display:none;">
+    <div class="modal-content">
+      <span class="close-btn" onclick="document.getElementById('friendModal').style.display='none'">&times;</span>
+      <div id="friendPreviewContainer"></div>
+    </div>
+  </div>
+
 </div>
 {% endblock %}
