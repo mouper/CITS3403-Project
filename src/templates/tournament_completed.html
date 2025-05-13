@@ -236,9 +236,11 @@
                 </div>
                 {% if is_creator %}
                 <div class="SendJoinBtn">
-                    <button id="sendResultsBtn">
-                        <i class="fas fa-envelope"></i> Send Results to Players
-                    </button>
+                    <form method="POST" action="/tournament/{{ tournament.id }}/send_results">
+                        <button type="submit">
+                            <i class="fas fa-envelope"></i> Send Results to Players
+                        </button>
+                    </form>
                 </div>
                 {% endif %}
             </div>

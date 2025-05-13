@@ -273,13 +273,7 @@
                         <span class="timer-label medium2">Round Time:</span>
                         <span id="timerDisplay" class="timer-value">{{ tournament.round_time_minutes }}:00</span>
                     </div>
-                    <div class="SendJoinBtn" style="display: flex; gap: 1rem;">
-                        {% if is_creator %}
-                        <button id="sendPairingsBtn" class="send-pairings-btn">
-                            <i class="fas fa-envelope"></i>
-                            Send Pairings
-                        </button>
-                        {% endif %}
+                    <div class="SendJoinBtn">
                         <button id="startRoundBtn">
                             <div class="CreateIcon"></div>
                             Start Round
