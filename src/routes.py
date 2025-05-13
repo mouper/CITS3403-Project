@@ -361,6 +361,34 @@ def save_display_settings():
 @application.route('/new_tournament')
 @login_required
 def new_tournament():
+    # Check if we're editing an existing draft tournament
+    tournament_id = request.args.get('tournament_id')
+    if tournament_id:
+        tournament = Tournament.query.get(tournament_id)
+        if tournament and tournament.created_by == current_user.id and tournament.status == 'draft':
+            # Get tournament players
+            players = TournamentPlayer.query.filter_by(tournament_id=tournament_id).all()
+            player_data = []
+            for player in players:
+                player_info = {
+                    'id': player.id,
+                    'is_confirmed': player.is_confirmed,
+                    'has_tourney_pro_account': bool(player.user_id),
+                    'guest_firstname': player.guest_firstname,
+                    'guest_lastname': player.guest_lastname,
+                    'email': player.email
+                }
+                if player.user_id:
+                    user = User.query.get(player.user_id)
+                    if user:
+                        player_info['username'] = user.username
+                        player_info['user_id'] = user.id
+                player_data.append(player_info)
+            
+            return render_template('new_tournament.html', 
+                                tournament=tournament,
+                                players=player_data)
+        
     # Get accepted friends
     sent_accepted = Friend.query.filter_by(user_id=current_user.id, status='accepted').all()
     recv_accepted = Friend.query.filter_by(friend_id=current_user.id, status='accepted').all()
@@ -389,30 +417,80 @@ def save_tournament():
         validation_result = validate_tournament_data(data)
         if not validation_result['valid']:
             return jsonify(validation_result['response']), 400
+        
+        # Check if we're updating an existing draft tournament
+        tournament_id = data.get('tournament_id')
+        if tournament_id:
+            tournament = Tournament.query.get(tournament_id)
+            if not tournament:
+                return jsonify({
+                    'success': False,
+                    'message': 'Tournament not found'
+                }), 404
             
-        new_tournament = Tournament(
-            title=data['title'],
-            format=data['format'],
-            game_type=data['game_type'],
-            created_by=current_user.id,
-            status=data['is_draft'],
-            include_creator_as_player=data['include_creator_as_player']
-        )
-        
-        db.session.add(new_tournament)
-        db.session.flush()
-        
-        for player_data in data['players']:
-            new_player = create_tournament_player(new_tournament.id, player_data)
-            db.session.add(new_player)
-        
-        db.session.commit()
-        
-        return jsonify({
-            'success': True,
-            'tournament_id': new_tournament.id,
-            'message': 'Tournament saved successfully'
-        })
+            if tournament.created_by != current_user.id:
+                return jsonify({
+                    'success': False,
+                    'message': 'You do not have permission to modify this tournament'
+                }), 403
+            
+            if tournament.status != 'draft':
+                return jsonify({
+                    'success': False,
+                    'message': 'Can only modify draft tournaments'
+                }), 400
+            
+            # Update existing tournament
+            tournament.title = data['title']
+            tournament.format = data['format']
+            tournament.game_type = data['game_type']
+            tournament.status = 'draft'  # Ensure it stays as draft
+            tournament.include_creator_as_player = data['include_creator_as_player']
+            tournament.round_time_minutes = data.get('round_time_minutes', 30)
+            tournament.num_players = len(data['players'])
+            
+            # Delete existing players
+            TournamentPlayer.query.filter_by(tournament_id=tournament_id).delete()
+            
+            # Add new players
+            for player_data in data['players']:
+                new_player = create_tournament_player(tournament.id, player_data)
+                db.session.add(new_player)
+            
+            db.session.commit()
+            
+            return jsonify({
+                'success': True,
+                'tournament_id': tournament.id,
+                'message': 'Tournament draft updated successfully'
+            })
+        else:
+            # Create new tournament as draft
+            new_tournament = Tournament(
+                title=data['title'],
+                format=data['format'],
+                game_type=data['game_type'],
+                created_by=current_user.id,
+                status='draft',  # Explicitly set as draft
+                include_creator_as_player=data['include_creator_as_player'],
+                round_time_minutes=data.get('round_time_minutes', 30),
+                num_players=len(data['players'])
+            )
+            
+            db.session.add(new_tournament)
+            db.session.flush()
+            
+            for player_data in data['players']:
+                new_player = create_tournament_player(new_tournament.id, player_data)
+                db.session.add(new_player)
+            
+            db.session.commit()
+            
+            return jsonify({
+                'success': True,
+                'tournament_id': new_tournament.id,
+                'message': 'Tournament draft saved successfully'
+            })
         
     except Exception as e:
         db.session.rollback()
@@ -434,89 +512,189 @@ def start_tournament():
         validation_result = validate_tournament_data(data)
         if not validation_result['valid']:
             return jsonify(validation_result['response']), 400
+        
+        # Check if we're updating an existing draft tournament
+        tournament_id = data.get('tournament_id')
+        if tournament_id:
+            tournament = Tournament.query.get(tournament_id)
+            if not tournament:
+                return jsonify({
+                    'success': False,
+                    'message': 'Tournament not found'
+                }), 404
             
-        # Create new tournament with status='active' instead of draft
-        new_tournament = Tournament(
-            title=data['title'],
-            format=data['format'],
-            game_type=data['game_type'],
-            created_by=current_user.id,
-            status='active',
-            include_creator_as_player=data['include_creator_as_player'],
-            round_time_minutes=data.get('round_time_minutes', 30),
-            num_players=len(data['players']),
-            start_time=datetime.datetime.now()
-        )
-        
-        # Calculate total_rounds based on tournament format and number of players
-        player_count = len(data['players'])
-        if data['format'] == 'round robin':
-            new_tournament.total_rounds = player_count - 1
-        elif data['format'] == 'single elimination':
-            new_tournament.total_rounds = math.ceil(math.log2(player_count))
-        elif data['format'] == 'swiss':
-            new_tournament.total_rounds = math.ceil(math.log2(player_count))
-        
-        # Add tournament to database and flush to get ID
-        db.session.add(new_tournament)
-        db.session.flush()
-        
-        # Process players
-        player_ids = []
-        for player_data in data['players']:
-            new_player = create_tournament_player(new_tournament.id, player_data)
-            db.session.add(new_player)
-            db.session.flush()
-            player_ids.append(new_player.id)
-        
-        # Generate first round pairings
-        if data['format'] == 'round robin' or data['format'] == 'swiss':
-            # For round robin or swiss, randomly pair players for the first round
-            random.shuffle(player_ids)
+            if tournament.created_by != current_user.id:
+                return jsonify({
+                    'success': False,
+                    'message': 'You do not have permission to modify this tournament'
+                }), 403
             
-            # Create pairs
-            for i in range(0, len(player_ids), 2):
-                # If we have an odd number of players, the last player gets a bye
-                if i + 1 >= len(player_ids):
-                    # Create a bye match
-                    create_match(new_tournament.id, 1, player_ids[i], None, is_bye=True, status='not started')
-                else:
-                    # Create a normal match
-                    create_match(new_tournament.id, 1, player_ids[i], player_ids[i+1], status='not started')
+            if tournament.status != 'draft':
+                return jsonify({
+                    'success': False,
+                    'message': 'Can only start draft tournaments'
+                }), 400
+            
+            # Update existing tournament
+            tournament.title = data['title']
+            tournament.format = data['format']
+            tournament.game_type = data['game_type']
+            tournament.status = 'active'
+            tournament.include_creator_as_player = data['include_creator_as_player']
+            tournament.round_time_minutes = data.get('round_time_minutes', 30)
+            tournament.num_players = len(data['players'])
+            tournament.start_time = datetime.datetime.now()
+            
+            # Calculate total_rounds based on tournament format and number of players
+            player_count = len(data['players'])
+            if data['format'] == 'round robin':
+                tournament.total_rounds = player_count - 1
+            elif data['format'] == 'single elimination':
+                tournament.total_rounds = math.ceil(math.log2(player_count))
+            elif data['format'] == 'swiss':
+                tournament.total_rounds = math.ceil(math.log2(player_count))
+            
+            # Delete existing data in the correct order
+            # First get all rounds for this tournament
+            rounds = Round.query.filter_by(tournament_id=tournament_id).all()
+            round_ids = [r.id for r in rounds]
+            
+            # Delete matches for these rounds
+            if round_ids:
+                Match.query.filter(Match.round_id.in_(round_ids)).delete(synchronize_session=False)
+            
+            # Delete the rounds
+            Round.query.filter_by(tournament_id=tournament_id).delete(synchronize_session=False)
+            
+            # Delete existing players
+            TournamentPlayer.query.filter_by(tournament_id=tournament_id).delete(synchronize_session=False)
+            
+            # Process new players
+            player_ids = []
+            for player_data in data['players']:
+                new_player = create_tournament_player(tournament.id, player_data)
+                db.session.add(new_player)
+                db.session.flush()
+                player_ids.append(new_player.id)
+            
+            # Generate first round pairings
+            if data['format'] == 'round robin' or data['format'] == 'swiss':
+                # For round robin or swiss, randomly pair players for the first round
+                random.shuffle(player_ids)
                 
-        elif data['format'] == 'single elimination':
-            # For single elimination, calculate number of byes needed
-            next_power_of_two = 2 ** math.ceil(math.log2(len(player_ids)))
-            num_byes = next_power_of_two - len(player_ids)
-            
-            # Shuffle players
-            random.shuffle(player_ids)
-            
-            # Create matches with byes as needed
-            match_index = 0
-            for i in range(0, len(player_ids), 2):
-                if match_index < num_byes:
-                    # This player gets a bye
-                    create_match(new_tournament.id, 1, player_ids[i], None, is_bye=True, status='not started')
+                # Create pairs
+                for i in range(0, len(player_ids), 2):
+                    # If we have an odd number of players, the last player gets a bye
+                    if i + 1 >= len(player_ids):
+                        # Create a bye match
+                        create_match(tournament.id, 1, player_ids[i], None, is_bye=True, status='not started')
+                    else:
+                        # Create a normal match
+                        create_match(tournament.id, 1, player_ids[i], player_ids[i+1], status='not started')
                     
-                    # Next player also gets a match
-                    if i + 1 < len(player_ids):
-                        create_match(new_tournament.id, 1, player_ids[i+1], None, is_bye=True, status='not started')
-                else:
-                    # Regular match between two players
-                    if i + 1 < len(player_ids):
-                        create_match(new_tournament.id, 1, player_ids[i], player_ids[i+1], status='not started')
+            elif data['format'] == 'single elimination':
+                # For single elimination, calculate number of byes needed
+                next_power_of_two = 2 ** math.ceil(math.log2(len(player_ids)))
+                num_byes = next_power_of_two - len(player_ids)
+
+                # Shuffle players
+                random.shuffle(player_ids)
                 
-                match_index += 1
-        
-        # Commit all changes
-        db.session.commit()
-        
-        return jsonify({
-            'success': True,
-            'tournament_id': new_tournament.id,
-            'message': 'Tournament started successfully'
-        })
+                # Create first round matches
+                # For each match slot in the first round
+                for i in range(0, next_power_of_two, 2):
+                    if i + 1 >= len(player_ids):
+                        # Last player gets a bye if we have an odd number
+                        if i < len(player_ids):
+                            create_match(tournament.id, 1, player_ids[i], None, is_bye=True, status='not started')
+                    else:
+                        # Regular match between two players
+                        create_match(tournament.id, 1, player_ids[i], player_ids[i+1], status='not started')
+            
+            db.session.commit()
+            
+            return jsonify({
+                'success': True,
+                'tournament_id': tournament.id,
+                'message': 'Tournament started successfully'
+            })
+        else:
+            # Create new tournament with status='active' instead of draft
+            new_tournament = Tournament(
+                title=data['title'],
+                format=data['format'],
+                game_type=data['game_type'],
+                created_by=current_user.id,
+                status='active',
+                include_creator_as_player=data['include_creator_as_player'],
+                round_time_minutes=data.get('round_time_minutes', 30),
+                num_players=len(data['players']),
+                start_time=datetime.datetime.now()
+            )
+            
+            # Calculate total_rounds based on tournament format and number of players
+            player_count = len(data['players'])
+            if data['format'] == 'round robin':
+                new_tournament.total_rounds = player_count - 1
+            elif data['format'] == 'single elimination':
+                new_tournament.total_rounds = math.ceil(math.log2(player_count))
+            elif data['format'] == 'swiss':
+                new_tournament.total_rounds = math.ceil(math.log2(player_count))
+            
+            # Add tournament to database and flush to get ID
+            db.session.add(new_tournament)
+            db.session.flush()
+            
+            # Process players
+            player_ids = []
+            for player_data in data['players']:
+                new_player = create_tournament_player(new_tournament.id, player_data)
+                db.session.add(new_player)
+                db.session.flush()
+                player_ids.append(new_player.id)
+            
+            # Generate first round pairings
+            if data['format'] == 'round robin' or data['format'] == 'swiss':
+                # For round robin or swiss, randomly pair players for the first round
+                random.shuffle(player_ids)
+                
+                # Create pairs
+                for i in range(0, len(player_ids), 2):
+                    # If we have an odd number of players, the last player gets a bye
+                    if i + 1 >= len(player_ids):
+                        # Create a bye match
+                        create_match(new_tournament.id, 1, player_ids[i], None, is_bye=True, status='not started')
+                    else:
+                        # Create a normal match
+                        create_match(new_tournament.id, 1, player_ids[i], player_ids[i+1], status='not started')
+                    
+            elif data['format'] == 'single elimination':
+                # For single elimination, calculate number of byes needed
+                next_power_of_two = 2 ** math.ceil(math.log2(len(player_ids)))
+                num_byes = next_power_of_two - len(player_ids)
+
+                # Shuffle players
+                random.shuffle(player_ids)
+                
+                # Create first round matches
+                # For each match slot in the first round
+                for i in range(0, next_power_of_two, 2):
+                    if i + 1 >= len(player_ids):
+                        # Last player gets a bye if we have an odd number
+                        if i < len(player_ids):
+                            create_match(new_tournament.id, 1, player_ids[i], None, is_bye=True, status='not started')
+                    else:
+                        # Regular match between two players
+                        create_match(new_tournament.id, 1, player_ids[i], player_ids[i+1], status='not started')
+            
+            # Commit all changes
+            db.session.commit()
+            
+            return jsonify({
+                'success': True,
+                'tournament_id': new_tournament.id,
+                'message': 'Tournament started successfully'
+            })
         
     except Exception as e:
         # Roll back any changes if error occurs
@@ -570,34 +748,34 @@ def view_tournament(tournament_id):
     if current_round:
         current_matches = Match.query.filter_by(round_id=current_round.id).all()
     
-    # Calculate player stats (wins/losses across all completed rounds)
+    # Get tournament results ordered by rank
+    tournament_results = TournamentResult.query.filter_by(
+        tournament_id=tournament_id
+    ).order_by(TournamentResult.rank).all()
+    
+    # Create player_stats dictionary from tournament results for pairings table
     player_stats = {}
-    for player in tournament_players:
-        player_stats[player.id] = {'wins': 0, 'losses': 0}
+    for result in tournament_results:
+        player_stats[result.player_id] = {
+            'wins': result.wins,
+            'losses': result.losses
+        }
     
-    for match in all_matches:
-        if match.winner_id:
-            # Increment winner's win count
-            if match.winner_id in player_stats:
-                player_stats[match.winner_id]['wins'] += 1
-            
-            # Increment loser's loss count
-            if match.player1_id != match.winner_id and match.player1_id in player_stats:
-                player_stats[match.player1_id]['losses'] += 1
-            
-            if match.player2_id and match.player2_id != match.winner_id and match.player2_id in player_stats:
-                player_stats[match.player2_id]['losses'] += 1
-    
-    # Prepare player results for rankings
+    # Prepare player results for rankings using stored ranks
     ranked_players = []
-    for player_id, player in players.items():
+    for result in tournament_results:
+        player = players.get(result.player_id)
+        if not player:
+            continue
+            
         player_result = {
-            'id': player_id,
+            'id': player.id,
             'name': "",
-            'wins': player_stats[player_id]['wins'],
-            'losses': player_stats[player_id]['losses'],
-            'owp': 0,
-            'oowp': 0
+            'wins': result.wins,
+            'losses': result.losses,
+            'owp': result.opponent_win_percentage or 0,
+            'oowp': result.opp_opp_win_percentage or 0,
+            'rank': result.rank
         }
         
         # Set player name
@@ -606,23 +784,7 @@ def view_tournament(tournament_id):
         else:
             player_result['name'] = f"{player.guest_firstname} {player.guest_lastname}"
         
-        # Get tournament result for this player (for Swiss tiebreakers)
-        tournament_result = TournamentResult.query.filter_by(
-            tournament_id=tournament_id, 
-            player_id=player_id
-        ).first()
-        
-        if tournament_result:
-            player_result['owp'] = tournament_result.opponent_win_percentage or 0
-            player_result['oowp'] = tournament_result.opp_opp_win_percentage or 0
-        
         ranked_players.append(player_result)
-    
-    # Sort ranked players based on tournament format
-    if tournament.format == 'swiss':
-        ranked_players.sort(key=lambda x: (-x['wins'], -x['owp'], -x['oowp']))
-    else:
-        ranked_players.sort(key=lambda x: -x['wins'])
     
     # If tournament is completed, use the completed template with special stats
     if tournament.status == 'completed':
@@ -651,7 +813,6 @@ def view_tournament(tournament_id):
             completed_rounds=completed_rounds,
             players=players,
             matches_by_round=matches_by_round,
-            player_stats=player_stats,
             ranked_players=ranked_players,
             player_count=len(tournament_players),
             total_matches=total_matches,
@@ -671,8 +832,8 @@ def view_tournament(tournament_id):
             players=players,
             matches_by_round=matches_by_round,
             current_matches=current_matches,
-            player_stats=player_stats,
             ranked_players=ranked_players,
+            player_stats=player_stats,  # Add back player_stats for pairings table
             view_state=view_state
         )
     
@@ -955,10 +1116,18 @@ def compute_rankings(tournament_id, format):
                 if opp_results:
                     total_games = opp_results.wins + opp_results.losses
                     if total_games > 0:
-                        opp_wp_list.append(opp_results.wins / total_games)
-
-        owp = sum(opp_wp_list) / len(opp_wp_list) if opp_wp_list else 0
-
+                        opp_win_pct = opp_results.wins / total_games
+                    else:
+                        opp_win_pct = 0.0
+                    
+                    opp_wp_list.append(opp_win_pct)
+            
+            # Calculate average opponent win percentage
+            if opp_wp_list:
+                record['owp'] = sum(opp_wp_list) / len(opp_wp_list)
+            else:
+                record['owp'] = 0.0
+        
         # Calculate OOWP: Average OWP of the player's opponents
         oowp_list = []
         for opp_id in opponents:
@@ -966,9 +1135,13 @@ def compute_rankings(tournament_id, format):
                 opp_results = TournamentResult.query.filter_by(player_id=opp_id, tournament_id=tournament_id).first()
                 if opp_results:
                     oowp_list.append(opp_results.opponent_win_percentage or 0)
-
-        oowp = sum(oowp_list) / len(oowp_list) if oowp_list else 0
-
+            
+            # Calculate opponents' opponent win percentage (OOWP)
+            if oowp_list:
+                record['oowp'] = sum(oowp_list) / len(oowp_list)
+            else:
+                record['oowp'] = 0.0
+        
         # Add player's data to the standings
         p = stats["player"]
         
@@ -983,8 +1156,8 @@ def compute_rankings(tournament_id, format):
             "name": player_name,
             "wins": stats["wins"],
             "losses": stats["losses"],
-            "owp": round(owp, 3),
-            "oowp": round(oowp, 3)
+            "owp": round(record['owp'], 3),
+            "oowp": round(record['oowp'], 3)
         })
 
     # Sort the standings: by wins, then OWP, then OOWP
@@ -1150,47 +1323,49 @@ def create_single_elimination_pairings(tournament, current_round, players):
     if current_round.round_number == 1:
         import random
         player_ids = [p.id for p in players]
-        random.shuffle(player_ids)
-        
-        # Add byes for power of 2
-        next_power_of_2 = 2 ** (tournament.total_rounds)
-        while len(player_ids) < next_power_of_2:
-            player_ids.append(None)  # None represents a bye
-        
-        # Create first round matches
-        for i in range(0, len(player_ids), 2):
-            player1_id = player_ids[i]
-            player2_id = player_ids[i+1] if i+1 < len(player_ids) else None
-            
-            is_bye = player2_id is None
-            
+        # Special case: if exactly 2 players, just pair them (no byes)
+        if len(player_ids) == 2:
             match = Match(
                 round_id=current_round.id,
-                player1_id=player1_id,
-                player2_id=player2_id,
-                is_bye=is_bye,
+                player1_id=player_ids[0],
+                player2_id=player_ids[1],
+                is_bye=False,
                 status='not started'
             )
             db.session.add(match)
+        else:
+            random.shuffle(player_ids)
+            # Add byes for power of 2
+            next_power_of_2 = 2 ** (tournament.total_rounds)
+            while len(player_ids) < next_power_of_2:
+                player_ids.append(None)  # None represents a bye
+            # Create first round matches
+            for i in range(0, len(player_ids), 2):
+                player1_id = player_ids[i]
+                player2_id = player_ids[i+1] if i+1 < len(player_ids) else None
+                is_bye = player2_id is None
+                match = Match(
+                    round_id=current_round.id,
+                    player1_id=player1_id,
+                    player2_id=player2_id,
+                    is_bye=is_bye,
+                    status='not started'
+                )
+                db.session.add(match)
     else:
         # For subsequent rounds: winners of previous round
         prev_round = Round.query.filter_by(
             tournament_id=tournament.id,
             round_number=current_round.round_number - 1
         ).first()
-        
         prev_matches = Match.query.filter_by(round_id=prev_round.id).order_by(Match.id).all()
-        
         # Create matches based on winners from previous round
         for i in range(0, len(prev_matches), 2):
             match1 = prev_matches[i]
             match2 = prev_matches[i+1] if i+1 < len(prev_matches) else None
-            
             player1_id = match1.winner_id if match1 and match1.winner_id else None
             player2_id = match2.winner_id if match2 and match2.winner_id else None
-            
             is_bye = player2_id is None and player1_id is not None
-            
             match = Match(
                 round_id=current_round.id,
                 player1_id=player1_id,
@@ -1258,111 +1433,130 @@ def update_tournament_results(tournament_id):
     
     # Get all players in this tournament
     players = TournamentPlayer.query.filter_by(tournament_id=tournament_id).all()
+    player_ids = [p.id for p in players]
     
     # Get all matches across all rounds
-    matches = Match.query.join(Round).filter(
-        Round.tournament_id == tournament_id,
-        Round.status == 'completed'
-    ).all()
+    rounds = Round.query.filter_by(tournament_id=tournament_id).all()
+    round_ids = [r.id for r in rounds]
+    matches = Match.query.filter(Match.round_id.in_(round_ids), Match.status == "completed").all()
     
-    # Calculate win-loss record for each player
-    player_records = {}
-    for player in players:
-        player_records[player.id] = {
-            'player_id': player.id,
-            'wins': 0,
-            'losses': 0,
-            'opponents': []  # To track opponents for tiebreakers
-        }
-    
-    # Process match results
+    # Build stats for each player
+    stats = {pid: {"wins": 0, "losses": 0, "opponents": [], "head_to_head": {}} for pid in player_ids}
     for match in matches:
-        if match.winner_id:
-            # Record the win
-            if match.winner_id in player_records:
-                player_records[match.winner_id]['wins'] += 1
-            
-            # Record the loss for the other player
-            if match.player1_id != match.winner_id and match.player1_id in player_records:
-                player_records[match.player1_id]['losses'] += 1
-                # Add opponent for tiebreakers
-                if not match.is_bye and match.player2_id:
-                    player_records[match.player1_id]['opponents'].append(match.player2_id)
-            
-            if match.player2_id and match.player2_id != match.winner_id and match.player2_id in player_records:
-                player_records[match.player2_id]['losses'] += 1
-                # Add opponent for tiebreakers
-                player_records[match.player2_id]['opponents'].append(match.player1_id)
+        p1, p2, winner = match.player1_id, match.player2_id, match.winner_id
+        # Byes: only p1 gets a win
+        if match.is_bye:
+            if p1:
+                stats[p1]["wins"] += 1
+            continue
+        # Track opponents
+        if p1 and p2:
+            stats[p1]["opponents"].append(p2)
+            stats[p2]["opponents"].append(p1)
+        # Track wins/losses
+        if winner == p1:
+            stats[p1]["wins"] += 1
+            if p2:
+                stats[p2]["losses"] += 1
+                stats[p1]["head_to_head"][p2] = stats[p1]["head_to_head"].get(p2, 0) + 1
+        elif winner == p2:
+            stats[p2]["wins"] += 1
+            stats[p1]["losses"] += 1
+            stats[p2]["head_to_head"][p1] = stats[p2]["head_to_head"].get(p1, 0) + 1
+
+    # Calculate OWP and OOWP for Swiss
+    owp = {}
+    oowp = {}
+    if tournament.format == "swiss":
+        for pid in player_ids:
+            opps = stats[pid]["opponents"]
+            opp_wp = []
+            for opp in opps:
+                if opp in stats:
+                    opp_wins = stats[opp]["wins"]
+                    opp_losses = stats[opp]["losses"]
+                    total = opp_wins + opp_losses
+                    if total > 0:
+                        opp_wp.append(opp_wins / total)
+            owp[pid] = sum(opp_wp) / len(opp_wp) if opp_wp else 0.0
+        for pid in player_ids:
+            opps = stats[pid]["opponents"]
+            opp_owp = [owp[opp] for opp in opps if opp in owp]
+            oowp[pid] = sum(opp_owp) / len(opp_owp) if opp_owp else 0.0
+
+    # Prepare ranking list
+    ranking = []
+    for pid in player_ids:
+        entry = {
+            "player_id": pid,
+            "wins": stats[pid]["wins"],
+            "losses": stats[pid]["losses"],
+            "owp": owp[pid] if tournament.format == "swiss" else 0.0,
+            "oowp": oowp[pid] if tournament.format == "swiss" else 0.0,
+            "head_to_head": stats[pid]["head_to_head"]
+        }
+        ranking.append(entry)
+
+    # Sort ranking based on tournament format
+    if tournament.format == "swiss":
+        ranking.sort(key=lambda x: (-x["wins"], -x["owp"], -x["oowp"]))
+    elif tournament.format == "round robin":
+        # First by wins, then head-to-head if only two tied, else OWP/OOWP
+        def rr_sort_key(x):
+            return (-x["wins"],)
+        ranking.sort(key=rr_sort_key)
+        # Now resolve ties by head-to-head if only two tied
+        i = 0
+        while i < len(ranking) - 1:
+            j = i
+            # Find group of tied players
+            while j + 1 < len(ranking) and ranking[j]["wins"] == ranking[j+1]["wins"]:
+                j += 1
+            if j > i:
+                tied = ranking[i:j+1]
+                if len(tied) == 2:
+                    a, b = tied[0], tied[1]
+                    # If a beat b, a stays ahead; if b beat a, swap
+                    if a["head_to_head"].get(b["player_id"], 0) > b["head_to_head"].get(a["player_id"], 0):
+                        pass  # a stays ahead
+                    elif b["head_to_head"].get(a["player_id"], 0) > a["head_to_head"].get(b["player_id"], 0):
+                        ranking[i], ranking[i+1] = b, a
+                # If more than two tied, use OWP/OOWP as fallback
+                else:
+                    # Calculate OWP/OOWP for these players
+                    for entry in tied:
+                        opps = stats[entry["player_id"]]["opponents"]
+                        opp_wp = []
+                        for opp in opps:
+                            if opp in stats:
+                                opp_wins = stats[opp]["wins"]
+                                opp_losses = stats[opp]["losses"]
+                                total = opp_wins + opp_losses
+                                if total > 0:
+                                    opp_wp.append(opp_wins / total)
+                        entry["owp"] = sum(opp_wp) / len(opp_wp) if opp_wp else 0.0
+                    tied.sort(key=lambda x: -x["owp"])
+                    ranking[i:j+1] = tied
+            i = j + 1
+    else:  # single elimination
+        ranking.sort(key=lambda x: -x["wins"])
+
+    # Delete existing results for this tournament
+    TournamentResult.query.filter_by(tournament_id=tournament_id).delete()
     
-    # Calculate opponent win percentage (OWP) for Swiss tiebreakers
-    if tournament.format == 'swiss':
-        for player_id, record in player_records.items():
-            opponents = record['opponents']
-            if not opponents:
-                record['owp'] = 0.0
-                continue
-            
-            # Calculate opponents' win percentages
-            opponent_win_percentages = []
-            for opp_id in opponents:
-                if opp_id in player_records:
-                    opp_record = player_records[opp_id]
-                    # Exclude matches against this player for opponent's win percentage
-                    opp_wins = opp_record['wins']
-                    opp_losses = opp_record['losses']
-                    
-                    # Handle division by zero
-                    if opp_wins + opp_losses > 0:
-                        opp_win_pct = opp_wins / (opp_wins + opp_losses)
-                    else:
-                        opp_win_pct = 0.0
-                    
-                    opponent_win_percentages.append(opp_win_pct)
-            
-            # Calculate average opponent win percentage
-            if opponent_win_percentages:
-                record['owp'] = sum(opponent_win_percentages) / len(opponent_win_percentages)
-            else:
-                record['owp'] = 0.0
-        
-        # Calculate opponents' opponent win percentage (OOWP)
-        for player_id, record in player_records.items():
-            opponents = record['opponents']
-            if not opponents:
-                record['oowp'] = 0.0
-                continue
-            
-            opp_opp_win_percentages = []
-            for opp_id in opponents:
-                if opp_id in player_records and 'owp' in player_records[opp_id]:
-                    opp_opp_win_percentages.append(player_records[opp_id]['owp'])
-            
-            if opp_opp_win_percentages:
-                record['oowp'] = sum(opp_opp_win_percentages) / len(opp_opp_win_percentages)
-            else:
-                record['oowp'] = 0.0
-    
-    # Update tournament results in the database
-    for player_id, record in player_records.items():
-        result = TournamentResult.query.filter_by(
+    # Create new tournament results with ranks
+    for idx, entry in enumerate(ranking, 1):
+        new_result = TournamentResult(
             tournament_id=tournament_id,
-            player_id=player_id
-        ).first()
-        
-        if not result:
-            result = TournamentResult(
-                tournament_id=tournament_id,
-                player_id=player_id,
-                game_type=tournament.game_type
-            )
-            db.session.add(result)
-        
-        result.wins = record['wins']
-        result.losses = record['losses']
-        
-        if tournament.format == 'swiss':
-            result.opponent_win_percentage = record.get('owp', 0.0)
-            result.opp_opp_win_percentage = record.get('oowp', 0.0)
+            player_id=entry["player_id"],
+            game_type=tournament.game_type,
+            rank=idx,  # Assign rank based on sorted position
+            wins=entry["wins"],
+            losses=entry["losses"],
+            opponent_win_percentage=entry["owp"],
+            opp_opp_win_percentage=entry["oowp"]
+        )
+        db.session.add(new_result)
     
     db.session.commit()
 

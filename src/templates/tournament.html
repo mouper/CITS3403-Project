@@ -250,7 +250,7 @@
                             <tbody>
                                 {% for player_result in ranked_players %}
                                 <tr>
-                                    <td>{{ loop.index }}</td>
+                                    <td>{{ player_result.rank }}</td>
                                     <td>{{ player_result.name }}</td>
                                     <td>{{ player_result.wins }}-{{ player_result.losses }}</td>
                                     {% if tournament.format == 'swiss' %}
