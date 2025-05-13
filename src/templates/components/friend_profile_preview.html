@@ -1,6 +1,6 @@
 {% from "components/admincards_macros.html" import admincards %}
 
-<div class="profile-preview-wrapper">
+<div class="profile-preview-wrapper" id="playerView">
   <div class="preview-upper">
     <div class="preview-avatar-wrapper">
       <img src="{{ url_for('static', filename=friend.avatar_path or 'default-avatar.png') }}" class="avatar-preview-img" alt="Avatar">
