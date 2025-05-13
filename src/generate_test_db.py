@@ -182,7 +182,6 @@ def add_friendships():
         (5, 7, "accepted"),
         (6, 8, "accepted"),
         (7, 9, "accepted"),
-        (1, 5, "accepted"),
         (2, 6, "accepted"),
         (3, 7, "accepted"),
         (4, 8, "accepted"),
