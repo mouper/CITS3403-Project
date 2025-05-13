@@ -72,18 +72,20 @@
   <!-- Friend Search Section -->
   <div class="friend-search-section">
     <div class="friend-search-text">
-      <h2 class="subheadline">Find Friends</h2>
+      <h2 class="subheadline purple-text">My Friends</h2>
       <p class="regular3">Friends List:</p>
-      <div class="friend-list-section">
-        <ul class="friend-list">
-          {% for username in accepted_friend_usernames %}
-            <li class="friend-item">{{ username }}</li>
-          {% else %}
-            <li class="friend-item">No accepted friends found</li>
-          {% endfor %}
+      <div class="friend-list-section" style="min-height: auto; max-height: none; overflow: visible;">
+        <ul class="friend-list" style="max-height: none; overflow: visible;">
+          <ul class="friend-list"></ul>
+            {% for username in accepted_friend_usernames %}
+              <li class="friend-item clickable-friend" data-username="{{ username }}">{{ username }}</li>
+            {% else %}
+              <li class="friend-item">No accepted friends found</li>
+            {% endfor %}
+          </ul>
         </ul>
       </div>
-      <p class="regular3">Or search for other players to invite to your tournaments.</p>
+      <p class="regular3">Add new friends to invite them to your tournaments:</p>
     </div>
 
     <div class="friend-search-bar">
@@ -99,5 +101,13 @@
       </div>
     </div>
   </div>
+
+  <div class="modal" id="friendModal" style="display:none;">
+    <div class="modal-content">
+      <span class="close-btn" onclick="document.getElementById('friendModal').style.display='none'">&times;</span>
+      <div id="friendPreviewContainer"></div>
+    </div>
+  </div>
+
 </div>
 {% endblock %}

@@ -1,11 +1,11 @@
 import datetime
 import math
 import random
-from flask import render_template, request, redirect, url_for, flash, jsonify
+from flask import render_template, request, redirect, url_for, flash, jsonify, send_from_directory
 from flask_login import login_user, logout_user, current_user, login_required
 from flask_mail import Message
 from app import application, mail
-from models import Friend, User, UserStat, Tournament, TournamentPlayer, TournamentResult, Match, Round, Friend, Invite
+from models import Friend, User, UserStat, Tournament, TournamentPlayer, TournamentResult, Match, Round, Invite
 from db import db  # Use the centralized db object from db.py
 from sqlalchemy import func
 import json, io
@@ -1837,7 +1837,7 @@ def send_friend_request():
     ).first()
     if existing:
         return jsonify(success=False,
-                       message="Already requested or you're already friends"), 409
+                       message="You have already sent this player a friend request."), 409
 
     fr = Friend(
         user_id=current_user.id,
@@ -1859,6 +1859,42 @@ def edit_friend_request(request_id):
     fr.status = 'pending'
     db.session.commit()
     return redirect(url_for('view_requests'))
+
+@application.route('/get_friends')
+@login_required
+def get_friends():
+    try:
+        # Get all accepted friends for the current user
+        friends = Friend.query.filter(
+            ((Friend.user_id == current_user.id) | 
+             (Friend.friend_id == current_user.id)) &
+            (Friend.status == 'accepted')
+        ).all()
+        
+        friend_list = []
+        for friend in friends:
+            # Determine which user is the friend (not the current user)
+            friend_id = friend.friend_id if friend.user_id == current_user.id else friend.user_id
+            friend_user = User.query.get(friend_id)
+            if friend_user:
+                friend_list.append({
+                    'id': friend_user.id,
+                    'username': friend_user.username,
+                    'first_name': friend_user.first_name,
+                    'last_name': friend_user.last_name,
+                    'email': friend_user.email
+                })
+        
+        return jsonify({
+            'success': True,
+            'friends': friend_list
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
 UPLOAD_FOLDER = os.path.join("static", "uploads", "avatars")
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -1899,5 +1935,114 @@ def update_profile():
     db.session.commit()
     flash("Profile updated successfully!", "success")
     return redirect(url_for('account'))
+
+
+
+
+@application.route('/user_preview/<username>')
+@login_required
+def user_preview(username):
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        return "User not found", 404
+
+    from sqlalchemy.orm import aliased
+    from collections import defaultdict
+    TP = aliased(TournamentPlayer)
+
+    # 获取该用户参与的比赛数据
+    all_results = (
+        db.session.query(TournamentResult, Tournament)
+        .join(Tournament, TournamentResult.tournament_id == Tournament.id)
+        .join(TP, TournamentResult.player_id == TP.id)
+        .filter(TP.user_id == user.id)
+        .all()
+    )
+
+    # 分组：Top 3 卡片
+    grouped_results = defaultdict(list)
+    for result, tournament in all_results:
+        grouped_results[tournament.game_type].append((result, tournament))
+    for game_type in grouped_results:
+        grouped_results[game_type].sort(key=lambda x: x[0].wins, reverse=True)
+
+    # 最近 3 场卡片
+    last_3_results = sorted(all_results, key=lambda x: x[1].created_at, reverse=True)[:3]
+
+    # 计算胜率
+    total_stats = (
+        db.session.query(
+            func.sum(TournamentResult.wins),
+            func.sum(TournamentResult.losses)
+        )
+        .join(TP, TournamentResult.player_id == TP.id)
+        .filter(TP.user_id == user.id)
+        .first()
+    )
+    total_wins = total_stats[0] or 0
+    total_losses = total_stats[1] or 0
+    total_games = total_wins + total_losses
+    total_winrate = round(total_wins / total_games * 100, 1) if total_games > 0 else 0.0
+
+    # 获取统计数据
+    user_stats = db.session.query(UserStat).filter_by(user_id=user.id).all()
+
+    # 最近主办比赛（Admin 卡片，复用 account 和 analytics 的逻辑）
+    recent_tournaments = []
+    base_q = (
+        db.session.query(Tournament)
+        .filter_by(created_by=user.id)
+        .order_by(Tournament.created_at.desc())
+    )
+    recent = base_q.limit(6).all()
+
+    for tourney in recent:
+        rows = (
+            db.session.query(TournamentPlayer, TournamentResult, User)
+            .join(TournamentResult, TournamentResult.player_id == TournamentPlayer.id)
+            .outerjoin(User, TournamentPlayer.user_id == User.id)
+            .filter(TournamentPlayer.tournament_id == tourney.id)
+            .all()
+        )
+
+        standings = []
+        for player, result, u in rows:
+            if u:
+                display_name = u.username
+            else:
+                first = player.guest_firstname or ""
+                last_initial = player.guest_lastname[0] if player.guest_lastname else ""
+                display_name = f"{first} {last_initial}".strip() or "Unknown"
+
+            standings.append({
+                'username': display_name,
+                'wins': result.wins,
+                'losses': result.losses,
+                'owp': round(result.opponent_win_percentage * 100, 2),
+                'opp_owp': round(result.opp_opp_win_percentage * 100, 2)
+            })
+
+        if len(standings) < 3:
+            continue
+
+        standings.sort(key=lambda p: (p['wins'], p['opp_owp']), reverse=True)
+
+        recent_tournaments.append({
+            'id': tourney.id,
+            'title': tourney.title,
+            'standings': standings
+        })
+
+    return render_template(
+        "components/friend_profile_preview.html",
+        friend=user,
+        total_winrate=total_winrate,
+        user_stats=user_stats,
+        grouped_results=grouped_results,
+        last_3_results=last_3_results,
+        recent_tournaments=recent_tournaments,
+        game_types=list(grouped_results.keys())
+    )
+
 
 
