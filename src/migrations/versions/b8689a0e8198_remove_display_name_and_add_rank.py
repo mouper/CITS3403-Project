@@ -1,7 +1,7 @@
 """Remove display name and add rank
 
 Revision ID: b8689a0e8198
-Revises: cf6db34f8c31
+Revises: 9397a8d126fd
 Create Date: 2025-05-12 15:29:10.367482
 
 """
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = 'b8689a0e8198'
-down_revision = 'cf6db34f8c31'
+down_revision = '9397a8d126fd'
 branch_labels = None
 depends_on = None
 
