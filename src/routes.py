@@ -5,7 +5,7 @@ from flask import render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_user, logout_user, current_user, login_required
 from flask_mail import Message
 from app import application, mail
-from models import Friend, User, UserStat, Tournament, TournamentPlayer, TournamentResult, Match, Round
+from models import Friend, User, UserStat, Tournament, TournamentPlayer, TournamentResult, Match, Round, Friend, Invite
 from db import db  # Use the centralized db object from db.py
 from sqlalchemy import func
 import json, io
@@ -79,55 +79,12 @@ def signup():
         user = User(
             username=username,
             email=email,
-            display_name=username,
             first_name=first_name,
             last_name=last_name
         )
         user.set_password(password)
         db.session.add(user)
         db.session.commit()
-
-        # Re-fetch user to ensure ID is available after commit
-        user = db.session.query(User).filter_by(email=email).first()
-
-        # Find guest tournament entries with the same email
-        guest_players = db.session.query(TournamentPlayer).filter_by(email=email, user_id=None).all()
-
-        if guest_players:
-            flash(f'We found {len(guest_players)} past result(s) linked to this email. Adding them to your account now.', 'success')
-
-            for guest in guest_players:
-                guest.user_id = user.id  # Link guest player record to new user
-                guest.email = None      # Optional: clear guest email since it's now linked
-                db.session.add(guest)
-
-                # Fetch corresponding tournament result if exists
-                result = db.session.query(TournamentResult).filter_by(player_id=guest.id).first()
-                if result:
-                    # Look for existing user stat or create one
-                    user_stat = db.session.query(UserStat).filter_by(user_id=user.id, game_type=result.game_type).first()
-                    if not user_stat:
-                        user_stat = UserStat(
-                            user_id=user.id,
-                            game_type=result.game_type,
-                            games_played=0,
-                            games_won=0,
-                            games_lost=0,
-                            win_percentage=0.0
-                        )
-                        db.session.add(user_stat)
-
-                    # Update the user's stats
-                    user_stat.games_played += result.wins + result.losses
-                    user_stat.games_won += result.wins
-                    user_stat.games_lost += result.losses
-                    if user_stat.games_played > 0:
-                        user_stat.win_percentage = user_stat.games_won / user_stat.games_played
-
-            db.session.commit()
-            flash('Past results have been successfully added to your account.', 'success')
-        else:
-            flash('No past results found for this email.', 'info')
 
         flash('Account created! Please login.', 'success')
         return redirect(url_for('login', fresh=1))
@@ -137,8 +94,22 @@ def signup():
 @application.route('/dashboard')
 @login_required
 def dashboard():
-    return render_template("dashboard.html", title="Dashboard")
+    my_tournaments = Tournament.query.filter_by(created_by=current_user.id).all()
 
+    sent_accepted = Friend.query.filter_by(user_id=current_user.id, status='accepted').all()
+    recv_accepted = Friend.query.filter_by(friend_id=current_user.id, status='accepted').all()
+
+    accepted_friends = [f.recipient for f in sent_accepted] + [f.sender for f in recv_accepted]
+
+    accepted_friend_usernames = [friend.username for friend in accepted_friends]
+
+    return render_template(
+        'dashboard.html',
+        tournaments=my_tournaments,
+        accepted_friend_usernames=accepted_friend_usernames
+    )
+
+    
 @application.route('/analytics')
 @login_required
 def analytics():
@@ -148,7 +119,7 @@ def analytics():
     try:
         limit = int(limit_param)
     except ValueError:
-        limit = None  # means “all”
+        limit = None  # means "all"
 
     base_q = (
         db.session.query(Tournament)
@@ -174,7 +145,7 @@ def analytics():
         standings = []
         for player, result, user in rows:
             if user:
-                display_name = getattr(user, 'display_name', None) or user.username
+                display_name = user.username
             else:
                 first = player.guest_firstname or ""
                 last_initial = player.guest_lastname[0] if player.guest_lastname else ""
@@ -214,8 +185,15 @@ def analytics():
     
 @application.route('/requests')
 @login_required
-def requests():
-    return render_template("requests.html", title="My Requests")
+def view_requests():
+    incoming_rels = Friend.query.filter_by(friend_id=current_user.id).all()
+
+    incoming = [
+        { "fr": fr, "user": fr.sender }
+        for fr in incoming_rels
+    ]
+
+    return render_template('requests.html', incoming=incoming)
 
 @application.route('/account')
 @login_required
@@ -315,7 +293,7 @@ def account():
         standings = []
         for player, result, user in rows:
             if user:
-                display_name = getattr(user, 'display_name', None) or user.username
+                display_name = user.username
             else:
                 first = player.guest_firstname or ""
                 last_initial = player.guest_lastname[0] if player.guest_lastname else ""
@@ -374,7 +352,23 @@ def save_display_settings():
 @application.route('/new_tournament')
 @login_required
 def new_tournament():
-    return render_template('new_tournament.html')
+    # Get accepted friends
+    sent_accepted = Friend.query.filter_by(user_id=current_user.id, status='accepted').all()
+    recv_accepted = Friend.query.filter_by(friend_id=current_user.id, status='accepted').all()
+
+    accepted_friends = [f.recipient for f in sent_accepted] + [f.sender for f in recv_accepted]
+    accepted_friend_usernames = [friend.username for friend in accepted_friends]
+    
+    # Create list of friend details including names
+    accepted_friend_details = [{
+        'username': friend.username,
+        'first_name': friend.first_name,
+        'last_name': friend.last_name
+    } for friend in accepted_friends]
+
+    return render_template('new_tournament.html', 
+                         accepted_friend_usernames=accepted_friend_usernames,
+                         accepted_friend_details=accepted_friend_details)
 
 @application.route('/save_tournament', methods=['POST'])
 @login_required
@@ -599,7 +593,7 @@ def view_tournament(tournament_id):
         
         # Set player name
         if player.user_id:
-            player_result['name'] = player.user.display_name or player.user.username
+            player_result['name'] = player.user.username
         else:
             player_result['name'] = f"{player.guest_firstname} {player.guest_lastname}"
         
@@ -1554,6 +1548,114 @@ def create_match(tournament_id, round_number, player1_id, player2_id=None, is_by
     db.session.add(new_match)
     return new_match
 
+@application.route('/search_players')
+def search_players():
+    query = request.args.get('query', '')
+    
+    if not query or len(query) < 1:
+        return jsonify({'players': []})
+
+    search_term = f"%{query}%"
+    players = User.query.filter(
+        User.username.ilike(search_term)
+    ).limit(10).all()
+    
+    results = []
+    for player in players:
+        results.append({
+            'id': player.id,
+            'username': player.username,
+        })
+    
+    return jsonify({'players': results})
+
+@application.route('/send_invite', methods=['POST'])
+@login_required
+def send_invite():
+    data = request.get_json()
+    recipient_id  = data.get('recipient_id')
+    tournament_id = data.get('tournament_id')
+    recipient = User.query.get(recipient_id)
+    tournament = Tournament.query.get(tournament_id)
+    if not recipient or not tournament:
+        flash("Invalid user or tournament.", "error")
+        return jsonify(success=True)
+
+    exists = Invite.query.filter_by(
+        recipient_id=recipient.id,
+        tournament_id=tournament.id
+    ).first()
+    if exists:
+        flash("You've already invited that player to this tournament.", "warning")
+        return redirect(url_for('dashboard'))
+
+    inv = Invite(
+        sender_id=current_user.id,
+        recipient_id=recipient.id,
+        tournament_id=tournament.id
+    )
+    db.session.add(inv)
+    db.session.commit()
+    flash("Invite sent!", "success")
+    return redirect(url_for('dashboard'))
+
+@application.route('/friends/respond/<int:request_id>', methods=['POST'])
+@login_required
+def respond_friend_request(request_id):
+    fr = Friend.query.filter_by(
+        user_id=request_id,
+        friend_id=current_user.id,
+        status='pending'
+    ).first_or_404()
+
+    resp = request.form.get('response')
+    if resp == 'accept':
+        fr.status = 'accepted'
+    else:  
+        db.session.delete(fr)
+
+    db.session.commit()
+    return redirect(url_for('view_requests'))
+
+@application.route('/friends/request', methods=['POST'])
+@login_required
+def send_friend_request():
+    data = request.get_json() or {}
+    friend_id = data.get('friend_id')
+    if not friend_id:
+        return jsonify(success=False, message="No user selected"), 400
+
+    if User.query.get(friend_id) is None:
+        return jsonify(success=False, message="User not found"), 404
+
+    existing = Friend.query.filter_by(
+        user_id=current_user.id,
+        friend_id=friend_id
+    ).first()
+    if existing:
+        return jsonify(success=False,
+                       message="Already requested or you're already friends"), 409
+
+    fr = Friend(
+        user_id=current_user.id,
+        friend_id=friend_id,
+        status='pending'
+    )
+    db.session.add(fr)
+    db.session.commit()
+    return jsonify(success=True)
+
+@application.route('/friends/edit/<int:request_id>', methods=['POST'])
+@login_required
+def edit_friend_request(request_id):
+    fr = Friend.query.filter_by(
+        user_id   = request_id,
+        friend_id = current_user.id
+    ).first_or_404()
+
+    fr.status = 'pending'
+    db.session.commit()
+    return redirect(url_for('view_requests'))
 UPLOAD_FOLDER = os.path.join("static", "uploads", "avatars")
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)

@@ -38,6 +38,12 @@ class Friend(db.Model):
     __table_args__ = (
         db.CheckConstraint("status IN ('pending', 'accepted')", name='status_check'),
     )
+    sender    = db.relationship('User',
+                                foreign_keys=[user_id],
+                                backref=db.backref('sent_requests',  lazy='dynamic'))
+    recipient = db.relationship('User',
+                                foreign_keys=[friend_id],
+                                backref=db.backref('incoming_requests', lazy='dynamic'))
 
 
 class Tournament(db.Model):
@@ -116,3 +122,16 @@ class UserStat(db.Model):
     games_won = db.Column(db.Integer, default=0)
     games_lost = db.Column(db.Integer, default=0)
     win_percentage = db.Column(db.Float)
+
+class Invite(db.Model):
+    __tablename__ = 'invite'
+    id = db.Column(db.Integer, primary_key=True)
+    tournament_id = db.Column(db.Integer, db.ForeignKey('tournaments.id'), nullable=False)
+    sender_id     = db.Column(db.Integer, db.ForeignKey('users.id'),       nullable=False)
+    recipient_id  = db.Column(db.Integer, db.ForeignKey('users.id'),       nullable=False)
+    status        = db.Column(db.String(20), nullable=False, default='pending')
+    created_at    = db.Column(db.DateTime, server_default=func.now())
+
+    tournament = db.relationship('Tournament', backref=db.backref('invites', lazy='dynamic'))
+    sender     = db.relationship('User', foreign_keys=[sender_id])
+    recipient  = db.relationship('User', foreign_keys=[recipient_id])
