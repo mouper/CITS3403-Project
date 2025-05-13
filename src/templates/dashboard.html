@@ -1,11 +1,9 @@
 {% extends "base.html" %}
 {% import "components/tournament_cards.html" as cards %}
 
-
 {% block content %}
 <div class="dashboard-container">
   <h1 class="title2 page-header"> <span>TourneyPro Dashboard</span> </h1>
-
   {% with messages = get_flashed_messages(with_categories=true) %}
   {% if messages %}
     <div class="flashes" style="margin: 2rem;">
@@ -15,23 +13,16 @@
     </div>
   {% endif %}
   {% endwith %}
-
   <p class="medium4" style="margin-bottom: 3rem;">Welcome to your dashboard!</p>
-
-  <!-- Button Container -->
   <div class="dashboard-btn-container">
     <a href="{{ url_for('new_tournament') }}" target="_blank" class="NewBtn">
       <div class="CreateIcon"></div>
       Create New Tournament
     </a>
   </div>
-
-  <!-- My Tournaments Section -->
   <div class="tournament-section">
     <div class="tournament-header">
       <h2 class="subheadline">My Tournaments</h2>
-
-      <!-- dropdown filter -->
       <form method="GET" class="FilterComponent" id="statusFilterForm">
         <select
           name="status"
@@ -49,12 +40,11 @@
           >Draft</option>
         </select>
       </form>
-
+    </div>
     <div id="myTourneyCards">
       {{ cards.tournament_cards(tournaments) }}
     </div>
   </div>
-  <!-- Friend Search Section -->
   <div class="friend-search-section">
     <div class="friend-search-text">
       <h2 class="subheadline">Find Friends</h2>

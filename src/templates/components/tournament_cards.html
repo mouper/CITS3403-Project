@@ -6,16 +6,16 @@
          data-status="{{ t.status }}">               
       <div class="statcard-top-row">
         <p class="subheadline">
-          {{ t.current_round }} / {{ t.total_rounds }}
+          0 / {{ t.total_rounds }} Rounds
         </p>
       </div>
       <div class="statcard-middle-row">
         <p class="subheadline">
-          {{ t.format|title }}
+          {{ t.title }}
         </p>
       </div>
       <div class="tournament-footer">
-        <span class="regular3">{{ t.title }}</span>
+        <span class="regular3">{{ t.format|title }}</span>
         {% if t.status == 'draft' %}
           <a href="{{ url_for('edit_tournament', tournament_id=t.id) }}" class="ViewBtn">View</a>
         {% else %}

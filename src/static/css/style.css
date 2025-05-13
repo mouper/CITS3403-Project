@@ -390,36 +390,120 @@ html, body {
 }
 
 .tournament-section {
-    margin-top: 4rem;
     width: 100%;
 }
-
+  
 .tournament-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1.5rem;   /* space below the header */
-    padding: 0 0.5rem;
-}
-  
-  /* push the cards down and clear any floats */
-#myTourneyCards {
-    clear: both;             /* sit below any floated elements */
-    margin-top: 1rem;        /* extra breathing room under header */
-  
-    /* optional: make your cards lay out in a nice responsive grid */
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 1.5rem;
     width: 100%;
+    margin-bottom: 1.5rem;
 }
-
+  
 .FilterComponent {
     display: flex;
     align-items: center;
     gap: 0.5rem;
     color: var(--off-white);
     font-size: 1rem;
+}
+
+/* Tournament Cards Styling - specific to myTourneyCards */
+#myTourneyCards .statcard-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    width: 100%;
+}
+  
+#myTourneyCards .statcard {
+    border-radius: 0.625rem;
+    border: 2px solid var(--Primary-Shade-1, #BBB2FF);
+    background: var(--Background-Shade3, #0E0E0E);
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+    min-height: 200px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+  
+#myTourneyCards .statcard:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(107, 70, 193, 0.2);
+}
+  
+/* Top row with round info */
+#myTourneyCards .statcard-top-row {
+    margin-bottom: 1.5rem;
+    text-align: left;
+}
+  
+#myTourneyCards .statcard-top-row .subheadline {
+    color: var(--Off-White, #FAFAFA);
+    font-size: 1.5rem;
+    font-style: italic;
+    font-weight: 500;
+    line-height: normal;
+}
+  
+/* Middle row with tournament type */
+#myTourneyCards .statcard-middle-row {
+    margin-bottom: 1.5rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-grow: 1;
+}
+  
+#myTourneyCards .statcard-middle-row .subheadline {
+    color: var(--Primary-Shade2, #D6D6EE);
+    font-size: 1.25rem;
+    font-style: normal;
+    font-weight: 500;
+    line-height: normal;
+    text-align: center;
+}
+  
+/* Bottom row with tournament name and view button */
+#myTourneyCards .tournament-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+  
+#myTourneyCards .tournament-footer .regular3 {
+    color: var(--Off-White, #FAFAFA);
+    font-size: 1rem;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 1.5rem;
+    text-align: left;
+    margin-right: auto;
+}
+  
+#myTourneyCards .ViewBtn {
+    color: var(--Primary-Shade-1, #BBB2FF);
+    font-size: 0.875rem;
+    font-style: italic;
+    font-weight: 300;
+    line-height: 1.5rem;
+    text-decoration-line: underline;
+    text-decoration-style: solid;
+    text-decoration-skip-ink: none;
+    text-decoration-thickness: auto;
+    text-underline-offset: auto;
+    text-underline-position: from-font;
+    text-align: right;
+    margin-left: auto;
+}
+  
+#myTourneyCards .ViewBtn:hover {
+    color: #ad87fb;
+    text-decoration: underline;
 }
 
 .friend-search-section {
