@@ -74,19 +74,12 @@
     <div class="friend-search-text">
       <h2 class="subheadline">Find Friends</h2>
       <p class="regular3">Friends List:</p>
-      <div class="friend-dropdown-section">
-        <input
-          id="friendDropdownInput"
-          type="text"
-          placeholder="Search your friends"
-          autocomplete="off"
-          class="friend-dropdown-input"
-        >
-        <ul id="friendDropdownList" class="friend-dropdown-list">
+      <div class="friend-list-section">
+        <ul class="friend-list">
           {% for username in accepted_friend_usernames %}
-            <li class="friend-dropdown-item">{{ username }}</li>
+            <li class="friend-item">{{ username }}</li>
           {% else %}
-            <li class="friend-dropdown-item">No accepted friends found</li>
+            <li class="friend-item">No accepted friends found</li>
           {% endfor %}
         </ul>
       </div>

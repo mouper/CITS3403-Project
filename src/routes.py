@@ -79,7 +79,6 @@ def signup():
         user = User(
             username=username,
             email=email,
-            display_name=username,
             first_name=first_name,
             last_name=last_name
         )
@@ -120,7 +119,7 @@ def analytics():
     try:
         limit = int(limit_param)
     except ValueError:
-        limit = None  # means “all”
+        limit = None  # means "all"
 
     base_q = (
         db.session.query(Tournament)
@@ -146,7 +145,7 @@ def analytics():
         standings = []
         for player, result, user in rows:
             if user:
-                display_name = getattr(user, 'display_name', None) or user.username
+                display_name = user.username
             else:
                 first = player.guest_firstname or ""
                 last_initial = player.guest_lastname[0] if player.guest_lastname else ""
@@ -294,7 +293,7 @@ def account():
         standings = []
         for player, result, user in rows:
             if user:
-                display_name = getattr(user, 'display_name', None) or user.username
+                display_name = user.username
             else:
                 first = player.guest_firstname or ""
                 last_initial = player.guest_lastname[0] if player.guest_lastname else ""
@@ -353,7 +352,23 @@ def save_display_settings():
 @application.route('/new_tournament')
 @login_required
 def new_tournament():
-    return render_template('new_tournament.html')
+    # Get accepted friends
+    sent_accepted = Friend.query.filter_by(user_id=current_user.id, status='accepted').all()
+    recv_accepted = Friend.query.filter_by(friend_id=current_user.id, status='accepted').all()
+
+    accepted_friends = [f.recipient for f in sent_accepted] + [f.sender for f in recv_accepted]
+    accepted_friend_usernames = [friend.username for friend in accepted_friends]
+    
+    # Create list of friend details including names
+    accepted_friend_details = [{
+        'username': friend.username,
+        'first_name': friend.first_name,
+        'last_name': friend.last_name
+    } for friend in accepted_friends]
+
+    return render_template('new_tournament.html', 
+                         accepted_friend_usernames=accepted_friend_usernames,
+                         accepted_friend_details=accepted_friend_details)
 
 @application.route('/save_tournament', methods=['POST'])
 @login_required
@@ -578,7 +593,7 @@ def view_tournament(tournament_id):
         
         # Set player name
         if player.user_id:
-            player_result['name'] = player.user.display_name or player.user.username
+            player_result['name'] = player.user.username
         else:
             player_result['name'] = f"{player.guest_firstname} {player.guest_lastname}"
         
@@ -1571,7 +1586,7 @@ def send_invite():
         tournament_id=tournament.id
     ).first()
     if exists:
-        flash("You’ve already invited that player to this tournament.", "warning")
+        flash("You've already invited that player to this tournament.", "warning")
         return redirect(url_for('dashboard'))
 
     inv = Invite(
@@ -1619,7 +1634,7 @@ def send_friend_request():
     ).first()
     if existing:
         return jsonify(success=False,
-                       message="Already requested or you’re already friends"), 409
+                       message="Already requested or you're already friends"), 409
 
     fr = Friend(
         user_id=current_user.id,

@@ -140,5 +140,7 @@
   window.currentUserLastName = '{{ current_user.last_name }}';
   window.currentUserEmail = '{{ current_user.email }}';
   window.currentUserUsername = '{{ current_user.username }}';
+  window.acceptedFriendUsernames = JSON.parse('{{ accepted_friend_usernames|tojson|safe }}');
+  window.acceptedFriendDetails = JSON.parse('{{ accepted_friend_details|tojson|safe }}');
 </script>
 {% endblock %}
