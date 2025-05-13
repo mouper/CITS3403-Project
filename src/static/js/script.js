@@ -2082,47 +2082,49 @@ function closeModal() {
 document.addEventListener('DOMContentLoaded', function() {
   const searchInput = document.getElementById('playerSearch');
   const searchResults = document.getElementById('searchResults');
-  const friendDropdownInput = document.getElementById('friendDropdownInput');
-  const friendDropdownList = document.getElementById('friendDropdownList');
+  const friendList = document.querySelector('.friend-list');
   const sendInviteBtn = document.getElementById('sendInviteBtn');
   let selectedPlayerId = null;
 
-  friendDropdownInput.addEventListener('click', function() {
-    friendDropdownList.style.display = 'block';
-  });
-
-  friendDropdownInput.addEventListener('input', function() {
-    const query = this.value.trim().toLowerCase();
+  // Function to update friends list
+  function updateFriendsList(friends) {
+    if (!friendList) return;
     
-    const allFriendItems = Array.from(friendDropdownList.querySelectorAll('li'));
-    
-    if (query.length < 1) {
-      allFriendItems.forEach(item => item.style.display = 'block');
-      friendDropdownList.style.display = 'block';
-      return;
+    friendList.innerHTML = '';
+    if (friends && friends.length > 0) {
+      friends.forEach(friend => {
+        const li = document.createElement('li');
+        li.className = 'friend-item';
+        li.textContent = friend.username;
+        friendList.appendChild(li);
+      });
+    } else {
+      const li = document.createElement('li');
+      li.className = 'friend-item';
+      li.textContent = 'No accepted friends found';
+      friendList.appendChild(li);
     }
-    
-    let anyVisible = false;
-    allFriendItems.forEach(item => {
-      const friendUsername = item.textContent.toLowerCase();
-      if (friendUsername.includes(query)) {
-        item.style.display = 'block';
-        anyVisible = true;
-      } else {
-        item.style.display = 'none';
-      }
-    });
-    
-    friendDropdownList.style.display = anyVisible ? 'block' : 'none';
-  });
+  }
 
-  friendDropdownList.addEventListener('click', function(e) {
-    if (e.target.tagName === 'LI') {
-      friendDropdownInput.value = e.target.textContent;
-      friendDropdownList.style.display = 'none';
-    }
-  });
+  // Function to handle friend request success
+  function handleFriendRequestSuccess() {
+    // Refresh the friends list
+    fetch('/get_friends')
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          updateFriendsList(data.friends);
+          // Update the global window object for other components
+          window.acceptedFriendUsernames = data.friends.map(f => f.username);
+          window.acceptedFriendDetails = data.friends;
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching friends:', error);
+      });
+  }
 
+  // Search input handler
   searchInput.addEventListener('input', function() {
     const query = this.value.trim().toLowerCase();  
 
@@ -2131,6 +2133,30 @@ document.addEventListener('DOMContentLoaded', function() {
       return;
     }
 
+    // First check friends list
+    const friendItems = Array.from(friendList.querySelectorAll('.friend-item'));
+    const matchingFriends = friendItems.filter(item => 
+      item.textContent.toLowerCase().includes(query)
+    );
+
+    if (matchingFriends.length > 0) {
+      searchResults.innerHTML = '';
+      matchingFriends.forEach(friend => {
+        const resultItem = document.createElement('div');
+        resultItem.className = 'search-result-item';
+        resultItem.textContent = friend.textContent;
+        resultItem.addEventListener('click', function() {
+          searchInput.value = friend.textContent;
+          searchResults.style.display = 'none';
+          sendInviteBtn.disabled = true; // Disable since they're already friends
+        });
+        searchResults.appendChild(resultItem);
+      });
+      searchResults.style.display = 'block';
+      return;
+    }
+
+    // If no friends match, search all players
     fetch(`/search_players?query=${encodeURIComponent(query)}`)
       .then(response => response.json())
       .then(data => {
@@ -2138,9 +2164,14 @@ document.addEventListener('DOMContentLoaded', function() {
           searchResults.innerHTML = '';
           
           data.players.forEach(player => {
+            // Skip if player is already a friend
+            if (friendItems.some(item => item.textContent === player.username)) {
+              return;
+            }
+
             const resultItem = document.createElement('div');
             resultItem.className = 'search-result-item';
-            resultItem.innerHTML = `${player.username}`;
+            resultItem.textContent = player.username;
             
             resultItem.addEventListener('click', function() {
               searchInput.value = player.username;
@@ -2152,7 +2183,12 @@ document.addEventListener('DOMContentLoaded', function() {
             searchResults.appendChild(resultItem);
           });
           
-          searchResults.style.display = 'block';
+          if (searchResults.children.length > 0) {
+            searchResults.style.display = 'block';
+          } else {
+            searchResults.innerHTML = '<div style="padding: 10px;">No new players found</div>';
+            searchResults.style.display = 'block';
+          }
         } else {
           searchResults.innerHTML = '<div style="padding: 10px;">No players found</div>';
           searchResults.style.display = 'block';
@@ -2163,15 +2199,14 @@ document.addEventListener('DOMContentLoaded', function() {
       });
   });
 
+  // Click outside handler
   document.addEventListener('click', function(event) {
     if (!searchInput.contains(event.target) && !searchResults.contains(event.target)) {
       searchResults.style.display = 'none';
     }
-    if (!friendDropdownInput.contains(event.target) && !friendDropdownList.contains(event.target)) {
-      friendDropdownList.style.display = 'none';
-    }
   });
 
+  // Send invite button handler
   sendInviteBtn.addEventListener('click', function() {
     if (!selectedPlayerId) {
       alert('Please select a player first');
@@ -2190,6 +2225,8 @@ document.addEventListener('DOMContentLoaded', function() {
         searchInput.value = '';
         selectedPlayerId = null;
         sendInviteBtn.disabled = true;
+        // Refresh friends list after successful request
+        handleFriendRequestSuccess();
       } else {
         alert('Error: ' + data.message);
       }
@@ -2199,6 +2236,12 @@ document.addEventListener('DOMContentLoaded', function() {
       alert('Failed to send request.');
     });
   });
+
+  // Initial friends list update
+  if (window.acceptedFriendUsernames) {
+    const friends = window.acceptedFriendUsernames.map(username => ({ username }));
+    updateFriendsList(friends);
+  }
 });
 
 // =============================================

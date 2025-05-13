@@ -1,11 +1,11 @@
 import datetime
 import math
 import random
-from flask import render_template, request, redirect, url_for, flash, jsonify
+from flask import render_template, request, redirect, url_for, flash, jsonify, send_from_directory
 from flask_login import login_user, logout_user, current_user, login_required
 from flask_mail import Message
 from app import application, mail
-from models import Friend, User, UserStat, Tournament, TournamentPlayer, TournamentResult, Match, Round, Friend, Invite
+from models import Friend, User, UserStat, Tournament, TournamentPlayer, TournamentResult, Match, Round, Invite
 from db import db  # Use the centralized db object from db.py
 from sqlalchemy import func
 import json, io
@@ -1643,7 +1643,7 @@ def send_friend_request():
     ).first()
     if existing:
         return jsonify(success=False,
-                       message="Already requested or you're already friends"), 409
+                       message="You have already sent this player a friend request."), 409
 
     fr = Friend(
         user_id=current_user.id,
@@ -1665,6 +1665,42 @@ def edit_friend_request(request_id):
     fr.status = 'pending'
     db.session.commit()
     return redirect(url_for('view_requests'))
+
+@application.route('/get_friends')
+@login_required
+def get_friends():
+    try:
+        # Get all accepted friends for the current user
+        friends = Friend.query.filter(
+            ((Friend.user_id == current_user.id) | 
+             (Friend.friend_id == current_user.id)) &
+            (Friend.status == 'accepted')
+        ).all()
+        
+        friend_list = []
+        for friend in friends:
+            # Determine which user is the friend (not the current user)
+            friend_id = friend.friend_id if friend.user_id == current_user.id else friend.user_id
+            friend_user = User.query.get(friend_id)
+            if friend_user:
+                friend_list.append({
+                    'id': friend_user.id,
+                    'username': friend_user.username,
+                    'first_name': friend_user.first_name,
+                    'last_name': friend_user.last_name,
+                    'email': friend_user.email
+                })
+        
+        return jsonify({
+            'success': True,
+            'friends': friend_list
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
 UPLOAD_FOLDER = os.path.join("static", "uploads", "avatars")
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
