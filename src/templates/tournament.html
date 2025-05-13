@@ -265,6 +265,16 @@
                 </div>
             </div>
             
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+              <div class="flashes" style="margin: 2rem; width: 100%;">
+                {% for category, message in messages %}
+                  <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+              </div>
+            {% endif %}
+            {% endwith %}
+
             <!-- Round Controls -->
             <div class="round-controls">
                 {% if not current_round or current_round.status == 'not started' %}
@@ -273,7 +283,7 @@
                         <span class="timer-label medium2">Round Time:</span>
                         <span id="timerDisplay" class="timer-value">{{ tournament.round_time_minutes }}:00</span>
                     </div>
-                    <div class="SendJoinBtn">
+                    <div class="SaveBtn">
                         <button id="startRoundBtn">
                             <div class="CreateIcon"></div>
                             Start Round

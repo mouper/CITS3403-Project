@@ -1358,6 +1358,19 @@ html, body {
     margin-bottom: 3rem;
 }
 
+.round-controls .Dialog{
+    display: flex;
+    align-items: center;
+    margin-top: 0rem;
+    width: fit-content;
+}
+
+.round-controls .Dialog button.cancel{
+    padding: 0.7rem 0.7rem;
+    width: 9rem;
+}
+
+
 .timer-label {
     margin: 0;
     color: var(--off-white);
@@ -1688,7 +1701,6 @@ html, body {
 /* Alert Styles */
 .flashes {
     width: 100%;
-    max-width: 60rem;
     margin: 2rem 0rem !important;
 }
 
@@ -1862,7 +1874,7 @@ html, body {
       }
 
     /* Tournament Management Pages */
-        .round-controls {
+    .round-controls {
         flex-direction: column;
         gap: 15px;
     }

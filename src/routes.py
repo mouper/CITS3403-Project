@@ -1958,6 +1958,9 @@ def send_round_pairings(tournament_id):
             'losses': result.losses
         }
     
+    # Track if any emails were sent
+    emails_sent = 0
+    
     # Send email to each player
     for player in players:
         if not player.email:
@@ -1973,14 +1976,25 @@ def send_round_pairings(tournament_id):
             player_stats=player_stats
         )
         
-        msg = Message(
-            subject=f"Round {current_round.round_number} Pairings - {tournament.title}",
-            recipients=[player.email],
-            html=html_body
-        )
-        mail.send(msg)
+        try:
+            msg = Message(
+                subject=f"Round {current_round.round_number} Pairings - {tournament.title}",
+                recipients=[player.email],
+                html=html_body
+            )
+            mail.send(msg)
+            emails_sent += 1
+        except Exception as e:
+            print(f"Error sending email to {player.email}: {str(e)}")
+            continue
     
-    flash("Round pairings sent to all players!", "success")
-    return redirect(url_for('view_tournament', tournament_id=tournament_id, view_state=request.args.get('view_state', 'normal')))
+    if emails_sent > 0:
+        flash(f"Round pairings sent to players!", "success")
+    else:
+        flash("No emails were sent. Please check that players have valid email addresses.", "warning")
+    
+    # Preserve the current view state and stay on the tournament page
+    view_state = request.args.get('view_state', 'normal')
+    return redirect(url_for('view_tournament', tournament_id=tournament_id, view_state=view_state))
 
 
