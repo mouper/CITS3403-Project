@@ -1,16 +1,297 @@
 {% extends "base.html" %}
+{% from "components/admincards_macros.html" import admincards %}
 
 {% block content %}
-<div class="account-container">
-    <h1 class="title2"> <span>My Account</span> </h1>
-    <p class="medium4">Welcome to your profile page!</p>
-    <!-- Div for Logout -->
+<h1 class="account-page-heading">My Account</h1>
+<div class="account-page-container">
+  <div class="top-section">
+    <div class="left-column">
+    <div class="ProfileSection">
+      <div class="profile-top"></div>
+      <!-- ✅ Avatar Upload Form -->
+      <form method="POST" action="{{ url_for('upload_avatar') }}" enctype="multipart/form-data" class="avatar-upload-form">
+        <div class="profile-avatar">
+          <label for="avatarUpload">
+            <img id="avatarPreview" src="{{ url_for('static', filename=current_user.avatar_path or 'default-avatar.png') }}" alt="Avatar" class="clickable-avatar">
+          </label>
+          <input type="file" id="avatarUpload" name="avatar" accept="image/*" style="display:none" onchange="this.form.submit()">
+          <button type="button" class="edit-avatar-btn" onclick="document.getElementById('avatarUpload').click();">
+            <div class="EditIcon"></div>
+          </button>
+        </div>
+      </form>
+
+      <div class="profile-info">
+        <h2 class="title2">{{ current_user.username }}</h2>
+        <!-- ✅ Email 可编辑并自动提交 -->
+        <form method="POST" action="{{ url_for('update_profile') }}">
+          <div class="email-display-line">
+            <input type="email" class="email-input" name="email" id="emailInput" value="{{ current_user.email }}" readonly>
+            <button type="button" class="edit-icon-btn" onclick="enableAndSubmit('emailInput', this)"><div class="EditIcon"></div></button>
+          </div>
+        </form>
+      </div>
+
+      <div class="profile-bottom">
+        <div class="player-details">
+          <!-- ✅ First Name -->
+          <form method="POST" action="{{ url_for('update_profile') }}">
+            <div class="AccountTextForm with-edit">
+              <input type="text" name="first_name" id="firstNameInput" value="{{ current_user.first_name }}" readonly>
+              <button type="button" class="edit-icon-btn" onclick="enableAndSubmit('firstNameInput', this)"><div class="EditIcon"></div></button>
+            </div>
+          </form>
+          <!-- ✅ Last Name -->
+          <form method="POST" action="{{ url_for('update_profile') }}">
+            <div class="AccountTextForm with-edit">
+              <input type="text" name="last_name" id="lastNameInput" value="{{ current_user.last_name }}" readonly>
+              <button type="button" class="edit-icon-btn" onclick="enableAndSubmit('lastNameInput', this)"><div class="EditIcon"></div></button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    </div>
+    
+    <div class="right-column">
+    <div class="settings-panel">
+        <div class="settings-header">
+          <h2 class="subheadline settings-title">Stats Displayed On My Profile:</h2>
+          <div class="Dropdown player-dropdown">
+            <select>
+              <option>Player</option>
+              <option>Admin</option>
+            </select>
+          </div>
+        </div>
+  
+        <div class="switch-group">
+          <div class="switch-card">
+            <span class="medium4">Win Rate</span>
+            <label class="switch">
+              <input type="checkbox" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+  
+          <div class="switch-card">
+            <span class="medium4">Total Wins/Total Played</span>
+            <label class="switch">
+              <input type="checkbox">
+              <span class="slider"></span>
+            </label>
+          </div>
+  
+          <div class="switch-card">
+            <span class="medium4">Last 3 Tournaments</span>
+            <label class="switch">
+              <input type="checkbox">
+              <span class="slider"></span>
+            </label>
+          </div>
+  
+          <div class="switch-card top3-card">
+            <div class="top3-row">
+              <span class="medium4">Top 3 Tournaments</span>
+              <label class="switch">
+                <input type="checkbox" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+  
+            <div class="top3-tab-group">
+              <button class="top3-tab">Highest Win Count</button>
+              <button class="top3-tab">Highest Win Rate</button>
+            </div>
+  
+            <div class="top3-subline">
+                <span class="caption">Select Game Displayed</span>
+                <select id="gameTypeSelect" class="medium4">
+                  {% for game_type in game_types %}
+                    <option value="{{ game_type }}">{{ game_type }}</option>
+                  {% endfor %}
+                </select>
+            </div>  
+          </div>
+        </div>
+
+        <button id="save-stats-btn" class="primary-button">Save</button>
+
+      </div> 
+    </div>
+
+  <!-- PROFILE PREVIEW -->
+  <div class="bottom-section">
+    <h2 class="title2">Profile Preview:</h2>
+    <div class="profile-preview-wrapper">
+      <div class="preview-upper">
+        <div class="preview-avatar-wrapper">
+          <img src="{{ url_for('static', filename=current_user.avatar_path or 'default-avatar.png') }}" alt="Avatar" class="avatar-preview-img">
+        </div>
+      </div>
+
+      <div class="preview-lower">
+        {% set total_wins = user_stats | map(attribute='games_won') | sum %}
+        {% set total_played = user_stats | map(attribute='games_played') | sum %}
+        <div class="identity-stat-line">
+            <div class="username">{{ current_user.username }}</div>
+            <div class="stat-line-right">
+              {% if current_user.show_win_rate %}
+                <span class="winrate">{{ total_winrate }}% WR</span>
+              {% endif %}
+              {% if current_user.show_total_wins_played %}
+                <span class="totalcount">{{ total_wins }}/{{ total_played }}</span>
+              {% endif %}
+            </div>
+        </div>
+
+        <div class="admin-hosted-section hosted-preview-section" data-section="hosted" style="display: none;">
+          <div class="admin-header">
+            <h2 class="subheadline purple-text">Recent Tournaments Hosted</h2>
+            <div class="game-dropdown">
+              <select id="adminGameFilter">
+                <option value="all">All Games</option>
+                {% for g in hosted_game_types %}
+                  <option value="{{ g }}">{{ g }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="count-buttons">
+              <button class="show-count-btn selected" data-count="3">Show 3</button>
+              <button class="show-count-btn" data-count="5">Show 5</button>
+              <button class="show-count-btn" data-count="10">Show 10</button>
+            </div>
+          </div>
+          <div id="adminView">
+            <div class="statcard-container" id="adminStatcards">
+              {{ admincards(recent_tournaments) }}
+            </div>
+          </div>  
+        </div>
+
+        
+        {% if current_user.show_last_three %}
+        <div class="last3-section" data-section="last3">
+          <div class="top3-header">
+            <span class="top3-title">LAST 3 TOURNAMENTS</span>
+          </div>
+          {% if last_3_results %}
+            <div class="statcard-container">
+            {% for result, tournament in last_3_results %}
+            <div class="statcard">
+                <div class="statcard-top-row">
+                  <p class="subheadline">{{ loop.index }}.</p>
+                  <p class="title2 purple-text">{{ result.wins }} WINS</p>
+                </div>
+                <div class="statcard-middle-row">
+                  <p class="medium5">
+                    {{ (result.wins / (result.wins + result.losses) * 100) | round(1) if (result.wins + result.losses) > 0 else 0 }}% WR
+                  </p>
+                  <p class="medium5">{{ (result.opponent_win_percentage * 100) | round(1) if result.opponent_win_percentage else 0 }}% OPWR%</p>
+                  <p class="medium5">{{ (result.opp_opp_win_percentage * 100) | round(1) if result.opp_opp_win_percentage else 0 }}% OPOWR%</p>
+                </div>
+                <p class="medium4 italic tournament-type">{{ tournament.format }}</p>
+                <p class="medium4">{{ tournament.title }}</p>
+              </div>
+            {% endfor %}
+            </div>
+          {% else %}
+            <p class="medium4 italic">No recent tournaments found.</p>
+          {% endif %}
+        </div>
+        {% endif %}
+        
+        {% if current_user.show_best_three %}
+        <div class="statcard-wrapper" data-section="top3">
+
+            <!-- Highest Win Count -->
+            {% for game_type, entries in grouped_results.items() %}
+            <div class="top3-section" data-type="wins" data-game-type="{{ game_type }}">
+              <div class="top3-header">
+                <span class="top3-title">TOP 3 TOURNAMENTS: HIGHEST WIN COUNT</span>
+                <span class="top3-game">{{ game_type }}</span>
+              </div>
+              <div class="statcard-container">
+                {% for result, tournament in entries[:3] %}
+                  <div class="statcard">
+                    <div class="statcard-top-row">
+                      <p class="subheadline">
+                        {% if loop.index == 1 %}1st{% elif loop.index == 2 %}2nd{% elif loop.index == 3 %}3rd{% else %}{{ loop.index }}th{% endif %}
+                      </p>
+                      <p class="title2 purple-text">{{ result.wins }} WINS</p>
+                    </div>
+                    <div class="statcard-middle-row">
+                      <p class="medium5">
+                        {{ (result.wins / (result.wins + result.losses) * 100) | round(1) if (result.wins + result.losses) > 0 else 0 }}% WR
+                      </p>
+                      <p class="medium5">{{ (result.opponent_win_percentage * 100) | round(1) if result.opponent_win_percentage else 0 }}% OPWR%</p>
+                      <p class="medium5">{{ (result.opp_opp_win_percentage * 100) | round(1) if result.opp_opp_win_percentage else 0 }}% OPOWR%</p>
+                    </div>
+                    <p class="medium4 italic tournament-type">{{ tournament.format }}</p>
+                    <p class="medium4">{{ tournament.title }}</p>
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+            {% else %}
+              <p class="medium4 italic">No tournaments found.</p>
+            {% endfor %} 
+
+            <!-- Highest Win Rate -->
+            {% for game_type, entries in grouped_by_winrate.items() %}
+            <div class="top3-section" data-type="winrate" data-game-type="{{ game_type }}" style="display: none;">
+              <div class="top3-header">
+                <span class="top3-title">TOP 3 TOURNAMENTS: HIGHEST WIN RATE</span>
+                <span class="top3-game">{{ game_type }}</span>
+              </div>
+              <div class="statcard-container">
+              {% for result, tournament in entries[:3] %}
+                <div class="statcard">
+                  <div class="statcard-top-row">
+                    <p class="subheadline">
+                      {% if loop.index == 1 %}1st{% elif loop.index == 2 %}2nd{% elif loop.index == 3 %}3rd{% else %}{{ loop.index }}th{% endif %}
+                    </p>
+                    <p class="title2 purple-text">
+                      {{ (result.wins / (result.wins + result.losses) * 100) | round(1) if (result.wins + result.losses) > 0 else 0 }}% WR
+                    </p>
+                  </div>
+                  <div class="statcard-middle-row">
+                    <p class="medium5">{{ result.wins }} Wins</p>
+                    <p class="medium5">{{ (result.opponent_win_percentage * 100) | round(1) if result.opponent_win_percentage else 0 }}% OPWR%</p>
+                    <p class="medium5">{{ (result.opp_opp_win_percentage * 100) | round(1) if result.opp_opp_win_percentage else 0 }}% OPOWR%</p>
+                  </div>
+                  <p class="medium4 italic tournament-type">{{ tournament.format }}</p>
+                  <p class="medium4">{{ tournament.title }}</p>
+                </div>
+              {% endfor %}
+              </div>
+            </div>
+            {% endfor %} 
+
+        </div>
+        {% endif %}
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Div for Logout -->
     <div class="navbar-logout-container">
         {% if current_user.is_authenticated %}
             <a class="navbar-logout medium4" href="{{ url_for('logout') }}">Logout</a>
         {% endif %}
-    </div>
-    <!-- Page content goes here -->
-    <p class="medium4" style="padding-top: 100rem;">Test navbar fixed positioning</p>
+  </div>
 </div>
 {% endblock %}
+
+
+
+
+
+
+
+
+
+
+
+

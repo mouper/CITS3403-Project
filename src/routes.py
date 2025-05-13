@@ -7,8 +7,11 @@ from flask_mail import Message
 from app import application, mail
 from models import Friend, User, UserStat, Tournament, TournamentPlayer, TournamentResult, Match, Round, Friend, Invite
 from db import db  # Use the centralized db object from db.py
+from sqlalchemy import func
 import json, io
 import re
+import os
+from werkzeug.utils import secure_filename
 
 @application.route('/')
 def landing():
@@ -143,7 +146,7 @@ def analytics():
         standings = []
         for player, result, user in rows:
             if user:
-                display_name = user.display_name
+                display_name = getattr(user, 'display_name', None) or user.username
             else:
                 first = player.guest_firstname or ""
                 last_initial = player.guest_lastname[0] if player.guest_lastname else ""
@@ -196,7 +199,155 @@ def view_requests():
 @application.route('/account')
 @login_required
 def account():
-    return render_template("account.html", title="My Account")
+    from sqlalchemy.orm import aliased
+    from collections import defaultdict
+    TP = aliased(TournamentPlayer)
+    # ✅ 获取当前用户参与的比赛
+    all_results = (
+        db.session.query(TournamentResult, Tournament)
+        .join(Tournament, TournamentResult.tournament_id == Tournament.id)
+        .join(TP, TournamentResult.player_id == TP.id)
+        .filter(TP.user_id == current_user.id)
+        .all()
+    )
+    # ✅ 分组：wins
+    grouped_results = defaultdict(list)
+    for result, tournament in all_results:
+        grouped_results[tournament.game_type].append((result, tournament))
+    for game_type in grouped_results:
+        grouped_results[game_type].sort(key=lambda x: x[0].wins, reverse=True)
+    # ✅ 最近 3 场
+    last_3_results = sorted(all_results, key=lambda x: x[1].created_at, reverse=True)[:3]
+    # ✅ 胜率排序
+    grouped_by_winrate = {}
+    for game_type, entries in grouped_results.items():
+        sorted_entries = sorted(
+            entries,
+            key=lambda x: (x[0].wins / (x[0].wins + x[0].losses)) if (x[0].wins + x[0].losses) > 0 else 0,
+            reverse=True
+        )
+        grouped_by_winrate[game_type] = sorted_entries
+
+    # ✅ 总胜率
+    total_stats = (
+        db.session.query(
+            func.sum(TournamentResult.wins),
+            func.sum(TournamentResult.losses)
+        )
+        .join(TP, TournamentResult.player_id == TP.id)
+        .filter(TP.user_id == current_user.id)
+        .first()
+    )
+    total_wins = total_stats[0] or 0
+    total_losses = total_stats[1] or 0
+    total_games = total_wins + total_losses
+    total_winrate = round(total_wins / total_games * 100, 1) if total_games > 0 else 0.0
+    # ✅ Admin 专属：获取自己主办的比赛及每场前三名
+    hosted_tournaments = (
+        db.session.query(Tournament)
+        .filter_by(created_by=current_user.id)
+        .order_by(Tournament.created_at.desc())
+        .all()
+    )
+    # ✅ Admin 卡片展示：top3 玩家
+    hosted_rankings_by_game = defaultdict(list)
+    for tournament in hosted_tournaments:
+        results = (
+            db.session.query(TournamentResult, TournamentPlayer, User)
+            .join(TournamentPlayer, TournamentResult.player_id == TournamentPlayer.id)
+            .join(User, TournamentPlayer.user_id == User.id)
+            .filter(TournamentResult.tournament_id == tournament.id)
+            .all()
+        )
+        def rank_score(res):
+            total = res.wins + res.losses
+            return res.wins / total if total > 0 else 0
+        top3 = sorted(results, key=lambda r: rank_score(r[0]), reverse=True)[:3]
+        hosted_rankings_by_game[tournament.game_type].append({
+            "tournament": tournament,
+            "top3": top3
+        })
+    # ✅ Admin 卡片展示：所有主办比赛（用于筛选）
+    hosted_by_game = defaultdict(list)
+    for t in hosted_tournaments:
+        hosted_by_game[t.game_type].append(t)
+    hosted_game_types = list(hosted_by_game.keys())
+
+    # ✅ recent_tournaments for admincards（直接复用 analytics 的逻辑）
+    recent_tournaments = []
+    base_q = (
+        db.session.query(Tournament)
+        .filter_by(created_by=current_user.id)
+        .order_by(Tournament.created_at.desc())
+    )
+    recent = base_q.limit(6).all()  # 可以固定 6，也可以用 request.args.get('limit')
+
+    for tourney in recent:
+        rows = (
+            db.session.query(TournamentPlayer, TournamentResult, User)
+            .join(TournamentResult, TournamentResult.player_id == TournamentPlayer.id)
+            .outerjoin(User, TournamentPlayer.user_id == User.id)
+            .filter(TournamentPlayer.tournament_id == tourney.id)
+            .all()
+        )
+
+        standings = []
+        for player, result, user in rows:
+            if user:
+                display_name = getattr(user, 'display_name', None) or user.username
+            else:
+                first = player.guest_firstname or ""
+                last_initial = player.guest_lastname[0] if player.guest_lastname else ""
+                display_name = f"{first} {last_initial}".strip() or "Unknown"
+
+            standings.append({
+                'username': display_name,
+                'wins': result.wins,
+                'losses': result.losses,
+                'owp': round(result.opponent_win_percentage * 100, 2),
+                'opp_owp': round(result.opp_opp_win_percentage * 100, 2)
+            })
+
+        if len(standings) < 3:
+            continue
+
+        standings.sort(key=lambda p: (p['wins'], p['opp_owp']), reverse=True)
+
+        recent_tournaments.append({
+            'id': tourney.id,
+            'title': tourney.title,
+            'standings': standings
+        })
+
+    # ✅ 用户统计
+    user_stats = db.session.query(UserStat).filter_by(user_id=current_user.id).all()
+    return render_template(
+        "account.html",
+        title="My Account",
+        results=all_results,
+        grouped_results=grouped_results,
+        grouped_by_winrate=grouped_by_winrate,
+        user_stats=user_stats,
+        total_winrate=total_winrate,
+        game_types=list(grouped_results.keys()),
+        last_3_results=last_3_results,
+        hosted_rankings_by_game=hosted_rankings_by_game,
+        hosted_game_types=hosted_game_types,
+        hosted_by_game=hosted_by_game,  # ✅ 新增变量，供 admin-hosted-section 使用
+        recent_tournaments=recent_tournaments
+    )
+
+@application.route('/account/save_display_settings', methods=['POST'])
+@login_required
+def save_display_settings():
+    data = request.json
+    current_user.show_win_rate = data.get('show_win_rate', False)
+    current_user.show_total_wins_played = data.get('show_total_wins_played', False)
+    current_user.show_last_three = data.get('show_last_three', False)
+    current_user.show_best_three = data.get('show_best_three', False)
+    current_user.show_admin = data.get('show_admin', False)
+    db.session.commit()
+    return jsonify(success=True)
 
 
 @application.route('/new_tournament')
@@ -246,7 +397,7 @@ def save_tournament():
         return jsonify({
             'success': False,
             'message': f"Error saving tournament: {str(e)}"
-        }), 500
+        }), 
 
 @application.route('/start_tournament', methods=['POST'])
 @login_required
@@ -1382,98 +1533,6 @@ def create_match(tournament_id, round_number, player1_id, player2_id=None, is_by
     db.session.add(new_match)
     return new_match
 
-@application.route('/upload_tournament_data', methods=['POST'])
-@login_required
-def upload_tournament_data():
-    uploaded_file = request.files.get('file')
-    if not uploaded_file or not uploaded_file.filename.endswith('.json'):
-        flash("Please upload a valid .json file.", "error")
-        return redirect(url_for('dashboard'))
-
-    try:
-        data = json.load(uploaded_file)
-        print("Parsed tournament data:", data)
-
-        # Validate required fields
-        required_keys = ["user_id", "tournament_id", "game_type", "games_won", "games_lost"]
-        missing_keys = [key for key in required_keys if key not in data]
-
-        if missing_keys:
-            flash(f"Missing field(s) in upload: {', '.join(missing_keys)}", "error")
-            return redirect(url_for('dashboard'))
-
-        user_id = data["user_id"]
-        tournament_id = data["tournament_id"]
-        game_type = data["game_type"]
-        games_won = data["games_won"]
-        games_lost = data["games_lost"]
-        opponent_win_percentage = data.get("opponent_win_percentage")
-        opp_opp_win_percentage = data.get("opp_opp_win_percentage")
-
-        # Calculate games_played
-        games_played = games_won + games_lost
-
-        # -------- Update UserStat --------
-        stat = db.session.query(UserStat).filter_by(user_id=user_id, game_type=game_type).first()
-
-        if stat:
-            stat.games_played += games_played
-            stat.games_won += games_won
-            stat.games_lost += games_lost
-            stat.win_percentage = round((stat.games_won / stat.games_played) * 100, 2) if stat.games_played > 0 else 0.0
-        else:
-            new_stat = UserStat(
-                user_id       = current_user.id,
-                game_type     = game_type,
-                games_played  = games_played,
-                games_won     = games_won,
-                games_lost    = games_lost,
-                win_percentage= win_percentage
-            )
-            db.session.add(new_stat)
-
-        # -------- Add TournamentResult --------
-        tournament_player = db.session.query(TournamentPlayer).filter_by(
-            tournament_id=tournament_id,
-            user_id=user_id
-        ).first()
-
-        if not tournament_player:
-            flash("Error: User is not a participant in the given tournament.", "error")
-            return redirect(url_for('dashboard'))
-
-        # Prevent duplicate tournament results
-        existing_result = db.session.query(TournamentResult).filter_by(
-            tournament_id=tournament_id,
-            player_id=tournament_player.id
-        ).first()
-
-        if existing_result:
-            flash("Tournament result already uploaded for this user.", "error")
-            return redirect(url_for('dashboard'))
-
-        # Safe to add new result
-        new_result = TournamentResult(
-            tournament_id=tournament_id,
-            player_id=tournament_player.id,
-            game_type=game_type,
-            wins=games_won,
-            losses=games_lost,
-            opponent_win_percentage=opponent_win_percentage,
-            opp_opp_win_percentage=opp_opp_win_percentage
-        )
-        db.session.add(new_result)
-
-        db.session.commit()
-        flash("Tournament data uploaded successfully!", "success")
-
-    except Exception as e:
-        db.session.rollback()
-        print("Error processing file:", e)
-        flash("Failed to process the uploaded file.", "error")
-
-    return redirect(url_for('dashboard'))
-
 @application.route('/search_players')
 def search_players():
     query = request.args.get('query', '')
@@ -1582,3 +1641,45 @@ def edit_friend_request(request_id):
     fr.status = 'pending'
     db.session.commit()
     return redirect(url_for('view_requests'))
+UPLOAD_FOLDER = os.path.join("static", "uploads", "avatars")
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+@application.route('/upload_avatar', methods=['POST'])
+@login_required
+def upload_avatar():
+    file = request.files.get('avatar')
+    if file and file.filename != '':
+        filename = secure_filename(file.filename)
+        ext = filename.rsplit('.', 1)[-1].lower()
+        if ext in ALLOWED_EXTENSIONS:
+            avatar_filename = f"user_{current_user.id}.{ext}"
+            file_path = os.path.join(UPLOAD_FOLDER, avatar_filename)
+            file.save(file_path)
+            current_user.avatar_path = f"uploads/avatars/{avatar_filename}"
+            db.session.commit()
+            flash("Avatar updated successfully!", "success")
+        else:
+            flash("Invalid file type. Please upload an image.", "error")
+    else:
+        flash("No file selected.", "error")
+    return redirect(url_for('account'))
+
+@application.route('/update_profile', methods=['POST'])
+@login_required
+def update_profile():
+    email = request.form.get('email')
+    first_name = request.form.get('first_name')
+    last_name = request.form.get('last_name')
+
+    if email:
+        current_user.email = email
+    if first_name:
+        current_user.first_name = first_name
+    if last_name:
+        current_user.last_name = last_name
+
+    db.session.commit()
+    flash("Profile updated successfully!", "success")
+    return redirect(url_for('account'))
+
+
