@@ -49,33 +49,25 @@ def logout():
 def signup():
     if current_user.is_authenticated:
         return redirect(url_for('dashboard'))
-
     if request.method == 'POST':
         first_name = request.form.get('first_name')
         last_name = request.form.get('last_name')
         username = request.form.get('username')
         password = request.form.get('password')
         email = request.form.get('email')
-
         errors = []
-
         if db.session.query(User).filter_by(username=username).first():
             errors.append("Username already exists.")
-
         if db.session.query(User).filter_by(email=email).first():
             errors.append("Email already in use.")
-
         if not password or password.strip() == "":
             errors.append("Password cannot be empty.")
-
         if not first_name or not last_name:
             errors.append("First and last name are required.")
-
         if errors:
             for error in errors:
                 flash(error, 'error')
             return redirect(url_for('signup'))
-
         user = User(
             username=username,
             email=email,
@@ -85,6 +77,48 @@ def signup():
         user.set_password(password)
         db.session.add(user)
         db.session.commit()
+
+        # Re-fetch user to ensure ID is available after commit
+        user = db.session.query(User).filter_by(email=email).first()
+
+        # Find guest tournament entries with the same email
+        guest_players = db.session.query(TournamentPlayer).filter_by(email=email, user_id=None).all()
+
+        if guest_players:
+            flash(f'We found {len(guest_players)} past result(s) linked to this email. Adding them to your account now.', 'success')
+
+            for guest in guest_players:
+                guest.user_id = user.id  # Link guest player record to new user
+                guest.email = None      # Optional: clear guest email since it's now linked
+                db.session.add(guest)
+
+                # Fetch corresponding tournament result if exists
+                result = db.session.query(TournamentResult).filter_by(player_id=guest.id).first()
+                if result:
+                    # Look for existing user stat or create one
+                    user_stat = db.session.query(UserStat).filter_by(user_id=user.id, game_type=result.game_type).first()
+                    if not user_stat:
+                        user_stat = UserStat(
+                            user_id=user.id,
+                            game_type=result.game_type,
+                            games_played=0,
+                            games_won=0,
+                            games_lost=0,
+                            win_percentage=0.0
+                        )
+                        db.session.add(user_stat)
+
+                    # Update the user's stats
+                    user_stat.games_played += result.wins + result.losses
+                    user_stat.games_won += result.wins
+                    user_stat.games_lost += result.losses
+                    if user_stat.games_played > 0:
+                        user_stat.win_percentage = user_stat.games_won / user_stat.games_played
+
+            db.session.commit()
+            flash('Past results have been successfully added to your account.', 'success')
+        else:
+            flash('No past results found for this email.', 'info')
 
         flash('Account created! Please login.', 'success')
         return redirect(url_for('login', fresh=1))
@@ -1028,32 +1062,6 @@ def send_results_to_players(tournament_id):
         msg = Message(subject=f"Tournament Results: {tournament.title}",
                       recipients=[player.email])
         msg.html = html_body
-
-        # Guest attachment
-        if not player.user_id:
-            player_matches = Match.query.join(Round, Match.round_id == Round.id).filter(
-                ((Match.player1_id == player.id) | (Match.player2_id == player.id)) &
-                (Round.tournament_id == tournament.id)
-            ).all()
-
-            wins = sum(1 for m in player_matches if m.winner_id == player.id)
-            losses = sum(1 for m in player_matches if m.winner_id and m.winner_id != player.id)
-
-            result = {
-                "user_id": None,
-                "tournament_id": tournament_id,
-                "game_type": tournament.game_type,
-                "games_won": wins,
-                "games_lost": losses,
-                "opponent_win_percentage": None,
-                "opp_opp_win_percentage": None
-            }
-
-            buffer = io.BytesIO()
-            buffer.write(json.dumps(result).encode('utf-8'))
-            buffer.seek(0)
-            msg.attach(f"tournament_{tournament_id}_results.json", "application/json", buffer.read())
-
         mail.send(msg)
 
     flash("Results sent to all players!", "success")
@@ -1106,6 +1114,13 @@ def compute_rankings(tournament_id, format):
     standings = []
 
     for player_id, stats in player_stats.items():
+        record = {
+            'wins': stats['wins'],
+            'losses': stats['losses'],
+            'owp': 0.0,
+            'oowp': 0.0
+        }
+        
         opponents = stats["opponents"]
         opp_wp_list = []
 
@@ -1122,11 +1137,9 @@ def compute_rankings(tournament_id, format):
                     
                     opp_wp_list.append(opp_win_pct)
             
-            # Calculate average opponent win percentage
-            if opp_wp_list:
-                record['owp'] = sum(opp_wp_list) / len(opp_wp_list)
-            else:
-                record['owp'] = 0.0
+        # Calculate average opponent win percentage
+        if opp_wp_list:
+            record['owp'] = sum(opp_wp_list) / len(opp_wp_list)
         
         # Calculate OOWP: Average OWP of the player's opponents
         oowp_list = []
@@ -1136,11 +1149,9 @@ def compute_rankings(tournament_id, format):
                 if opp_results:
                     oowp_list.append(opp_results.opponent_win_percentage or 0)
             
-            # Calculate opponents' opponent win percentage (OOWP)
-            if oowp_list:
-                record['oowp'] = sum(oowp_list) / len(oowp_list)
-            else:
-                record['oowp'] = 0.0
+        # Calculate opponents' opponent win percentage (OOWP)
+        if oowp_list:
+            record['oowp'] = sum(oowp_list) / len(oowp_list)
         
         # Add player's data to the standings
         p = stats["player"]
@@ -1154,8 +1165,8 @@ def compute_rankings(tournament_id, format):
 
         standings.append({
             "name": player_name,
-            "wins": stats["wins"],
-            "losses": stats["losses"],
+            "wins": record['wins'],
+            "losses": record['losses'],
             "owp": round(record['owp'], 3),
             "oowp": round(record['oowp'], 3)
         })
@@ -1935,6 +1946,90 @@ def update_profile():
     db.session.commit()
     flash("Profile updated successfully!", "success")
     return redirect(url_for('account'))
+
+@application.route('/tournament/<int:tournament_id>/send_pairings', methods=['POST'])
+@login_required
+def send_round_pairings(tournament_id):
+    tournament = Tournament.query.get_or_404(tournament_id)
+    
+    # Get current round
+    current_round = Round.query.filter_by(
+        tournament_id=tournament_id, 
+        status='in progress'
+    ).first()
+    
+    if not current_round:
+        current_round = Round.query.filter_by(
+            tournament_id=tournament_id,
+            status='not started'
+        ).order_by(Round.round_number).first()
+    
+    if not current_round:
+        flash("No active round found.", "error")
+        return redirect(url_for('view_tournament', tournament_id=tournament_id))
+    
+    # Get all players and their matches
+    players = TournamentPlayer.query.filter_by(tournament_id=tournament_id).all()
+    matches = Match.query.filter_by(round_id=current_round.id).all()
+    
+    # Create players dict for template
+    players_dict = {p.id: p for p in players}
+    
+    # Get user info for registered players
+    player_users = {}
+    for player in players:
+        if player.user_id:
+            user = User.query.get(player.user_id)
+            if user:
+                player_users[player.id] = user
+    
+    # Get player stats
+    player_stats = {}
+    tournament_results = TournamentResult.query.filter_by(tournament_id=tournament_id).all()
+    for result in tournament_results:
+        player_stats[result.player_id] = {
+            'wins': result.wins,
+            'losses': result.losses
+        }
+    
+    # Track if any emails were sent
+    emails_sent = 0
+    
+    # Send email to each player
+    for player in players:
+        if not player.email:
+            continue
+            
+        html_body = render_template(
+            "components/round_pairings_email.html",
+            tournament=tournament,
+            current_round=current_round,
+            matches=matches,
+            players=players_dict,
+            player_users=player_users,
+            player_stats=player_stats
+        )
+        
+        try:
+            msg = Message(
+                subject=f"Round {current_round.round_number} Pairings - {tournament.title}",
+                recipients=[player.email],
+                html=html_body
+            )
+            mail.send(msg)
+            emails_sent += 1
+        except Exception as e:
+            print(f"Error sending email to {player.email}: {str(e)}")
+            continue
+    
+    if emails_sent > 0:
+        flash(f"Round pairings sent to players!", "success")
+    else:
+        flash("No emails were sent. Please check that players have valid email addresses.", "warning")
+    
+    # Preserve the current view state and stay on the tournament page
+    view_state = request.args.get('view_state', 'normal')
+    return redirect(url_for('view_tournament', tournament_id=tournament_id, view_state=view_state))
 
 
 
