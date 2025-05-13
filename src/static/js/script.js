@@ -1927,50 +1927,66 @@ function closeModal() {
 document.addEventListener('DOMContentLoaded', function() {
   const searchInput = document.getElementById('playerSearch');
   const searchResults = document.getElementById('searchResults');
+  const friendDropdownInput = document.getElementById('friendDropdownInput');
   const friendDropdownList = document.getElementById('friendDropdownList');
   const sendInviteBtn = document.getElementById('sendInviteBtn');
   let selectedPlayerId = null;
 
-  // Function to handle search input for accepted friends (filter by username)
+  friendDropdownInput.addEventListener('click', function() {
+    friendDropdownList.style.display = 'block';
+  });
+
+  friendDropdownInput.addEventListener('input', function() {
+    const query = this.value.trim().toLowerCase();
+    
+    const allFriendItems = Array.from(friendDropdownList.querySelectorAll('li'));
+    
+    if (query.length < 1) {
+      allFriendItems.forEach(item => item.style.display = 'block');
+      friendDropdownList.style.display = 'block';
+      return;
+    }
+    
+    let anyVisible = false;
+    allFriendItems.forEach(item => {
+      const friendUsername = item.textContent.toLowerCase();
+      if (friendUsername.includes(query)) {
+        item.style.display = 'block';
+        anyVisible = true;
+      } else {
+        item.style.display = 'none';
+      }
+    });
+    
+    friendDropdownList.style.display = anyVisible ? 'block' : 'none';
+  });
+
+  friendDropdownList.addEventListener('click', function(e) {
+    if (e.target.tagName === 'LI') {
+      friendDropdownInput.value = e.target.textContent;
+      friendDropdownList.style.display = 'none';
+    }
+  });
+
   searchInput.addEventListener('input', function() {
-    const query = this.value.trim().toLowerCase();  // Make query case insensitive
+    const query = this.value.trim().toLowerCase();  
 
     if (query.length < 1) {
       searchResults.style.display = 'none';
-      friendDropdownList.style.display = 'none'; // Hide the friends list when input is empty
       return;
     }
 
-    // Filter the accepted friends list based on the search query
-    const filteredFriends = Array.from(friendDropdownList.children).filter(friendItem => {
-      const friendUsername = friendItem.textContent.toLowerCase(); // Match only by username
-      return friendUsername.includes(query);
-    });
-
-    // Show the filtered friends in the dropdown
-    if (filteredFriends.length > 0) {
-      friendDropdownList.innerHTML = ''; // Clear previous search results
-      filteredFriends.forEach(item => friendDropdownList.appendChild(item)); // Re-add the filtered items
-      friendDropdownList.style.display = 'block'; // Show the dropdown list
-    } else {
-      friendDropdownList.style.display = 'none'; // Hide if no friends match
-    }
-
-    // Make AJAX request for player search if needed
     fetch(`/search_players?query=${encodeURIComponent(query)}`)
       .then(response => response.json())
       .then(data => {
         if (data.players.length > 0) {
-          // Clear previous results
           searchResults.innerHTML = '';
           
-          // Add new results
           data.players.forEach(player => {
             const resultItem = document.createElement('div');
             resultItem.className = 'search-result-item';
             resultItem.innerHTML = `${player.username}`;
             
-            // Select player when clicked
             resultItem.addEventListener('click', function() {
               searchInput.value = player.username;
               selectedPlayerId = player.id;
@@ -1992,15 +2008,15 @@ document.addEventListener('DOMContentLoaded', function() {
       });
   });
 
-  // Close search results and dropdown when clicking outside
   document.addEventListener('click', function(event) {
-    if (!searchInput.contains(event.target) && !searchResults.contains(event.target) && !friendDropdownList.contains(event.target)) {
+    if (!searchInput.contains(event.target) && !searchResults.contains(event.target)) {
       searchResults.style.display = 'none';
+    }
+    if (!friendDropdownInput.contains(event.target) && !friendDropdownList.contains(event.target)) {
       friendDropdownList.style.display = 'none';
     }
   });
 
-  // Handle invite button click
   sendInviteBtn.addEventListener('click', function() {
     if (!selectedPlayerId) {
       alert('Please select a player first');

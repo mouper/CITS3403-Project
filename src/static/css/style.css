@@ -475,17 +475,18 @@ html, body {
 }
   
 .friend-dropdown-list {
-    position: absolute;
-    top: calc(100% + 0.25rem);
-    left: 0;
-    right: 0;
+    width: 100%;
+    max-height: 200px;
+    overflow-x: hidden;
     background: var(--Off-White,  #1a1a1a);
     border: 1px solid #333;
-    border-radius: 0.25rem;
+    border-radius: 0.75rem;
     max-height: 200px;
     overflow-y: auto;
     display: none;
-    z-index: 10;
+    z-index: 1000;
+    list-style-type: none;
+    box-sizing: border-box;
 }
   
 .friend-dropdown-item {
