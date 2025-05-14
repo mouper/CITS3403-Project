@@ -388,6 +388,8 @@ def save_display_settings():
     current_user.show_last_three = data.get('show_last_three', False)
     current_user.show_best_three = data.get('show_best_three', False)
     current_user.show_admin = data.get('show_admin', False)
+    current_user.preferred_game_type = data.get('preferred_game_type', None)
+    current_user.preferred_top3_sorting = data.get('preferred_top3_sorting', 'wins')
     db.session.commit()
     return jsonify(success=True)
 
@@ -2058,8 +2060,22 @@ def user_preview(username):
     grouped_results = defaultdict(list)
     for result, tournament in all_results:
         grouped_results[tournament.game_type].append((result, tournament))
+
+    # ✅ 根据用户偏好进行排序（wins 或 winrate）
     for game_type in grouped_results:
-        grouped_results[game_type].sort(key=lambda x: x[0].wins, reverse=True)
+        if user.preferred_top3_sorting == "winrate":
+            grouped_results[game_type].sort(
+                key=lambda x: (x[0].wins / (x[0].wins + x[0].losses)) if (x[0].wins + x[0].losses) > 0 else 0,
+                reverse=True
+            )
+        else:
+            grouped_results[game_type].sort(key=lambda x: x[0].wins, reverse=True)
+
+    # ✅ 如果用户设置了 preferred_game_type，只保留该类型的结果
+    if user.preferred_game_type and user.preferred_game_type in grouped_results:
+        grouped_results = {
+            user.preferred_game_type: grouped_results[user.preferred_game_type]
+        }
 
     # 最近 3 场卡片
     last_3_results = sorted(all_results, key=lambda x: x[1].created_at, reverse=True)[:3]
@@ -2082,7 +2098,7 @@ def user_preview(username):
     # 获取统计数据
     user_stats = db.session.query(UserStat).filter_by(user_id=user.id).all()
 
-    # 最近主办比赛（Admin 卡片，复用 account 和 analytics 的逻辑）
+    # 最近主办比赛（Admin 卡片）
     recent_tournaments = []
     base_q = (
         db.session.query(Tournament)
@@ -2138,6 +2154,3 @@ def user_preview(username):
         recent_tournaments=recent_tournaments,
         game_types=list(grouped_results.keys())
     )
-
-
-

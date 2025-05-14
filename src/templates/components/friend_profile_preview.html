@@ -58,8 +58,12 @@
       {% for game_type, entries in grouped_results.items() %}
       <div class="top3-section" data-type="wins" data-game-type="{{ game_type }}">
         <div class="top3-header">
-          <span class="top3-title">TOP 3 TOURNAMENTS: HIGHEST WIN COUNT</span>
-          <span class="top3-game">{{ game_type }}</span>
+          {% if friend.preferred_top3_sorting == 'winrate' %}
+            <span class="top3-title">TOP 3 TOURNAMENTS: HIGHEST WIN RATE</span>
+          {% else %}
+            <span class="top3-title">TOP 3 TOURNAMENTS: HIGHEST WIN COUNT</span>
+          {% endif %}
+            <span class="top3-game">{{ game_type }}</span>
         </div>
         <div class="statcard-container">
           {% for result, tournament in entries[:3] %}
