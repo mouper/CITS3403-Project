@@ -85,6 +85,16 @@
           </ul>
         </ul>
       </div>
+      <div class="modal w-full pt-10" id="friendModal" style="display:none;">
+        <div class="modal-content w-full max-w-full">
+          <span class="close-btn justify-items-end" onclick="document.getElementById('friendModal').style.display='none'">
+              <svg class="close-icon" width="21" height="21" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M54 2.00001L2 54M54 54L2 2" stroke="#FAFAFA" stroke-width="2.5" stroke-linecap="round"/>
+              </svg>
+            </span>
+          <div id="friendPreviewContainer"></div>
+        </div>
+      </div>
       <p class="regular3">Add new friends to invite them to your tournaments:</p>
     </div>
 
@@ -99,13 +109,6 @@
           Send Invite
         </button>
       </div>
-    </div>
-  </div>
-
-  <div class="modal" id="friendModal" style="display:none;">
-    <div class="modal-content">
-      <span class="close-btn" onclick="document.getElementById('friendModal').style.display='none'">&times;</span>
-      <div id="friendPreviewContainer"></div>
     </div>
   </div>
 

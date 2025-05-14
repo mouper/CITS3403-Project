@@ -108,22 +108,22 @@ html, body {
     text-decoration: none;
 }
 
-.navbar-logout-container{
+.logout-container{
     display: flex;
     align-items: center;
-    justify-content: end;
+    justify-content: center;
+    padding: 4rem 0 3rem 0;
     width: 100%;
 }
 
 /* temporary navbar logout button */
-.navbar-logout{
+.logout{
     color: var(--off-white) !important;
     text-decoration: none !important;
     cursor: pointer;
 }
 
-.navbar-logout:hover{
-    color: var(--primary-shade1) !important;
+.logout:hover{
     text-decoration: none !important;
 }
 
@@ -451,10 +451,12 @@ html, body {
     padding: 0.75rem 1.5rem;
     color: var(--off-white);
     transition: background-color 0.2s ease;
+    border-radius: 0.75rem;
 }
 
 .friend-list .friend-item:hover {
     background-color: var(--overlay-primary2);
+    overflow: hidden;
 }
 
 /* Keep existing dropdown styles for tournament form */
@@ -921,6 +923,11 @@ html, body {
     position: relative;
     margin: 0;
 
+}
+
+.friend-search-section .modal-content{
+    max-width: 100%;
+    width: 100%;
 }
   
 .modal-header-container {
@@ -1579,14 +1586,6 @@ html, body {
 .game-details {
     display: flex;
     gap: 3rem;
-}
-
-.medium4 {
-    color: var(--Primary-Shade-1, #BBB2FF);
-    font-size: 1rem;
-    font-style: normal;
-    font-weight: 400;
-    line-height: 1.5rem; 
 }
 
 .request-card-container {
