@@ -1,11 +1,11 @@
 import datetime
 import math
 import random
-from flask import render_template, request, redirect, url_for, flash, jsonify, abort
+from flask import render_template, request, redirect, url_for, flash, jsonify, send_from_directory, abort
 from flask_login import login_user, logout_user, current_user, login_required
 from flask_mail import Message
 from app import application, mail
-from models import Friend, User, UserStat, Tournament, TournamentPlayer, TournamentResult, Match, Round, Friend, Invite
+from models import Friend, User, UserStat, Tournament, TournamentPlayer, TournamentResult, Match, Round, Invite
 from db import db  # Use the centralized db object from db.py
 from sqlalchemy import func
 import json, io
@@ -49,33 +49,25 @@ def logout():
 def signup():
     if current_user.is_authenticated:
         return redirect(url_for('dashboard'))
-
     if request.method == 'POST':
         first_name = request.form.get('first_name')
         last_name = request.form.get('last_name')
         username = request.form.get('username')
         password = request.form.get('password')
         email = request.form.get('email')
-
         errors = []
-
         if db.session.query(User).filter_by(username=username).first():
             errors.append("Username already exists.")
-
         if db.session.query(User).filter_by(email=email).first():
             errors.append("Email already in use.")
-
         if not password or password.strip() == "":
             errors.append("Password cannot be empty.")
-
         if not first_name or not last_name:
             errors.append("First and last name are required.")
-
         if errors:
             for error in errors:
                 flash(error, 'error')
             return redirect(url_for('signup'))
-
         user = User(
             username=username,
             email=email,
@@ -86,6 +78,48 @@ def signup():
         db.session.add(user)
         db.session.commit()
 
+        # Re-fetch user to ensure ID is available after commit
+        user = db.session.query(User).filter_by(email=email).first()
+
+        # Find guest tournament entries with the same email
+        guest_players = db.session.query(TournamentPlayer).filter_by(email=email, user_id=None).all()
+
+        if guest_players:
+            flash(f'We found {len(guest_players)} past result(s) linked to this email. Adding them to your account now.', 'success')
+
+            for guest in guest_players:
+                guest.user_id = user.id  # Link guest player record to new user
+                guest.email = None      # Optional: clear guest email since it's now linked
+                db.session.add(guest)
+
+                # Fetch corresponding tournament result if exists
+                result = db.session.query(TournamentResult).filter_by(player_id=guest.id).first()
+                if result:
+                    # Look for existing user stat or create one
+                    user_stat = db.session.query(UserStat).filter_by(user_id=user.id, game_type=result.game_type).first()
+                    if not user_stat:
+                        user_stat = UserStat(
+                            user_id=user.id,
+                            game_type=result.game_type,
+                            games_played=0,
+                            games_won=0,
+                            games_lost=0,
+                            win_percentage=0.0
+                        )
+                        db.session.add(user_stat)
+
+                    # Update the user's stats
+                    user_stat.games_played += result.wins + result.losses
+                    user_stat.games_won += result.wins
+                    user_stat.games_lost += result.losses
+                    if user_stat.games_played > 0:
+                        user_stat.win_percentage = user_stat.games_won / user_stat.games_played
+
+            db.session.commit()
+            flash('Past results have been successfully added to your account.', 'success')
+        else:
+            flash('No past results found for this email.', 'info')
+
         flash('Account created! Please login.', 'success')
         return redirect(url_for('login', fresh=1))
 
@@ -94,11 +128,24 @@ def signup():
 @application.route('/dashboard')
 @login_required
 def dashboard():
-    sent = Friend.query.filter_by(user_id=current_user.id, status='accepted').all()
-    recv = Friend.query.filter_by(friend_id=current_user.id, status='accepted').all()
-    accepted = [f.recipient for f in sent] + [f.sender for f in recv]
-    accepted_usernames = [u.username for u in accepted]
+    my_tournaments = Tournament.query.filter_by(created_by=current_user.id).all()
 
+    sent_accepted = Friend.query.filter_by(user_id=current_user.id, status='accepted').all()
+    recv_accepted = Friend.query.filter_by(friend_id=current_user.id, status='accepted').all()
+
+    sent_friends = [f.recipient for f in sent_accepted]
+    recv_friends = [f.sender for f in recv_accepted]
+    
+    all_friend_ids = set()
+    accepted_friends = []
+    
+    for friend in sent_friends + recv_friends:
+        if friend.id not in all_friend_ids:
+            all_friend_ids.add(friend.id)
+            accepted_friends.append(friend)
+
+    accepted_friend_usernames = [friend.username for friend in accepted_friends]
+    
     status = request.args.get('status', 'in progress')
     N = 5
 
@@ -352,6 +399,8 @@ def save_display_settings():
     current_user.show_last_three = data.get('show_last_three', False)
     current_user.show_best_three = data.get('show_best_three', False)
     current_user.show_admin = data.get('show_admin', False)
+    current_user.preferred_game_type = data.get('preferred_game_type', None)
+    current_user.preferred_top3_sorting = data.get('preferred_top3_sorting', 'wins')
     db.session.commit()
     return jsonify(success=True)
 
@@ -359,6 +408,20 @@ def save_display_settings():
 @application.route('/new_tournament')
 @login_required
 def new_tournament():
+    # Get accepted friends (do this for all cases)
+    sent_accepted = Friend.query.filter_by(user_id=current_user.id, status='accepted').all()
+    recv_accepted = Friend.query.filter_by(friend_id=current_user.id, status='accepted').all()
+
+    accepted_friends = [f.recipient for f in sent_accepted] + [f.sender for f in recv_accepted]
+    accepted_friend_usernames = [friend.username for friend in accepted_friends]
+    
+    # Create list of friend details including names
+    accepted_friend_details = [{
+        'username': friend.username,
+        'first_name': friend.first_name,
+        'last_name': friend.last_name
+    } for friend in accepted_friends]
+
     # Check if we're editing an existing draft tournament
     tournament_id = request.args.get('tournament_id')
     if tournament_id:
@@ -374,36 +437,28 @@ def new_tournament():
                     'has_tourney_pro_account': bool(player.user_id),
                     'guest_firstname': player.guest_firstname,
                     'guest_lastname': player.guest_lastname,
-                    'email': player.email
+                    'email': player.email,
+                    'user_id': player.user_id
                 }
                 if player.user_id:
                     user = User.query.get(player.user_id)
                     if user:
                         player_info['username'] = user.username
-                        player_info['user_id'] = user.id
+                        # If this is the current user and they're a player, mark them as confirmed
+                        if user.id == current_user.id:
+                            player_info['is_confirmed'] = True
                 player_data.append(player_info)
             
             return render_template('new_tournament.html', 
                                 tournament=tournament,
-                                players=player_data)
-        
-    # Get accepted friends
-    sent_accepted = Friend.query.filter_by(user_id=current_user.id, status='accepted').all()
-    recv_accepted = Friend.query.filter_by(friend_id=current_user.id, status='accepted').all()
-
-    accepted_friends = [f.recipient for f in sent_accepted] + [f.sender for f in recv_accepted]
-    accepted_friend_usernames = [friend.username for friend in accepted_friends]
+                                players=player_data,
+                                accepted_friend_usernames=accepted_friend_usernames,
+                                accepted_friend_details=accepted_friend_details)
     
-    # Create list of friend details including names
-    accepted_friend_details = [{
-        'username': friend.username,
-        'first_name': friend.first_name,
-        'last_name': friend.last_name
-    } for friend in accepted_friends]
-
+    # If not editing an existing tournament
     return render_template('new_tournament.html', 
-                         accepted_friend_usernames=accepted_friend_usernames,
-                         accepted_friend_details=accepted_friend_details)
+                        accepted_friend_usernames=accepted_friend_usernames,
+                        accepted_friend_details=accepted_friend_details)
 
 @application.route('/save_tournament', methods=['POST'])
 @login_required
@@ -1026,32 +1081,6 @@ def send_results_to_players(tournament_id):
         msg = Message(subject=f"Tournament Results: {tournament.title}",
                       recipients=[player.email])
         msg.html = html_body
-
-        # Guest attachment
-        if not player.user_id:
-            player_matches = Match.query.join(Round, Match.round_id == Round.id).filter(
-                ((Match.player1_id == player.id) | (Match.player2_id == player.id)) &
-                (Round.tournament_id == tournament.id)
-            ).all()
-
-            wins = sum(1 for m in player_matches if m.winner_id == player.id)
-            losses = sum(1 for m in player_matches if m.winner_id and m.winner_id != player.id)
-
-            result = {
-                "user_id": None,
-                "tournament_id": tournament_id,
-                "game_type": tournament.game_type,
-                "games_won": wins,
-                "games_lost": losses,
-                "opponent_win_percentage": None,
-                "opp_opp_win_percentage": None
-            }
-
-            buffer = io.BytesIO()
-            buffer.write(json.dumps(result).encode('utf-8'))
-            buffer.seek(0)
-            msg.attach(f"tournament_{tournament_id}_results.json", "application/json", buffer.read())
-
         mail.send(msg)
 
     flash("Results sent to all players!", "success")
@@ -1104,6 +1133,13 @@ def compute_rankings(tournament_id, format):
     standings = []
 
     for player_id, stats in player_stats.items():
+        record = {
+            'wins': stats['wins'],
+            'losses': stats['losses'],
+            'owp': 0.0,
+            'oowp': 0.0
+        }
+        
         opponents = stats["opponents"]
         opp_wp_list = []
 
@@ -1120,11 +1156,9 @@ def compute_rankings(tournament_id, format):
                     
                     opp_wp_list.append(opp_win_pct)
             
-            # Calculate average opponent win percentage
-            if opp_wp_list:
-                record['owp'] = sum(opp_wp_list) / len(opp_wp_list)
-            else:
-                record['owp'] = 0.0
+        # Calculate average opponent win percentage
+        if opp_wp_list:
+            record['owp'] = sum(opp_wp_list) / len(opp_wp_list)
         
         # Calculate OOWP: Average OWP of the player's opponents
         oowp_list = []
@@ -1134,11 +1168,9 @@ def compute_rankings(tournament_id, format):
                 if opp_results:
                     oowp_list.append(opp_results.opponent_win_percentage or 0)
             
-            # Calculate opponents' opponent win percentage (OOWP)
-            if oowp_list:
-                record['oowp'] = sum(oowp_list) / len(oowp_list)
-            else:
-                record['oowp'] = 0.0
+        # Calculate opponents' opponent win percentage (OOWP)
+        if oowp_list:
+            record['oowp'] = sum(oowp_list) / len(oowp_list)
         
         # Add player's data to the standings
         p = stats["player"]
@@ -1152,8 +1184,8 @@ def compute_rankings(tournament_id, format):
 
         standings.append({
             "name": player_name,
-            "wins": stats["wins"],
-            "losses": stats["losses"],
+            "wins": record['wins'],
+            "losses": record['losses'],
             "owp": round(record['owp'], 3),
             "oowp": round(record['oowp'], 3)
         })
@@ -1835,7 +1867,7 @@ def send_friend_request():
     ).first()
     if existing:
         return jsonify(success=False,
-                       message="Already requested or you're already friends"), 409
+                       message="You have already sent this player a friend request."), 409
 
     fr = Friend(
         user_id=current_user.id,
@@ -1857,6 +1889,42 @@ def edit_friend_request(request_id):
     fr.status = 'pending'
     db.session.commit()
     return redirect(url_for('view_requests'))
+
+@application.route('/get_friends')
+@login_required
+def get_friends():
+    try:
+        # Get all accepted friends for the current user
+        friends = Friend.query.filter(
+            ((Friend.user_id == current_user.id) | 
+             (Friend.friend_id == current_user.id)) &
+            (Friend.status == 'accepted')
+        ).all()
+        
+        friend_list = []
+        for friend in friends:
+            # Determine which user is the friend (not the current user)
+            friend_id = friend.friend_id if friend.user_id == current_user.id else friend.user_id
+            friend_user = User.query.get(friend_id)
+            if friend_user:
+                friend_list.append({
+                    'id': friend_user.id,
+                    'username': friend_user.username,
+                    'first_name': friend_user.first_name,
+                    'last_name': friend_user.last_name,
+                    'email': friend_user.email
+                })
+        
+        return jsonify({
+            'success': True,
+            'friends': friend_list
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
 UPLOAD_FOLDER = os.path.join("static", "uploads", "avatars")
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -1898,7 +1966,211 @@ def update_profile():
     flash("Profile updated successfully!", "success")
     return redirect(url_for('account'))
 
-@application.route('/tournament/<int:tournament_id>')
+@application.route('/tournament/<int:tournament_id>/send_pairings', methods=['POST'])
+@login_required
+def send_round_pairings(tournament_id):
+    tournament = Tournament.query.get_or_404(tournament_id)
+    
+    # Get current round
+    current_round = Round.query.filter_by(
+        tournament_id=tournament_id, 
+        status='in progress'
+    ).first()
+    
+    if not current_round:
+        current_round = Round.query.filter_by(
+            tournament_id=tournament_id,
+            status='not started'
+        ).order_by(Round.round_number).first()
+    
+    if not current_round:
+        flash("No active round found.", "error")
+        return redirect(url_for('view_tournament', tournament_id=tournament_id))
+    
+    # Get all players and their matches
+    players = TournamentPlayer.query.filter_by(tournament_id=tournament_id).all()
+    matches = Match.query.filter_by(round_id=current_round.id).all()
+    
+    # Create players dict for template
+    players_dict = {p.id: p for p in players}
+    
+    # Get user info for registered players
+    player_users = {}
+    for player in players:
+        if player.user_id:
+            user = User.query.get(player.user_id)
+            if user:
+                player_users[player.id] = user
+    
+    # Get player stats
+    player_stats = {}
+    tournament_results = TournamentResult.query.filter_by(tournament_id=tournament_id).all()
+    for result in tournament_results:
+        player_stats[result.player_id] = {
+            'wins': result.wins,
+            'losses': result.losses
+        }
+    
+    # Track if any emails were sent
+    emails_sent = 0
+    
+    # Send email to each player
+    for player in players:
+        if not player.email:
+            continue
+            
+        html_body = render_template(
+            "components/round_pairings_email.html",
+            tournament=tournament,
+            current_round=current_round,
+            matches=matches,
+            players=players_dict,
+            player_users=player_users,
+            player_stats=player_stats
+        )
+        
+        try:
+            msg = Message(
+                subject=f"Round {current_round.round_number} Pairings - {tournament.title}",
+                recipients=[player.email],
+                html=html_body
+            )
+            mail.send(msg)
+            emails_sent += 1
+        except Exception as e:
+            print(f"Error sending email to {player.email}: {str(e)}")
+            continue
+    
+    if emails_sent > 0:
+        flash(f"Round pairings sent to players!", "success")
+    else:
+        flash("No emails were sent. Please check that players have valid email addresses.", "warning")
+    
+    # Preserve the current view state and stay on the tournament page
+    view_state = request.args.get('view_state', 'normal')
+    return redirect(url_for('view_tournament', tournament_id=tournament_id, view_state=view_state))
+
+
+
+
+@application.route('/user_preview/<username>')
+@login_required
+def user_preview(username):
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        return "User not found", 404
+
+    from sqlalchemy.orm import aliased
+    from collections import defaultdict
+    TP = aliased(TournamentPlayer)
+
+    # 获取该用户参与的比赛数据
+    all_results = (
+        db.session.query(TournamentResult, Tournament)
+        .join(Tournament, TournamentResult.tournament_id == Tournament.id)
+        .join(TP, TournamentResult.player_id == TP.id)
+        .filter(TP.user_id == user.id)
+        .all()
+    )
+
+    # 分组：Top 3 卡片
+    grouped_results = defaultdict(list)
+    for result, tournament in all_results:
+        grouped_results[tournament.game_type].append((result, tournament))
+
+    # ✅ 根据用户偏好进行排序（wins 或 winrate）
+    for game_type in grouped_results:
+        if user.preferred_top3_sorting == "winrate":
+            grouped_results[game_type].sort(
+                key=lambda x: (x[0].wins / (x[0].wins + x[0].losses)) if (x[0].wins + x[0].losses) > 0 else 0,
+                reverse=True
+            )
+        else:
+            grouped_results[game_type].sort(key=lambda x: x[0].wins, reverse=True)
+
+    # ✅ 如果用户设置了 preferred_game_type，只保留该类型的结果
+    if user.preferred_game_type and user.preferred_game_type in grouped_results:
+        grouped_results = {
+            user.preferred_game_type: grouped_results[user.preferred_game_type]
+        }
+
+    # 最近 3 场卡片
+    last_3_results = sorted(all_results, key=lambda x: x[1].created_at, reverse=True)[:3]
+
+    # 计算胜率
+    total_stats = (
+        db.session.query(
+            func.sum(TournamentResult.wins),
+            func.sum(TournamentResult.losses)
+        )
+        .join(TP, TournamentResult.player_id == TP.id)
+        .filter(TP.user_id == user.id)
+        .first()
+    )
+    total_wins = total_stats[0] or 0
+    total_losses = total_stats[1] or 0
+    total_games = total_wins + total_losses
+    total_winrate = round(total_wins / total_games * 100, 1) if total_games > 0 else 0.0
+
+    # 获取统计数据
+    user_stats = db.session.query(UserStat).filter_by(user_id=user.id).all()
+
+    # 最近主办比赛（Admin 卡片）
+    recent_tournaments = []
+    base_q = (
+        db.session.query(Tournament)
+        .filter_by(created_by=user.id)
+        .order_by(Tournament.created_at.desc())
+    )
+    recent = base_q.limit(6).all()
+
+    for tourney in recent:
+        rows = (
+            db.session.query(TournamentPlayer, TournamentResult, User)
+            .join(TournamentResult, TournamentResult.player_id == TournamentPlayer.id)
+            .outerjoin(User, TournamentPlayer.user_id == User.id)
+            .filter(TournamentPlayer.tournament_id == tourney.id)
+            .all()
+        )
+
+        standings = []
+        for player, result, u in rows:
+            if u:
+                display_name = u.username
+            else:
+                first = player.guest_firstname or ""
+                last_initial = player.guest_lastname[0] if player.guest_lastname else ""
+                display_name = f"{first} {last_initial}".strip() or "Unknown"
+
+            standings.append({
+                'username': display_name,
+                'wins': result.wins,
+                'losses': result.losses,
+                'owp': round(result.opponent_win_percentage * 100, 2),
+                'opp_owp': round(result.opp_opp_win_percentage * 100, 2)
+            })
+
+        if len(standings) < 3:
+            continue
+
+        standings.sort(key=lambda p: (p['wins'], p['opp_owp']), reverse=True)
+
+        recent_tournaments.append({
+            'id': tourney.id,
+            'title': tourney.title,
+            'standings': standings
+        })
+
+    return render_template(
+        "components/friend_profile_preview.html",
+        friend=user,
+        total_winrate=total_winrate,
+        user_stats=user_stats,
+        grouped_results=grouped_results,
+        last_3_results=last_3_results,
+        recent_tournaments=recent_tournaments,
+        game_types=list(grouped_results.keys())
+    )@application.route('/tournament/<int:tournament_id>')
 @login_required
 def tournament_detail(tournament_id):
     tournament = Tournament.query.get_or_404(tournament_id)

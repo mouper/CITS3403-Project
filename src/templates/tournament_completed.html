@@ -48,7 +48,7 @@
                     </div>
                     <div class="champion-name">{{ ranked_players[0].name }}</div>
                     <div class="champion-title">Tournament Champion</div>
-                    <div class="champion-record">Final Record: {{ ranked_players[0].wins }}-{{ ranked_players[0].losses }}</div>
+                    <div class="champion-record">Final Record (W/L): {{ ranked_players[0].wins }}/{{ ranked_players[0].losses }}</div>
                 </div>
                 {% endif %}
             </div>
@@ -68,7 +68,7 @@
                                 <tr>
                                     <th>Rank</th>
                                     <th>Player</th>
-                                    <th>Final Record</th>
+                                    <th>W/L</th>
                                     {% if tournament.format == 'swiss' %}
                                         <th>OWP</th>
                                         <th>OOWP</th>
@@ -80,7 +80,7 @@
                                 <tr {% if player_result.rank == 1 %}class="champion-row"{% endif %}>
                                     <td>{{ player_result.rank }}</td>
                                     <td>{{ player_result.name }}</td>
-                                    <td>{{ player_result.wins }}-{{ player_result.losses }}</td>
+                                    <td>{{ player_result.wins }}/{{ player_result.losses }}</td>
                                     {% if tournament.format == 'swiss' %}
                                         <td>{{ "%.1f"|format(player_result.owp * 100) }}%</td>
                                         <td>{{ "%.1f"|format(player_result.oowp * 100) }}%</td>

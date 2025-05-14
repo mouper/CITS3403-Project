@@ -37,7 +37,9 @@ def add_users():
             "show_total_wins_played": True,
             "show_last_three": False,
             "show_best_three": True,
-            "show_admin": False
+            "show_admin": False,
+            "preferred_game_type": "Chess",
+            "preferred_top3_sorting": "winrate"
         },
         {
             "username": "SamTheGamer",
@@ -49,7 +51,9 @@ def add_users():
             "show_total_wins_played": True,
             "show_last_three": True,
             "show_best_three": False,
-            "show_admin": False
+            "show_admin": False,
+            "preferred_game_type": "Pokémon TCG",
+            "preferred_top3_sorting": "wins"
         },
         {
             "username": "ChrisL",
@@ -61,7 +65,9 @@ def add_users():
             "show_total_wins_played": True,
             "show_last_three": True,
             "show_best_three": True,
-            "show_admin": False
+            "show_admin": False,
+            "preferred_game_type": "Magic: The Gathering",
+            "preferred_top3_sorting": "winrate"
         },
         {
             "username": "TayB",
@@ -73,7 +79,9 @@ def add_users():
             "show_total_wins_played": False,
             "show_last_three": False,
             "show_best_three": False,
-            "show_admin": False
+            "show_admin": False,
+            "preferred_game_type": "Checkers",
+            "preferred_top3_sorting": "wins"
         },
         {
             "username": "JD",
@@ -85,7 +93,9 @@ def add_users():
             "show_total_wins_played": True,
             "show_last_three": True,
             "show_best_three": True,
-            "show_admin": False
+            "show_admin": False,
+            "preferred_game_type": "YuGiOh",
+            "preferred_top3_sorting": "winrate"
         },
         {
             "username": "MorganW",
@@ -97,7 +107,9 @@ def add_users():
             "show_total_wins_played": False,
             "show_last_three": True,
             "show_best_three": True,
-            "show_admin": False
+            "show_admin": False,
+            "preferred_game_type": "Chess",
+            "preferred_top3_sorting": "wins"
         },
         {
             "username": "CM",
@@ -109,7 +121,9 @@ def add_users():
             "show_total_wins_played": False,
             "show_last_three": False,
             "show_best_three": True,
-            "show_admin": False
+            "show_admin": False,
+            "preferred_game_type": "Pokémon TCG",
+            "preferred_top3_sorting": "winrate"
         },
         {
             "username": "RileyG",
@@ -121,7 +135,9 @@ def add_users():
             "show_total_wins_played": True,
             "show_last_three": True,
             "show_best_three": False,
-            "show_admin": False
+            "show_admin": False,
+            "preferred_game_type": "Magic: The Gathering",
+            "preferred_top3_sorting": "wins"
         },
         {
             "username": "EventMaster",
@@ -133,7 +149,9 @@ def add_users():
             "show_total_wins_played": False,
             "show_last_three": False,
             "show_best_three": False,
-            "show_admin": True
+            "show_admin": True,
+            "preferred_game_type": "Checkers",
+            "preferred_top3_sorting": "winrate"
         },
         {
             "username": "TourneyQ",
@@ -145,7 +163,9 @@ def add_users():
             "show_total_wins_played": False,
             "show_last_three": False,
             "show_best_three": False,
-            "show_admin": True
+            "show_admin": True,
+            "preferred_game_type": "YuGiOh",
+            "preferred_top3_sorting": "wins"
         }
     ]
 
@@ -160,7 +180,9 @@ def add_users():
             show_last_three=user_info["show_last_three"],
             show_best_three=user_info["show_best_three"],
             show_admin=user_info["show_admin"],
-            avatar_path=f"avatars/{user_info['username']}.png"
+            avatar_path=f"avatars/{user_info['username']}.png",
+            preferred_game_type=user_info.get("preferred_game_type"),
+            preferred_top3_sorting=user_info.get("preferred_top3_sorting", "wins")
         )
         new_user.set_password(user_info["password"])
         db.session.add(new_user)
@@ -182,7 +204,6 @@ def add_friendships():
         (5, 7, "accepted"),
         (6, 8, "accepted"),
         (7, 9, "accepted"),
-        (1, 5, "accepted"),
         (2, 6, "accepted"),
         (3, 7, "accepted"),
         (4, 8, "accepted"),

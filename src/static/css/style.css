@@ -1450,6 +1450,19 @@ html, body {
     margin-bottom: 3rem;
 }
 
+.round-controls .Dialog{
+    display: flex;
+    align-items: center;
+    margin-top: 0rem;
+    width: fit-content;
+}
+
+.round-controls .Dialog button.cancel{
+    padding: 0.7rem 0.7rem;
+    width: 9rem;
+}
+
+
 .timer-label {
     margin: 0;
     color: var(--off-white);
@@ -1780,24 +1793,24 @@ html, body {
 /* Alert Styles */
 .flashes {
     width: 100%;
-    margin: 1rem 0;
+    margin: 2rem 0rem !important;
 }
 
 .alert {
     padding: 1rem;
     border-radius: 0.5rem;
     margin-bottom: 1rem;
+    font-size: 1rem;
 }
 
 .alert-success {
-    background-color: rgba(76, 175, 80, 0.2);
-    color: #4CAF50;
+    background-color: #d4edda;
+    color: #155724;
 }
 
 .alert-danger {
-    background-color: rgba(244, 67, 54, 0.2);
-    color: #F44336;
-    border: 1px solid #F44336;
+    background-color: #f8d7da;
+    color: #721c24;
 }
   
 /* Mobile Styles */
@@ -1953,7 +1966,7 @@ html, body {
       }
 
     /* Tournament Management Pages */
-        .round-controls {
+    .round-controls {
         flex-direction: column;
         gap: 15px;
     }

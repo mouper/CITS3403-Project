@@ -113,6 +113,20 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   bindTabClicks();
 
+  const sortingInput = document.getElementById('preferredSortingValue');
+  const userPreferredSorting = sortingInput?.value || 'wins';
+  document.querySelectorAll('.top3-tab').forEach(button => {
+    const isWinrate = button.textContent.includes('Win Rate');
+    const shouldBeActive = (userPreferredSorting === 'winrate' && isWinrate) ||
+                         (userPreferredSorting === 'wins' && !isWinrate);
+    if (shouldBeActive) {
+      button.classList.add('active');
+    } else {
+      button.classList.remove('active');
+    }
+  });
+
+
   if (!window.hostedGameTypes) window.hostedGameTypes = [];
 
   dropdown.addEventListener('change', () => {
@@ -161,7 +175,26 @@ document.addEventListener('DOMContentLoaded', () => {
       initAdminHostedFilters();
 
     } else {
-      location.reload();
+      // ✅ 切换为 Player 模式时，先保存状态
+      fetch('/account/save_display_settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            show_win_rate: true,            // 默认 Player 显示什么你自己定
+            show_total_wins_played: false,
+            show_last_three: true,
+            show_best_three: true,
+            show_admin: false
+        })
+      }).then(res => res.json()).then(data => {
+        if (data.success) {
+            location.reload();  // ✅ 状态存好了再刷新
+        } else {
+            alert('Failed to switch to Player view.');
+        }
+      }).catch(err => {
+        console.error('Error switching to Player view:', err);
+      });
     }
   });
 
@@ -215,6 +248,16 @@ document.addEventListener('DOMContentLoaded', () => {
         show_admin
       };
 
+      // 仅在 Player 模式下添加 sorting 和 game_type
+      if (!show_admin) {
+        const selectedGameType = document.getElementById('gameTypeSelect')?.value || null;
+        const selectedTab = document.querySelector('.top3-tab.active')?.textContent || '';
+        const preferredSorting = selectedTab.includes('Win Rate') ? 'winrate' : 'wins';
+
+        data.preferred_game_type = selectedGameType;
+        data.preferred_top3_sorting = preferredSorting;
+      }
+
       fetch('/account/save_display_settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -250,6 +293,13 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
+
+  const isAdminFlag = document.getElementById('isAdminFlag')?.value === 'true';
+  if (isAdminFlag) {
+    dropdown.value = 'Admin';
+    dropdown.dispatchEvent(new Event('change'));
+  }
+
 });
 
 function enableAndSubmit(inputId, buttonEl) {

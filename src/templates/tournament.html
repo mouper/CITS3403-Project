@@ -81,9 +81,9 @@
                                 <tr>
                                     <th>Table</th>
                                     <th>Player 1</th>
-                                    <th>Record</th>
+                                    <th>W/L</th>
                                     <th>Player 2</th>
-                                    <th>Record</th>
+                                    <th>W/L</th>
                                     {% if (current_round and current_round.status == 'in progress') or view_state == 'confirm_results' %}
                                     <th class="win-header">Select Winner:</th>
                                     {% endif %}
@@ -111,7 +111,7 @@
                                             {% endif %}
                                         {% endif %}
                                     </td>
-                                    <td>{{ p1_stats.wins }}-{{ p1_stats.losses }}</td>
+                                    <td>{{ p1_stats.wins }}/{{ p1_stats.losses }}</td>
                                     <td class="player2-cell">
                                         {% if match.player2_id %}
                                             {% set player2 = players.get(match.player2_id) %}
@@ -128,7 +128,7 @@
                                     </td>
                                     <td>
                                         {% if match.player2_id %}
-                                            {{ p2_stats.wins }}-{{ p2_stats.losses }}
+                                            {{ p2_stats.wins }}/{{ p2_stats.losses }}
                                         {% else %}
                                             -
                                         {% endif %}
@@ -240,7 +240,7 @@
                                 <tr>
                                     <th>Rank</th>
                                     <th>Player</th>
-                                    <th>Record</th>
+                                    <th>W/L</th>
                                     {% if tournament.format == 'swiss' %}
                                         <th>OWP</th>
                                         <th>OOWP</th>
@@ -252,7 +252,7 @@
                                 <tr>
                                     <td>{{ player_result.rank }}</td>
                                     <td>{{ player_result.name }}</td>
-                                    <td>{{ player_result.wins }}-{{ player_result.losses }}</td>
+                                    <td>{{ player_result.wins }}/{{ player_result.losses }}</td>
                                     {% if tournament.format == 'swiss' %}
                                         <td>{{ "%.1f"|format(player_result.owp * 100) }}%</td>
                                         <td>{{ "%.1f"|format(player_result.oowp * 100) }}%</td>
@@ -265,6 +265,16 @@
                 </div>
             </div>
             
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+              <div class="flashes" style="margin: 2rem; width: 100%;">
+                {% for category, message in messages %}
+                  <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+              </div>
+            {% endif %}
+            {% endwith %}
+
             <!-- Round Controls -->
             <div class="round-controls">
                 {% if not current_round or current_round.status == 'not started' %}
@@ -273,11 +283,18 @@
                         <span class="timer-label medium2">Round Time:</span>
                         <span id="timerDisplay" class="timer-value">{{ tournament.round_time_minutes }}:00</span>
                     </div>
-                    <div class="SendJoinBtn">
+                    <div class="SaveBtn">
                         <button id="startRoundBtn">
                             <div class="CreateIcon"></div>
                             Start Round
                         </button>
+                    </div>
+                    <div class="SendJoinBtn">
+                        <form method="POST" action="/tournament/{{ tournament.id }}/send_pairings">
+                            <button type="submit">
+                                <i class="fas fa-envelope"></i> Send Pairings to Players
+                            </button>
+                        </form>
                     </div>
                 {% elif current_round and current_round.status == 'in progress' and view_state == 'confirm_results' %}
                     <!-- Round Timer - Hidden in confirm results state -->
