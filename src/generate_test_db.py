@@ -195,6 +195,7 @@ def add_friendships():
     
     # Create some accepted friendships
     friendships = [
+        # Original friendships
         (1, 2, "accepted"),
         (1, 3, "accepted"),
         (2, 4, "accepted"),
@@ -207,11 +208,24 @@ def add_friendships():
         (3, 7, "accepted"),
         (4, 8, "accepted"),
         
+        # Additional friendships for tournament organizers (EventMaster and TourneyQ)
+        (9, 1, "accepted"),  # EventMaster friends with AlexJ
+        (9, 2, "accepted"),  # EventMaster friends with SamTheGamer
+        (9, 3, "accepted"),  # EventMaster friends with ChrisL
+        (9, 4, "accepted"),  # EventMaster friends with TayB
+        (9, 5, "accepted"),  # EventMaster friends with JD
+        (10, 1, "accepted"), # TourneyQ friends with AlexJ
+        (10, 2, "accepted"), # TourneyQ friends with SamTheGamer
+        (10, 3, "accepted"), # TourneyQ friends with ChrisL
+        (10, 4, "accepted"), # TourneyQ friends with TayB
+        (10, 5, "accepted"), # TourneyQ friends with JD
+        (10, 6, "accepted"), # TourneyQ friends with MorganW
+        (10, 7, "accepted"), # TourneyQ friends with CM
+        (10, 8, "accepted"), # TourneyQ friends with RileyG
+        
         # Some pending friendships
         (1, 7, "pending"),
         (2, 8, "pending"),
-        (3, 9, "pending"),
-        (4, 10, "pending"),
         (5, 1, "pending"),
         (6, 3, "pending")
     ]
@@ -434,18 +448,6 @@ def add_tournaments():
 
         # Upcoming Tournaments (Draft Status)
         {
-            "title": "Summer Magic Championship",
-            "game_type": "Magic: The Gathering",
-            "format": "swiss",
-            "created_by": 9,
-            "status": "draft",
-            "num_players": 32,
-            "round_time_minutes": 50,
-            "total_rounds": 6,
-            "include_creator_as_player": False,
-            "start_time": datetime.datetime.now() + datetime.timedelta(days=14)
-        },
-        {
             "title": "Pokémon TCG Draft Tournament",
             "game_type": "Pokémon TCG",
             "format": "swiss",
@@ -455,7 +457,7 @@ def add_tournaments():
             "round_time_minutes": 40,
             "total_rounds": 3,
             "include_creator_as_player": True,
-            "start_time": datetime.datetime.now() + datetime.timedelta(days=7)
+            "start_time": None
         },
         {
             "title": "YuGiOh Weekend Challenge",
@@ -467,7 +469,7 @@ def add_tournaments():
             "round_time_minutes": 45,
             "total_rounds": 4,
             "include_creator_as_player": True,
-            "start_time": datetime.datetime.now() + datetime.timedelta(days=3)
+            "start_time": None
         },
         {
             "title": "Checkers Championship",
@@ -479,7 +481,7 @@ def add_tournaments():
             "round_time_minutes": 30,
             "total_rounds": 7,
             "include_creator_as_player": True,
-            "start_time": datetime.datetime.now() + datetime.timedelta(days=5)
+            "start_time": None
         }
     ]
     
@@ -508,53 +510,71 @@ def add_tournaments():
     return created_tournaments
 
 def add_tournament_players(created_tournaments):
-    """Add players to tournaments"""
+    """Add players to tournaments, ensuring creators can only add users they are friends with"""
     users = User.query.all()
-    user_ids = [user.id for user in users]
     
     for tournament_id, tournament_info in created_tournaments:
-        # Add registered users as players
-        available_user_ids = user_ids.copy()
+        creator_id = tournament_info["created_by"]
+        
+        # Get all friends of the creator (both sent and received accepted friendships)
+        creator_friends = Friend.query.filter(
+            ((Friend.user_id == creator_id) | (Friend.friend_id == creator_id)) &
+            (Friend.status == "accepted")
+        ).all()
+        
+        # Get friend IDs (excluding the creator)
+        friend_ids = set()
+        for friendship in creator_friends:
+            if friendship.user_id == creator_id:
+                friend_ids.add(friendship.friend_id)
+            else:
+                friend_ids.add(friendship.user_id)
+        
+        # Convert to list of User objects
+        available_friends = [user for user in users if user.id in friend_ids]
         
         # If creator is included as player, add them first
         if tournament_info["include_creator_as_player"]:
+            creator = User.query.get(creator_id)
             new_player = TournamentPlayer(
                 tournament_id=tournament_id,
-                user_id=tournament_info["created_by"],
+                user_id=creator_id,
                 is_confirmed=True
             )
             db.session.add(new_player)
-            available_user_ids.remove(tournament_info["created_by"])
         
-        # Fill remaining slots with users or guests
+        # Calculate how many more players we need
         players_to_add = tournament_info["num_players"]
+        if tournament_info["include_creator_as_player"]:
+            players_to_add -= 1
         
-        # Add some users as confirmed players
-        confirmed_count = min(players_to_add - 2, len(available_user_ids) - 1)
+        # Add some friends as confirmed players
+        confirmed_count = min(players_to_add - 1, len(available_friends))
         if confirmed_count > 0:
-            confirmed_users = random.sample(available_user_ids, confirmed_count)
-            for user_id in confirmed_users:
+            confirmed_friends = random.sample(available_friends, confirmed_count)
+            for friend in confirmed_friends:
                 new_player = TournamentPlayer(
                     tournament_id=tournament_id,
-                    user_id=user_id,
+                    user_id=friend.id,
                     is_confirmed=True
                 )
                 db.session.add(new_player)
-                available_user_ids.remove(user_id)
             players_to_add -= confirmed_count
         
-        # Add some users as unconfirmed players
-        if players_to_add > 0 and available_user_ids:
-            unconfirmed_count = min(players_to_add - 1, len(available_user_ids))
-            unconfirmed_users = random.sample(available_user_ids, unconfirmed_count)
-            for user_id in unconfirmed_users:
-                new_player = TournamentPlayer(
-                    tournament_id=tournament_id,
-                    user_id=user_id,
-                    is_confirmed=False
-                )
-                db.session.add(new_player)
-            players_to_add -= unconfirmed_count
+        # Add some friends as unconfirmed players if we still need more
+        if players_to_add > 0 and available_friends:
+            remaining_friends = [f for f in available_friends if f.id not in [cf.id for cf in confirmed_friends]]
+            unconfirmed_count = min(players_to_add - 1, len(remaining_friends))
+            if unconfirmed_count > 0:
+                unconfirmed_friends = random.sample(remaining_friends, unconfirmed_count)
+                for friend in unconfirmed_friends:
+                    new_player = TournamentPlayer(
+                        tournament_id=tournament_id,
+                        user_id=friend.id,
+                        is_confirmed=False
+                    )
+                    db.session.add(new_player)
+                players_to_add -= unconfirmed_count
         
         # Fill remaining slots with guests
         for i in range(players_to_add):
