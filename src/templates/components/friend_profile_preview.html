@@ -72,7 +72,13 @@
               <p class="subheadline">
                 {% if loop.index == 1 %}1st{% elif loop.index == 2 %}2nd{% elif loop.index == 3 %}3rd{% else %}{{ loop.index }}th{% endif %}
               </p>
-              <p class="title2 purple-text">{{ result.wins }} WINS</p>
+              {% if friend.preferred_top3_sorting == 'winrate' %}
+                <p class="title2 purple-text">
+                  {{ (result.wins / (result.wins + result.losses) * 100) | round(1) if (result.wins + result.losses) > 0 else 0 }}% WR
+                </p>
+              {% else %}
+                <p class="title2 purple-text">{{ result.wins }} WINS</p>
+              {% endif %}
             </div>
             <div class="statcard-middle-row">
               <p class="medium5">

@@ -56,7 +56,7 @@
     <div class="right-column">
     <div class="settings-panel">
       <input type="hidden" id="isAdminFlag" value="{{ 'true' if current_user.show_admin else 'false' }}">
-      
+      <input type="hidden" id="preferredSortingValue" value="{{ current_user.preferred_top3_sorting or 'wins' }}">
         <div class="settings-header">
           <h2 class="subheadline settings-title">Stats Displayed On My Profile:</h2>
           <div class="Dropdown player-dropdown">
@@ -110,7 +110,9 @@
                 <span class="caption">Select Game Displayed</span>
                 <select id="gameTypeSelect" class="medium4">
                   {% for game_type in game_types %}
-                    <option value="{{ game_type }}">{{ game_type }}</option>
+                    <option value="{{ game_type }}" {% if game_type == current_user.preferred_game_type %}selected{% endif %}>
+                      {{ game_type }}
+                    </option>
                   {% endfor %}
                 </select>
             </div>  

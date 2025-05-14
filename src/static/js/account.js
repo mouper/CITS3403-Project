@@ -113,6 +113,20 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   bindTabClicks();
 
+  const sortingInput = document.getElementById('preferredSortingValue');
+  const userPreferredSorting = sortingInput?.value || 'wins';
+  document.querySelectorAll('.top3-tab').forEach(button => {
+    const isWinrate = button.textContent.includes('Win Rate');
+    const shouldBeActive = (userPreferredSorting === 'winrate' && isWinrate) ||
+                         (userPreferredSorting === 'wins' && !isWinrate);
+    if (shouldBeActive) {
+      button.classList.add('active');
+    } else {
+      button.classList.remove('active');
+    }
+  });
+
+
   if (!window.hostedGameTypes) window.hostedGameTypes = [];
 
   dropdown.addEventListener('change', () => {
