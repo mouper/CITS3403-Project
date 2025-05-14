@@ -129,9 +129,9 @@
 <div id="tournamentData" 
     data-tournament='{
         "id": {{ tournament.id }},
-        "title": "{{ tournament.title|replace('"', '\\"') }}",
-        "format": "{{ tournament.format }}",
-        "game_type": "{{ tournament.game_type }}",
+        "title": {{ tournament.title|tojson|safe }},
+        "format": {{ tournament.format|tojson|safe }},
+        "game_type": {{ tournament.game_type|tojson|safe }},
         "round_time_minutes": {{ tournament.round_time_minutes }},
         "num_players": {{ tournament.num_players }},
         "include_creator_as_player": {{ 'true' if tournament.include_creator_as_player else 'false' }},
