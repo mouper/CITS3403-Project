@@ -2151,6 +2151,9 @@ function initAnalytics() {
         section.style.display = (matchesType && matchesGame) ? 'block' : 'none';
       });
 
+      document.querySelectorAll('.recent-tournaments').forEach(section => {
+        section.style.display = section.dataset.gameType === selected ? 'block' : 'none';
+      });
     });
 
     gameTypeSelector.dispatchEvent(new Event('change'));
