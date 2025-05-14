@@ -55,6 +55,8 @@
     
     <div class="right-column">
     <div class="settings-panel">
+      <input type="hidden" id="isAdminFlag" value="{{ 'true' if current_user.show_admin else 'false' }}">
+      
         <div class="settings-header">
           <h2 class="subheadline settings-title">Stats Displayed On My Profile:</h2>
           <div class="Dropdown player-dropdown">
@@ -69,7 +71,7 @@
           <div class="switch-card">
             <span class="medium4">Win Rate</span>
             <label class="switch">
-              <input type="checkbox" checked>
+              <input type="checkbox" {% if current_user.show_win_rate %}checked{% endif %}>
               <span class="slider"></span>
             </label>
           </div>
@@ -77,7 +79,7 @@
           <div class="switch-card">
             <span class="medium4">Total Wins/Total Played</span>
             <label class="switch">
-              <input type="checkbox">
+              <input type="checkbox" {% if current_user.show_total_wins_played %}checked{% endif %}>
               <span class="slider"></span>
             </label>
           </div>
@@ -85,7 +87,7 @@
           <div class="switch-card">
             <span class="medium4">Last 3 Tournaments</span>
             <label class="switch">
-              <input type="checkbox">
+              <input type="checkbox" {% if current_user.show_last_three %}checked{% endif %}>
               <span class="slider"></span>
             </label>
           </div>
@@ -94,7 +96,7 @@
             <div class="top3-row">
               <span class="medium4">Top 3 Tournaments</span>
               <label class="switch">
-                <input type="checkbox" checked>
+                <input type="checkbox" {% if current_user.show_best_three %}checked{% endif %}>
                 <span class="slider"></span>
               </label>
             </div>

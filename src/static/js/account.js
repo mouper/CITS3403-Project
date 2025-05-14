@@ -161,7 +161,26 @@ document.addEventListener('DOMContentLoaded', () => {
       initAdminHostedFilters();
 
     } else {
-      location.reload();
+      // ✅ 切换为 Player 模式时，先保存状态
+      fetch('/account/save_display_settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            show_win_rate: true,            // 默认 Player 显示什么你自己定
+            show_total_wins_played: false,
+            show_last_three: true,
+            show_best_three: true,
+            show_admin: false
+        })
+      }).then(res => res.json()).then(data => {
+        if (data.success) {
+            location.reload();  // ✅ 状态存好了再刷新
+        } else {
+            alert('Failed to switch to Player view.');
+        }
+      }).catch(err => {
+        console.error('Error switching to Player view:', err);
+      });
     }
   });
 
@@ -250,6 +269,13 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
+
+  const isAdminFlag = document.getElementById('isAdminFlag')?.value === 'true';
+  if (isAdminFlag) {
+    dropdown.value = 'Admin';
+    dropdown.dispatchEvent(new Event('change'));
+  }
+
 });
 
 function enableAndSubmit(inputId, buttonEl) {
