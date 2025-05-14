@@ -87,47 +87,27 @@
         </div>
       {% endfor %}
       <h2 class="subheadline purple-text">Recent Tournaments</h2>
-      <div class="statcard-container">
-        <div class="statcard">
-          <div class="statcard-top-row">
-            <p class="subheadline">3rd</p>
-            <p class="title2 purple-text">4 WINS</p>
-          </div>
-          <div class="statcard-middle-row">
-            <p class="medium5">80% WR</p>
-            <p class="medium5">OPWR%</p>
-            <p class="medium5">OPOPWR%</p>
-          </div>
-          <p class="medium4 italic tournament-type">Tournament Type</p>
-          <p class="medium4">Tournament Name</p>
+      {% if last_3_results %}
+        <div class="statcard-container">
+          {% for result, tournament in last_3_results %}
+            <div class="statcard">
+              <div class="statcard-top-row">
+                <p class="subheadline">{{ loop.index }}.</p>
+                <p class="title2 purple-text">{{ result.wins }} WINS</p>
+              </div>
+              <div class="statcard-middle-row">
+                <p class="medium5">{{ (result.wins / (result.wins + result.losses) * 100) | round(1) }}% WR</p>
+                <p class="medium5">{{ (result.opponent_win_percentage * 100) | round(1) }}% OPWR%</p>
+                <p class="medium5">{{ (result.opp_opp_win_percentage * 100) | round(1) }}% OPOWR%</p>
+              </div>
+              <p class="medium4 italic tournament-type">{{ tournament.format }}</p>
+              <p class="medium4">{{ tournament.title }}</p>
+            </div>
+          {% endfor %}
         </div>
-        <div class="statcard">
-          <div class="statcard-top-row">
-            <p class="subheadline">1st</p>
-            <p class="title2 purple-text">10 WINS</p>
-          </div>
-          <div class="statcard-middle-row">
-            <p class="medium5">100% WR</p>
-            <p class="medium5">OPWR%</p>
-            <p class="medium5">OPOPWR%</p>
-          </div>
-          <p class="medium4 italic tournament-type">Tournament Type</p>
-          <p class="medium4">Tournament Name</p>
-        </div>
-        <div class="statcard">
-          <div class="statcard-top-row">
-            <p class="subheadline">5th</p>
-            <p class="title2 purple-text">5 WINS</p>
-          </div>
-          <div class="statcard-middle-row">
-            <p class="medium5">63% WR</p>
-            <p class="medium5">OPWR%</p>
-            <p class="medium5">OPOPWR%</p>
-          </div>
-          <p class="medium4 italic tournament-type">Tournament Type</p>
-          <p class="medium4">Tournament Name</p>
-        </div>
-      </div>   
+      {% else %}
+        <p class="medium4 italic">No recent tournaments found.</p>
+      {% endif %} 
     </div>
   
     <div id="adminView" class="analytics-view" style="display: none;">

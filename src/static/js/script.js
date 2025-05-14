@@ -2140,6 +2140,17 @@ function initAnalytics() {
           section.style.display = 'none';
         }
       });
+
+        // New: Top 3 Section Filtering
+      const activeTab = document.querySelector('.top3-tab.active');
+      const selectedTypeTab = activeTab?.textContent.includes('Win Rate') ? 'winrate' : 'wins';
+
+      document.querySelectorAll('.top3-section').forEach(section => {
+        const matchesType = section.dataset.type === selectedTypeTab;
+        const matchesGame = section.dataset.gameType === selected;
+        section.style.display = (matchesType && matchesGame) ? 'block' : 'none';
+      });
+
     });
 
     gameTypeSelector.dispatchEvent(new Event('change'));
