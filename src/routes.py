@@ -426,13 +426,16 @@ def new_tournament():
                     'has_tourney_pro_account': bool(player.user_id),
                     'guest_firstname': player.guest_firstname,
                     'guest_lastname': player.guest_lastname,
-                    'email': player.email
+                    'email': player.email,
+                    'user_id': player.user_id
                 }
                 if player.user_id:
                     user = User.query.get(player.user_id)
                     if user:
                         player_info['username'] = user.username
-                        player_info['user_id'] = user.id
+                        # If this is the current user and they're a player, mark them as confirmed
+                        if user.id == current_user.id:
+                            player_info['is_confirmed'] = True
                 player_data.append(player_info)
             
             return render_template('new_tournament.html', 
