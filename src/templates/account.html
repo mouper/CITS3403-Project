@@ -124,6 +124,15 @@
       </div> 
     </div>
 
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flashes" style="margin: 2rem; width: 100%;">
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
   <!-- PROFILE PREVIEW -->
   <div class="bottom-section">
     <h2 class="title2">Profile Preview:</h2>
