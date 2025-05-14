@@ -8,6 +8,8 @@ from app import application, mail
 from models import Friend, User, UserStat, Tournament, TournamentPlayer, TournamentResult, Match, Round, Invite
 from db import db  # Use the centralized db object from db.py
 from sqlalchemy import func
+from sqlalchemy.orm import aliased
+from collections import defaultdict
 import json, io
 import re
 import os
@@ -156,7 +158,40 @@ def dashboard():
 @application.route('/analytics')
 @login_required
 def analytics():
+    # User's personal performance data
+
+    TP = aliased(TournamentPlayer)
+
+    all_results = (
+        db.session.query(TournamentResult, Tournament)
+        .join(Tournament, TournamentResult.tournament_id == Tournament.id)
+        .join(TP, TournamentResult.player_id == TP.id)
+        .filter(TP.user_id == current_user.id)
+        .all()
+    )
+
+    grouped_results = defaultdict(list)
+    for result, tournament in all_results:
+        grouped_results[tournament.game_type].append((result, tournament))
+    for game_type in grouped_results:
+        grouped_results[game_type].sort(key=lambda x: x[0].wins, reverse=True)
+
+    last_3_results = sorted(all_results, key=lambda x: x[1].created_at, reverse=True)[:3]
+
+    grouped_by_winrate = {}
+    for game_type, entries in grouped_results.items():
+        sorted_entries = sorted(
+            entries,
+            key=lambda x: (x[0].wins / (x[0].wins + x[0].losses)) if (x[0].wins + x[0].losses) > 0 else 0,
+            reverse=True
+        )
+        grouped_by_winrate[game_type] = sorted_entries
+
     user_stats = db.session.query(UserStat).filter_by(user_id=current_user.id).all()
+
+    # Adjust win_percentage for display
+    for stat in user_stats:
+        stat.win_percentage = round(stat.win_percentage * 100, 2)
 
     limit_param = request.args.get('limit', 'all')
     try:
@@ -202,11 +237,10 @@ def analytics():
                 'opp_owp':  round(result.opp_opp_win_percentage   * 100, 2)
             })
 
-
         if len(standings) < 3:
             continue
 
-        standings.sort(key=lambda p: (p['wins'], p['opp_owp']),reverse=True)
+        standings.sort(key=lambda p: (p['wins'], p['opp_owp']), reverse=True)
         recent_tournaments.append({
             'id':                   tourney.id,
             'title':                tourney.title,
@@ -222,6 +256,9 @@ def analytics():
         title='Analytics',
         stats=user_stats,
         recent_tournaments=recent_tournaments,
+        grouped_results=grouped_results,
+        grouped_by_winrate=grouped_by_winrate,
+        last_3_results=last_3_results,
         limit=limit_param
     )
 
