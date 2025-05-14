@@ -808,6 +808,7 @@ def start_tournament():
 def view_tournament(tournament_id):
     # Get the tournament
     tournament = Tournament.query.get_or_404(tournament_id)
+    is_creator = (tournament.created_by == current_user.id)
     
     if tournament.status == 'draft' and tournament.created_by != current_user.id:
         flash("That tournament draft is private to its organizer.", "danger")
@@ -2225,9 +2226,9 @@ def user_preview(username):
 @login_required
 def edit_tournament(tournament_id):
     tournament = Tournament.query.get_or_404(tournament_id)
-    if tournament.created_by != current_user.id:
-        flash("You don’t have permission to edit that draft.", "danger")
-        return redirect(url_for('dashboard', status='draft'))
+    if tournament.created_by != current_user.id or tournament.status != 'draft':
+        flash("You don’t have permission to edit that tournament.", "error")
+        return redirect(url_for('view_tournament', tournament_id=tournament_id))
 
     rows = TournamentPlayer.query.filter_by(
         tournament_id=tournament.id
