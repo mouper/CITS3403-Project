@@ -158,6 +158,10 @@ def dashboard():
 def analytics():
     user_stats = db.session.query(UserStat).filter_by(user_id=current_user.id).all()
 
+    # Adjust win_percentage for display
+    for stat in user_stats:
+        stat.win_percentage = round(stat.win_percentage * 100, 2)
+
     limit_param = request.args.get('limit', 'all')
     try:
         limit = int(limit_param)
