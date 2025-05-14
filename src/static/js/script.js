@@ -34,43 +34,90 @@ function initTournamentForm() {
   // Initialize tournament data if available
   const tournamentDataElement = document.getElementById('tournamentData');
   if (tournamentDataElement) {
-    window.existingTournament = JSON.parse(tournamentDataElement.dataset.tournament);
-    
-    // Trigger competitor count change to create player sections
-    competitorCountSelect.value = window.existingTournament.num_players;
-    handleCompetitorCountChange();
-    
-    // Wait for player sections to be created
-    setTimeout(() => {
-      // Populate player data
-      window.existingTournament.players.forEach((player, index) => {
-        const playerId = index + 1;
+    try {
+        window.existingTournament = JSON.parse(tournamentDataElement.dataset.tournament);
         
-        // Set TourneyPro account radio
-        if (player.has_tourney_pro_account) {
-          document.getElementById(`tourneyProYes${playerId}`).checked = true;
-          document.getElementById(`usernameGroup${playerId}`).style.display = 'block';
-          document.getElementById(`formGrid${playerId}`).style.display = 'none';
-          
-          // Set username
-          if (player.username) {
-            document.getElementById(`username${playerId}`).value = player.username;
-          }
-        } else {
-          document.getElementById(`tourneyProNo${playerId}`).checked = true;
-          document.getElementById(`usernameGroup${playerId}`).style.display = 'none';
-          document.getElementById(`formGrid${playerId}`).style.display = 'block';
-          
-          // Set guest info
-          document.getElementById(`firstName${playerId}`).value = player.guest_firstname || '';
-          document.getElementById(`lastName${playerId}`).value = player.guest_lastname || '';
-          document.getElementById(`email${playerId}`).value = player.email || '';
+        // Restore tournament form fields
+        document.getElementById('tournamentName').value = window.existingTournament.title;
+        document.getElementById('tournamentType').value = window.existingTournament.format;
+        document.getElementById('gameType').value = window.existingTournament.game_type;
+        document.getElementById('roundTimeLimit').value = window.existingTournament.round_time_minutes;
+        
+        // Set the "I am participating" checkbox
+        isCompetitorCheckbox.checked = window.existingTournament.include_creator_as_player;
+        
+        // Set competitor count and show player container
+        competitorCountSelect.value = window.existingTournament.num_players;
+        playersContainer.style.display = 'block';
+        
+        // Generate player tabs and content
+        const count = window.existingTournament.num_players;
+        for (let i = 1; i <= count; i++) {
+            createPlayerTab(i);
+            createPlayerSection(i);
         }
-      });
-      
-      // Check if all players are filled out
-      checkAndCreateConfirmDetailsTab();
-    }, 100);
+        
+        // Check if user is competitor and update accordingly
+        if (window.existingTournament.include_creator_as_player) {
+            updatePlayerOneAsMyself();
+        }
+        
+        // Restore player data
+        window.existingTournament.players.forEach((player, index) => {
+            const playerId = index + 1;
+            
+            // Set TourneyPro account radio
+            if (player.has_tourney_pro_account) {
+                const radioYes = document.getElementById(`tourneyProYes${playerId}`);
+                if (radioYes) {
+                    radioYes.checked = true;
+                    // Trigger the change event to show/hide appropriate fields
+                    radioYes.dispatchEvent(new Event('change'));
+                }
+                
+                // Set username if available
+                const usernameInput = document.getElementById(`username${playerId}`);
+                if (usernameInput && player.username) {
+                    usernameInput.value = player.username;
+                    // Trigger validation events
+                    usernameInput.dispatchEvent(new Event('change', { bubbles: true }));
+                    usernameInput.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            } else {
+                const radioNo = document.getElementById(`tourneyProNo${playerId}`);
+                if (radioNo) {
+                    radioNo.checked = true;
+                    // Trigger the change event to show/hide appropriate fields
+                    radioNo.dispatchEvent(new Event('change'));
+                }
+                
+                // Set guest info
+                const inputs = {
+                    firstName: document.getElementById(`firstName${playerId}`),
+                    lastName: document.getElementById(`lastName${playerId}`),
+                    email: document.getElementById(`email${playerId}`)
+                };
+                
+                if (inputs.firstName) inputs.firstName.value = player.guest_firstname || '';
+                if (inputs.lastName) inputs.lastName.value = player.guest_lastname || '';
+                if (inputs.email) inputs.email.value = player.email || '';
+                
+                // Trigger validation events for each input
+                Object.values(inputs).forEach(input => {
+                    if (input) {
+                        input.dispatchEvent(new Event('change', { bubbles: true }));
+                        input.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
+                });
+            }
+        });
+        
+        // Activate first player and check if we can show confirm details
+        activatePlayer(1);
+        checkAndCreateConfirmDetailsTab();
+    } catch (error) {
+        console.error('Error parsing tournament data:', error);
+    }
   }
 
   // Error message container
@@ -165,18 +212,18 @@ function initTournamentForm() {
     
     // Remove existing confirm details tab if it exists
     if (confirmDetailsTab) {
-      confirmDetailsTab.remove();
-      confirmDetailsTab = null;
+        confirmDetailsTab.remove();
+        confirmDetailsTab = null;
     }
     if (confirmDetailsSection) {
-      confirmDetailsSection.remove();
-      confirmDetailsSection = null;
+        confirmDetailsSection.remove();
+        confirmDetailsSection = null;
     }
     
     // Hide the Start Tournament button
     const startTournamentBtnContainer = document.querySelector('.SendJoinBtn');
     if (startTournamentBtnContainer) {
-      startTournamentBtnContainer.classList.add('hidden');
+        startTournamentBtnContainer.classList.add('hidden');
     }
     
     const count = parseInt(competitorCountSelect.value);
@@ -186,25 +233,77 @@ function initTournamentForm() {
     playerContent.innerHTML = '';
     
     if (!isNaN(count)) {
-      // Show player container
-      playersContainer.style.display = 'block';
-      
-      // Generate player tabs and content
-      for (let i = 1; i <= count; i++) {
-        createPlayerTab(i);
-        createPlayerSection(i);
-      }
-      
-      // Check if user is competitor and update accordingly
-      if (isCompetitorCheckbox.checked) {
-        updatePlayerOneAsMyself();
-      }
-      
-      // Activate first player by default
-      activatePlayer(1);
+        // Show player container
+        playersContainer.style.display = 'block';
+        
+        // Generate player tabs and content
+        for (let i = 1; i <= count; i++) {
+            createPlayerTab(i);
+            createPlayerSection(i);
+        }
+        
+        // Check if user is competitor and update accordingly
+        if (isCompetitorCheckbox.checked) {
+            updatePlayerOneAsMyself();
+        }
+        
+        // If we have existing tournament data, restore it after creating sections
+        if (window.existingTournament && window.existingTournament.players) {
+            window.existingTournament.players.forEach((player, index) => {
+                const playerId = index + 1;
+                
+                // Set TourneyPro account radio
+                if (player.has_tourney_pro_account) {
+                    const radioYes = document.getElementById(`tourneyProYes${playerId}`);
+                    if (radioYes) {
+                        radioYes.checked = true;
+                        // Trigger the change event to show/hide appropriate fields
+                        radioYes.dispatchEvent(new Event('change'));
+                    }
+                    
+                    // Set username if available
+                    const usernameInput = document.getElementById(`username${playerId}`);
+                    if (usernameInput && player.username) {
+                        usernameInput.value = player.username;
+                        // Trigger validation events
+                        usernameInput.dispatchEvent(new Event('change', { bubbles: true }));
+                        usernameInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
+                } else {
+                    const radioNo = document.getElementById(`tourneyProNo${playerId}`);
+                    if (radioNo) {
+                        radioNo.checked = true;
+                        // Trigger the change event to show/hide appropriate fields
+                        radioNo.dispatchEvent(new Event('change'));
+                    }
+                    
+                    // Set guest info
+                    const inputs = {
+                        firstName: document.getElementById(`firstName${playerId}`),
+                        lastName: document.getElementById(`lastName${playerId}`),
+                        email: document.getElementById(`email${playerId}`)
+                    };
+                    
+                    if (inputs.firstName) inputs.firstName.value = player.guest_firstname || '';
+                    if (inputs.lastName) inputs.lastName.value = player.guest_lastname || '';
+                    if (inputs.email) inputs.email.value = player.email || '';
+                    
+                    // Trigger validation events for each input
+                    Object.values(inputs).forEach(input => {
+                        if (input) {
+                            input.dispatchEvent(new Event('change', { bubbles: true }));
+                            input.dispatchEvent(new Event('input', { bubbles: true }));
+                        }
+                    });
+                }
+            });
+        }
+        
+        // Activate first player by default
+        activatePlayer(1);
     } else {
-      // Hide player container if custom or no selection
-      playersContainer.style.display = 'none';
+        // Hide player container if custom or no selection
+        playersContainer.style.display = 'none';
     }
 
     // Check if we should show the Confirm Details tab
@@ -2040,6 +2139,20 @@ function initAnalytics() {
         } else {
           section.style.display = 'none';
         }
+      });
+
+        // New: Top 3 Section Filtering
+      const activeTab = document.querySelector('.top3-tab.active');
+      const selectedTypeTab = activeTab?.textContent.includes('Win Rate') ? 'winrate' : 'wins';
+
+      document.querySelectorAll('.top3-section').forEach(section => {
+        const matchesType = section.dataset.type === selectedTypeTab;
+        const matchesGame = section.dataset.gameType === selected;
+        section.style.display = (matchesType && matchesGame) ? 'block' : 'none';
+      });
+
+      document.querySelectorAll('.recent-tournaments').forEach(section => {
+        section.style.display = section.dataset.gameType === selected ? 'block' : 'none';
       });
     });
 
