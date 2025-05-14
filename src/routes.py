@@ -397,6 +397,20 @@ def save_display_settings():
 @application.route('/new_tournament')
 @login_required
 def new_tournament():
+    # Get accepted friends (do this for all cases)
+    sent_accepted = Friend.query.filter_by(user_id=current_user.id, status='accepted').all()
+    recv_accepted = Friend.query.filter_by(friend_id=current_user.id, status='accepted').all()
+
+    accepted_friends = [f.recipient for f in sent_accepted] + [f.sender for f in recv_accepted]
+    accepted_friend_usernames = [friend.username for friend in accepted_friends]
+    
+    # Create list of friend details including names
+    accepted_friend_details = [{
+        'username': friend.username,
+        'first_name': friend.first_name,
+        'last_name': friend.last_name
+    } for friend in accepted_friends]
+
     # Check if we're editing an existing draft tournament
     tournament_id = request.args.get('tournament_id')
     if tournament_id:
@@ -423,25 +437,14 @@ def new_tournament():
             
             return render_template('new_tournament.html', 
                                 tournament=tournament,
-                                players=player_data)
-        
-    # Get accepted friends
-    sent_accepted = Friend.query.filter_by(user_id=current_user.id, status='accepted').all()
-    recv_accepted = Friend.query.filter_by(friend_id=current_user.id, status='accepted').all()
-
-    accepted_friends = [f.recipient for f in sent_accepted] + [f.sender for f in recv_accepted]
-    accepted_friend_usernames = [friend.username for friend in accepted_friends]
+                                players=player_data,
+                                accepted_friend_usernames=accepted_friend_usernames,
+                                accepted_friend_details=accepted_friend_details)
     
-    # Create list of friend details including names
-    accepted_friend_details = [{
-        'username': friend.username,
-        'first_name': friend.first_name,
-        'last_name': friend.last_name
-    } for friend in accepted_friends]
-
+    # If not editing an existing tournament
     return render_template('new_tournament.html', 
-                         accepted_friend_usernames=accepted_friend_usernames,
-                         accepted_friend_details=accepted_friend_details)
+                        accepted_friend_usernames=accepted_friend_usernames,
+                        accepted_friend_details=accepted_friend_details)
 
 @application.route('/save_tournament', methods=['POST'])
 @login_required
