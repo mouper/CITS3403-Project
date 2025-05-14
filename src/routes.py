@@ -160,7 +160,7 @@ def dashboard():
     return render_template(
         'dashboard.html',
         tournaments=my_tournaments,
-        accepted_friend_usernames=accepted_usernames,
+        accepted_friend_usernames=accepted_friend_usernames,
         status_filter=status
     )
   
@@ -2170,24 +2170,6 @@ def user_preview(username):
         last_3_results=last_3_results,
         recent_tournaments=recent_tournaments,
         game_types=list(grouped_results.keys())
-    )@application.route('/tournament/<int:tournament_id>')
-@login_required
-def tournament_detail(tournament_id):
-    tournament = Tournament.query.get_or_404(tournament_id)
-    if tournament.status == 'draft':
-        abort(404)
-    return render_template(
-      'tournament.html',
-      tournament=tournament,
-      current_round=current_round,
-      view_state=view_state,
-      completed_rounds=completed_rounds,
-      player_stats=player_stats,
-      players=players,
-      current_matches=current_matches,
-      ranked_players=ranked_players,
-      matches_by_round=matches_by_round,
-      rounds_count=rounds_count
     )
 
 @application.route('/tournament/<int:tournament_id>/edit')
@@ -2197,34 +2179,58 @@ def edit_tournament(tournament_id):
     if tournament.created_by != current_user.id:
         abort(403)
 
-    player_rows = TournamentPlayer.query.filter_by(
+    rows = TournamentPlayer.query.filter_by(
         tournament_id=tournament.id
     ).all()
 
     players_data = []
-    for p in player_rows:
-        players_data.append({
-            "id": p.id,
-            "user_id": p.user_id,
-            "guest_firstname": p.guest_firstname,
-            "guest_lastname": p.guest_lastname,
-            "email": p.email,
-            "is_confirmed": p.is_confirmed
+    for p in rows:
+        if p.user_id:
+            user = User.query.get(p.user_id)
+            players_data.append({
+                "id": p.id,
+                "user_id": user.id,
+                "username": user.username,
+                "guest_firstname": "",
+                "guest_lastname": "",
+                "email": "",
+                "is_confirmed": True
+            })
+        else:
+            players_data.append({
+                "id": p.id,
+                "user_id": None,
+                "username": "",
+                "guest_firstname": p.guest_firstname,
+                "guest_lastname": p.guest_lastname,
+                "email": p.email,
+                "is_confirmed": p.is_confirmed
+            })
+
+    if tournament.include_creator_as_player and not any(d["user_id"] == current_user.id for d in players_data):
+        players_data.insert(0, {
+            "id": None,
+            "user_id": current_user.id,
+            "username": current_user.username,
+            "guest_firstname": "",
+            "guest_lastname": "",
+            "email": "",
+            "is_confirmed": True
         })
 
-    sent = Friend.query.filter_by(
-        user_id=current_user.id, status='accepted'
-    ).all()
-    recv = Friend.query.filter_by(
-        friend_id=current_user.id, status='accepted'
-    ).all()
+    sent = Friend.query.filter_by(user_id=current_user.id, status='accepted').all()
+    recv = Friend.query.filter_by(friend_id=current_user.id, status='accepted').all()
     accepted = [f.recipient for f in sent] + [f.sender for f in recv]
     accepted_friend_usernames = [u.username for u in accepted]
+    accepted_friend_details  = [
+        {"username":u.username, "first_name":u.first_name, "last_name":u.last_name}
+        for u in accepted
+    ]
 
     return render_template(
         'new_tournament.html',
         tournament=tournament,
-        players=players_data,             
+        players=players_data,
         accepted_friend_usernames=accepted_friend_usernames,
-        accepted_friend_details=[u.username for u in accepted]
+        accepted_friend_details=accepted_friend_details
     )
