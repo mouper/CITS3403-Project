@@ -51,13 +51,12 @@
         <div class="Dropdown">
           <select id="gameType">
             <option value="" disabled selected>Select</option>
-            <option value="pokemon" {% if tournament and tournament.game_type == 'pokemon' %}selected{% endif %}>Pokemon TCG</option>
-            <option value="magic" {% if tournament and tournament.game_type == 'magic' %}selected{% endif %}>Magic: The Gathering</option>
-            <option value="chess" {% if tournament and tournament.game_type == 'chess' %}selected{% endif %}>Chess</option>
-            <option value="yugioh" {% if tournament and tournament.game_type == 'yugioh' %}selected{% endif %}>Yu Gi Oh</option>
-            <option value="onepiece" {% if tournament and tournament.game_type == 'onepiece' %}selected{% endif %}>One Piece Card Game</option>
-            <option value="digimon" {% if tournament and tournament.game_type == 'digimon' %}selected{% endif %}>Digimon Card Game</option>
-            <option value="other" {% if tournament and tournament.game_type == 'other' %}selected{% endif %}>Other</option>
+            <option value="Pokémon TCG" {% if tournament and tournament.game_type == 'Pokémon TCG' %}selected{% endif %}>Pokémon TCG</option>
+            <option value="Magic: The Gathering" {% if tournament and tournament.game_type == 'Magic: The Gathering' %}selected{% endif %}>Magic: The Gathering</option>
+            <option value="Chess" {% if tournament and tournament.game_type == 'Chess' %}selected{% endif %}>Chess</option>
+            <option value="YuGiOh" {% if tournament and tournament.game_type == 'YuGiOh' %}selected{% endif %}>YuGiOh</option>
+            <option value="One Piece Card Game" {% if tournament and tournament.game_type == 'One Piece Card Game' %}selected{% endif %}>One Piece Card Game</option>
+            <option value="Other" {% if tournament and tournament.game_type == 'Other' %}selected{% endif %}>Other</option>
           </select>
         </div>
         </div>
