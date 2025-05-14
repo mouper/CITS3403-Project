@@ -806,9 +806,14 @@ def start_tournament():
 @application.route('/tournament/<int:tournament_id>', methods=['GET'])
 @login_required
 def view_tournament(tournament_id):
-    view_state = request.args.get('view_state', 'normal')
     # Get the tournament
     tournament = Tournament.query.get_or_404(tournament_id)
+    
+    if tournament.status == 'draft' and tournament.created_by != current_user.id:
+        flash("That tournament draft is private to its organizer.", "danger")
+        return redirect(url_for('dashboard', status='draft'))
+    
+    view_state = request.args.get('view_state', 'normal')
     
     # Get all rounds for this tournament
     rounds = Round.query.filter_by(tournament_id=tournament_id).order_by(Round.round_number).all()
@@ -2221,7 +2226,8 @@ def user_preview(username):
 def edit_tournament(tournament_id):
     tournament = Tournament.query.get_or_404(tournament_id)
     if tournament.created_by != current_user.id:
-        abort(403)
+        flash("You don’t have permission to edit that draft.", "danger")
+        return redirect(url_for('dashboard', status='draft'))
 
     rows = TournamentPlayer.query.filter_by(
         tournament_id=tournament.id
