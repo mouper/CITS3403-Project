@@ -180,7 +180,6 @@ def add_users():
             show_last_three=user_info["show_last_three"],
             show_best_three=user_info["show_best_three"],
             show_admin=user_info["show_admin"],
-            avatar_path=f"avatars/{user_info['username']}.png",
             preferred_game_type=user_info.get("preferred_game_type"),
             preferred_top3_sorting=user_info.get("preferred_top3_sorting", "wins")
         )
@@ -233,6 +232,107 @@ def add_tournaments():
     organizer_ids = [9, 10]  # IDs for the organizer users
     
     tournament_data = [
+        # Historical Completed Tournaments (4-6 months ago)
+        {
+            "title": "Winter Chess Classic",
+            "game_type": "Chess",
+            "format": "swiss",
+            "created_by": 9,
+            "status": "completed",
+            "num_players": 24,
+            "round_time_minutes": 45,
+            "total_rounds": 5,
+            "include_creator_as_player": True,
+            "start_time": datetime.datetime.now() - datetime.timedelta(days=180)
+        },
+        {
+            "title": "New Year Magic Tournament",
+            "game_type": "Magic: The Gathering",
+            "format": "single elimination",
+            "created_by": 10,
+            "status": "completed",
+            "num_players": 16,
+            "round_time_minutes": 50,
+            "total_rounds": 4,
+            "include_creator_as_player": False,
+            "start_time": datetime.datetime.now() - datetime.timedelta(days=170)
+        },
+        {
+            "title": "Winter Pokémon League",
+            "game_type": "Pokémon TCG",
+            "format": "swiss",
+            "created_by": 9,
+            "status": "completed",
+            "num_players": 32,
+            "round_time_minutes": 45,
+            "total_rounds": 6,
+            "include_creator_as_player": True,
+            "start_time": datetime.datetime.now() - datetime.timedelta(days=160)
+        },
+        {
+            "title": "YuGiOh Winter Championship",
+            "game_type": "YuGiOh",
+            "format": "single elimination",
+            "created_by": 10,
+            "status": "completed",
+            "num_players": 16,
+            "round_time_minutes": 40,
+            "total_rounds": 4,
+            "include_creator_as_player": False,
+            "start_time": datetime.datetime.now() - datetime.timedelta(days=150)
+        },
+
+        # Historical Completed Tournaments (2-3 months ago)
+        {
+            "title": "Spring Chess Championship",
+            "game_type": "Chess",
+            "format": "swiss",
+            "created_by": 9,
+            "status": "completed",
+            "num_players": 16,
+            "round_time_minutes": 30,
+            "total_rounds": 4,
+            "include_creator_as_player": True,
+            "start_time": datetime.datetime.now() - datetime.timedelta(days=90)
+        },
+        {
+            "title": "Magic Masters Series",
+            "game_type": "Magic: The Gathering",
+            "format": "single elimination",
+            "created_by": 10,
+            "status": "completed",
+            "num_players": 32,
+            "round_time_minutes": 50,
+            "total_rounds": 5,
+            "include_creator_as_player": False,
+            "start_time": datetime.datetime.now() - datetime.timedelta(days=85)
+        },
+        {
+            "title": "Pokémon Regional Championship",
+            "game_type": "Pokémon TCG",
+            "format": "swiss",
+            "created_by": 9,
+            "status": "completed",
+            "num_players": 24,
+            "round_time_minutes": 45,
+            "total_rounds": 5,
+            "include_creator_as_player": True,
+            "start_time": datetime.datetime.now() - datetime.timedelta(days=75)
+        },
+        {
+            "title": "One Piece Spring Tournament",
+            "game_type": "One Piece Card Game",
+            "format": "round robin",
+            "created_by": 10,
+            "status": "completed",
+            "num_players": 8,
+            "round_time_minutes": 40,
+            "total_rounds": 7,
+            "include_creator_as_player": True,
+            "start_time": datetime.datetime.now() - datetime.timedelta(days=70)
+        },
+
+        # Recently Completed Tournaments (last month)
         {
             "title": "Weekly Chess Tournament",
             "game_type": "Chess",
@@ -258,26 +358,52 @@ def add_tournaments():
             "start_time": datetime.datetime.now() - datetime.timedelta(days=7)
         },
         {
+            "title": "One Piece Weekly Series",
+            "game_type": "One Piece Card Game",
+            "format": "round robin",
+            "created_by": 9,
+            "status": "completed",
+            "num_players": 6,
+            "round_time_minutes": 40,
+            "total_rounds": 5,
+            "include_creator_as_player": True,
+            "start_time": datetime.datetime.now() - datetime.timedelta(days=10)
+        },
+        {
+            "title": "Checkers League Finals",
+            "game_type": "Checkers",
+            "format": "single elimination",
+            "created_by": 10,
+            "status": "completed",
+            "num_players": 8,
+            "round_time_minutes": 30,
+            "total_rounds": 3,
+            "include_creator_as_player": False,
+            "start_time": datetime.datetime.now() - datetime.timedelta(days=5)
+        },
+
+        # Currently In Progress Tournaments
+        {
             "title": "Pokémon TCG League",
             "game_type": "Pokémon TCG",
             "format": "single elimination",
             "created_by": 9,
             "status": "in progress",
-            "num_players": 6,
+            "num_players": 16,
             "round_time_minutes": 45,
-            "total_rounds": 3,  # Increased from 2 to 3
+            "total_rounds": 4,
             "include_creator_as_player": True,
             "start_time": datetime.datetime.now() - datetime.timedelta(days=1)
         },
         {
             "title": "YuGiOh Championship",
             "game_type": "YuGiOh",
-            "format": "round robin",
+            "format": "swiss",
             "created_by": 10,
-            "status": "in progress",  # Changed from draft to in progress
-            "num_players": 4,
+            "status": "in progress",
+            "num_players": 12,
             "round_time_minutes": 40,
-            "total_rounds": 3,
+            "total_rounds": 4,
             "include_creator_as_player": False,
             "start_time": datetime.datetime.now() - datetime.timedelta(days=2)
         },
@@ -286,7 +412,7 @@ def add_tournaments():
             "game_type": "One Piece Card Game",
             "format": "swiss",
             "created_by": 9,
-            "status": "in progress",  # Changed from draft to in progress
+            "status": "in progress",
             "num_players": 12,
             "round_time_minutes": 45,
             "total_rounds": 4,
@@ -294,40 +420,66 @@ def add_tournaments():
             "start_time": datetime.datetime.now() - datetime.timedelta(days=1)
         },
         {
-            "title": "Checkers Invitational",
-            "game_type": "Checkers",
-            "format": "swiss",
+            "title": "Chess Rapid Tournament",
+            "game_type": "Chess",
+            "format": "round robin",
             "created_by": 10,
-            "status": "completed",  # Added a new completed tournament
+            "status": "in progress",
             "num_players": 8,
-            "round_time_minutes": 30,
-            "total_rounds": 3,
+            "round_time_minutes": 15,
+            "total_rounds": 7,
             "include_creator_as_player": True,
-            "start_time": datetime.datetime.now() - datetime.timedelta(days=21)
+            "start_time": datetime.datetime.now() - datetime.timedelta(hours=6)
         },
+
+        # Upcoming Tournaments (Draft Status)
         {
-            "title": "Magic Standard Tournament",
+            "title": "Summer Magic Championship",
             "game_type": "Magic: The Gathering",
-            "format": "single elimination",
+            "format": "swiss",
             "created_by": 9,
-            "status": "completed",  # Added a new completed tournament
-            "num_players": 16,
-            "round_time_minutes": 45,
-            "total_rounds": 4,
+            "status": "draft",
+            "num_players": 32,
+            "round_time_minutes": 50,
+            "total_rounds": 6,
             "include_creator_as_player": False,
-            "start_time": datetime.datetime.now() - datetime.timedelta(days=28)
+            "start_time": datetime.datetime.now() + datetime.timedelta(days=14)
         },
         {
-            "title": "Upcoming Pokémon TCG Draft Tournament",
+            "title": "Pokémon TCG Draft Tournament",
             "game_type": "Pokémon TCG",
             "format": "swiss",
             "created_by": 10,
-            "status": "draft",  # This is our new draft tournament
+            "status": "draft",
             "num_players": 8,
             "round_time_minutes": 40,
             "total_rounds": 3,
             "include_creator_as_player": True,
-            "start_time": datetime.datetime.now() + datetime.timedelta(days=7)  # Future date
+            "start_time": datetime.datetime.now() + datetime.timedelta(days=7)
+        },
+        {
+            "title": "YuGiOh Weekend Challenge",
+            "game_type": "YuGiOh",
+            "format": "single elimination",
+            "created_by": 9,
+            "status": "draft",
+            "num_players": 16,
+            "round_time_minutes": 45,
+            "total_rounds": 4,
+            "include_creator_as_player": True,
+            "start_time": datetime.datetime.now() + datetime.timedelta(days=3)
+        },
+        {
+            "title": "Checkers Championship",
+            "game_type": "Checkers",
+            "format": "round robin",
+            "created_by": 10,
+            "status": "draft",
+            "num_players": 8,
+            "round_time_minutes": 30,
+            "total_rounds": 7,
+            "include_creator_as_player": True,
+            "start_time": datetime.datetime.now() + datetime.timedelta(days=5)
         }
     ]
     
@@ -522,7 +674,7 @@ def add_tournament_results(created_tournaments):
     """Generate tournament results for completed tournaments with accurate ranking"""
     for tournament_id, tournament_info in created_tournaments:
         if tournament_info["status"] == "completed":
-            tournament = Tournament.query.get(tournament_id)
+            tournament = db.session.get(Tournament, tournament_id)
             players = TournamentPlayer.query.filter_by(tournament_id=tournament_id, is_confirmed=True).all()
             player_ids = [p.id for p in players]
 
@@ -650,7 +802,7 @@ def add_tournament_results(created_tournaments):
     db.session.commit()
 
 def add_user_stats():
-    """Generate overall user statistics"""
+    """Generate overall user statistics based on completed tournament matches only"""
     users = User.query.all()
     
     for user in users:
@@ -659,10 +811,12 @@ def add_user_stats():
         
         # Group by game type
         game_type_stats = {}
+        
         for player_entry in player_entries:
-            tournament = Tournament.query.get(player_entry.tournament_id)
+            tournament = db.session.get(Tournament, player_entry.tournament_id)
             
-            if tournament and tournament.game_type:
+            # Only process completed tournaments
+            if tournament and tournament.game_type and tournament.status == "completed":
                 if tournament.game_type not in game_type_stats:
                     game_type_stats[tournament.game_type] = {
                         'played': 0,
@@ -670,67 +824,39 @@ def add_user_stats():
                         'lost': 0
                     }
                 
-                # Get tournament results
-                result = TournamentResult.query.filter_by(
-                    tournament_id=tournament.id, 
-                    player_id=player_entry.id
-                ).first()
-                
-                if result:
-                    game_type_stats[tournament.game_type]['played'] += result.wins + result.losses
-                    game_type_stats[tournament.game_type]['won'] += result.wins
-                    game_type_stats[tournament.game_type]['lost'] += result.losses
-                
-                # For in-progress tournaments, add some match data
-                if tournament.status == "in progress":
-                    # Get completed matches
-                    completed_matches = 0
-                    wins = 0
+                # Get all matches for this player in this completed tournament
+                rounds = Round.query.filter_by(tournament_id=tournament.id).all()
+                for round_obj in rounds:
+                    matches = Match.query.filter(
+                        Match.round_id == round_obj.id,
+                        Match.status == "completed",
+                        ((Match.player1_id == player_entry.id) | (Match.player2_id == player_entry.id)),
+                        Match.is_bye == False  # Exclude bye matches
+                    ).all()
                     
-                    rounds = Round.query.filter_by(tournament_id=tournament.id).all()
-                    for round_obj in rounds:
-                        matches = Match.query.filter(
-                            Match.round_id == round_obj.id,
-                            ((Match.player1_id == player_entry.id) | (Match.player2_id == player_entry.id)),
-                            Match.status == "completed"
-                        ).all()
-                        
-                        for match in matches:
-                            completed_matches += 1
-                            if match.winner_id == player_entry.id:
-                                wins += 1
-                    
-                    if completed_matches > 0:
-                        game_type_stats[tournament.game_type]['played'] += completed_matches
-                        game_type_stats[tournament.game_type]['won'] += wins
-                        game_type_stats[tournament.game_type]['lost'] += (completed_matches - wins)
+                    for match in matches:
+                        game_type_stats[tournament.game_type]['played'] += 1
+                        if match.winner_id == player_entry.id:
+                            game_type_stats[tournament.game_type]['won'] += 1
+                        else:
+                            game_type_stats[tournament.game_type]['lost'] += 1
         
-        # Also add some random game types that might not be in tournaments
-        for game_type in random.sample(GAME_TYPES, 3):
-            if game_type not in game_type_stats:
-                games_played = random.randint(5, 30)
-                games_won = random.randint(1, games_played)
-                game_type_stats[game_type] = {
-                    'played': games_played,
-                    'won': games_won,
-                    'lost': games_played - games_won
-                }
-        
-        # Create UserStat entries
+        # Create UserStat entries only for game types where the user has played
         for game_type, stats in game_type_stats.items():
-            win_percentage = stats['won'] / stats['played'] if stats['played'] > 0 else 0
-            
-            new_stat = UserStat(
-                user_id=user.id,
-                game_type=game_type,
-                games_played=stats['played'],
-                games_won=stats['won'],
-                games_lost=stats['lost'],
-                win_percentage=win_percentage
-            )
-            db.session.add(new_stat)
+            if stats['played'] > 0:  # Only create stats if games were actually played
+                win_percentage = stats['won'] / stats['played'] if stats['played'] > 0 else 0
+                
+                new_stat = UserStat(
+                    user_id=user.id,
+                    game_type=game_type,
+                    games_played=stats['played'],
+                    games_won=stats['won'],
+                    games_lost=stats['lost'],
+                    win_percentage=win_percentage
+                )
+                db.session.add(new_stat)
     
-    print("Added user stats successfully.")
+    print("Added user stats successfully based on completed tournament matches only.")
     db.session.commit()
 
 def init_db():

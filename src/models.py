@@ -18,7 +18,7 @@ class User(UserMixin, db.Model):
     show_best_three = db.Column(db.Boolean, default=False)
     show_admin = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, server_default=func.now())
-    avatar_path = db.Column(db.String(120))
+    avatar_path = db.Column(db.String(120), default='uploads/avatars/defaultAvatar.jpg')
     preferred_game_type = db.Column(db.String(50))  
     preferred_top3_sorting = db.Column(db.String(10), default='wins')  # 'wins' / 'winrate'
 
