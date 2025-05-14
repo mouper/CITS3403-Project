@@ -31,6 +31,20 @@ html, body {
     overflow-y: auto;
 }
 
+.purple-text {
+    color: var(--primary-shade1);
+}
+
+.lightpurple-text {
+    color: var(--primary-shade2);
+}
+
+.white-text {
+    color: var(--off-white);
+}
+  
+/*Navbar styles*/
+
 /* Content styles - when navbar exists */
 .app-container:has(.navbar-div) .content {
     margin-left: 17.438rem;
@@ -559,12 +573,14 @@ html, body {
 }
 
 /* Login and Sign up Page Temporary Styles */
+
 .login-form, .signup-form {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 1.5rem;
+    width: 100%;
 }
 
 /* Analytics Section */
@@ -626,14 +642,6 @@ html, body {
     aspect-ratio: 1 / 1;
     height: auto;
     display: block;
-}
-  
-.purple-text {
-    color: var(--primary-shade1);
-}
-  
-.white-text {
-    color: var(--off-white);
 }
   
 .statcard-container {
@@ -1718,6 +1726,11 @@ html, body {
 .alert-danger {
     background-color: #f8d7da;
     color: #721c24;
+}
+
+.alert-info {
+    background-color: var(--overlay-primary1);
+    color: var(--off-white);
 }
   
 /* Mobile Styles */
