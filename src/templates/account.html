@@ -2,7 +2,7 @@
 {% from "components/admincards_macros.html" import admincards %}
 
 {% block content %}
-<h1 class="account-page-heading">My Account</h1>
+<h1 class="title2 page-header"> <span>My Account</span> </h1> 
 <div class="account-page-container">
   <div class="top-section">
     <div class="left-column">
@@ -22,7 +22,7 @@
       </form>
 
       <div class="profile-info">
-        <h2 class="title2">{{ current_user.username }}</h2>
+        <h2 class="title2 pb-6">{{ current_user.username }}</h2>
         <!-- ✅ Email 可编辑并自动提交 -->
         <form method="POST" action="{{ url_for('update_profile') }}">
           <div class="email-display-line">
@@ -108,7 +108,7 @@
   
             <div class="top3-subline">
                 <span class="caption">Select Game Displayed</span>
-                <select id="gameTypeSelect" class="medium4">
+                <select id="gameTypeSelect" class="medium5 game-dropdown">
                   {% for game_type in game_types %}
                     <option value="{{ game_type }}" {% if game_type == current_user.preferred_game_type %}selected{% endif %}>
                       {{ game_type }}
@@ -119,11 +119,13 @@
           </div>
         </div>
 
-        <button id="save-stats-btn" class="primary-button">Save</button>
+        <div class="SaveBtn">
+          <button id="save-stats-btn" class="primary-button">Save Changes</button>
+        </div>
 
       </div> 
     </div>
-
+  </div>
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
         <div class="flashes" style="margin: 2rem; width: 100%;">
@@ -135,7 +137,7 @@
     {% endwith %}
   <!-- PROFILE PREVIEW -->
   <div class="bottom-section">
-    <h2 class="title2">Profile Preview:</h2>
+    <h2 class="subheadline purple-text pb-6">Profile Preview:</h2>
     <div class="profile-preview-wrapper">
       <div class="preview-upper">
         <div class="preview-avatar-wrapper">
@@ -153,26 +155,16 @@
                 <span class="winrate">{{ total_winrate }}% WR</span>
               {% endif %}
               {% if current_user.show_total_wins_played %}
-                <span class="totalcount">{{ total_wins }}/{{ total_played }}</span>
+                <span class="totalcount">{{ total_wins }} WINS / {{ total_played }} GAMES</span>
               {% endif %}
             </div>
         </div>
 
         <div class="admin-hosted-section hosted-preview-section" data-section="hosted" style="display: none;">
-          <div class="admin-header">
+          <div class="admin-header pl-[2rem]">
             <h2 class="subheadline purple-text">Recent Tournaments Hosted</h2>
             <div class="game-dropdown">
-              <select id="adminGameFilter">
-                <option value="all">All Games</option>
-                {% for g in hosted_game_types %}
-                  <option value="{{ g }}">{{ g }}</option>
-                {% endfor %}
-              </select>
-            </div>
-            <div class="count-buttons">
-              <button class="show-count-btn selected" data-count="3">Show 3</button>
-              <button class="show-count-btn" data-count="5">Show 5</button>
-              <button class="show-count-btn" data-count="10">Show 10</button>
+              All Games
             </div>
           </div>
           <div id="adminView">
@@ -284,16 +276,19 @@
         </div>
         {% endif %}
 
-      </div>
     </div>
   </div>
 
   <!-- Div for Logout -->
-    <div class="navbar-logout-container">
+    <div class="logout-container">
         {% if current_user.is_authenticated %}
-            <a class="navbar-logout medium4" href="{{ url_for('logout') }}">Logout</a>
+          <div class="SendJoinBtn">
+            <button>
+              <a class="logout" href="{{ url_for('logout') }}">Logout</a>
+            </button>
+          </div>
         {% endif %}
-  </div>
+    </div>
 </div>
 {% endblock %}
 
