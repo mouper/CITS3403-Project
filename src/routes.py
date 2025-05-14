@@ -157,6 +157,13 @@ def dashboard():
                   .all()
     )
 
+    for t in my_tournaments:
+        rounds = Round.query.filter_by(tournament_id=t.id).all()
+        completed = sum(1 for r in rounds if r.status == 'completed')
+        in_progress = any(r.status == 'in progress' for r in rounds)
+        t.current_round = completed + (1 if in_progress else 0)
+        t.completed_rounds = completed
+
     return render_template(
         'dashboard.html',
         tournaments=my_tournaments,
