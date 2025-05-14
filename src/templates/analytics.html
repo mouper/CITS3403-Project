@@ -13,6 +13,8 @@
               <option value="Chess">Chess</option>
               <option value="Magic: The Gathering">Magic: The Gathering</option>
               <option value="Checkers">Checkers</option>
+              <option value="YuGiOh">YuGiOh</option>
+              <option value="One Piece Card Game">One Piece Card Game</option>
               <option value="Other">Other</option>
             </select>
           </div>
@@ -59,89 +61,59 @@
       {% endif %}
 
       <h2 class="subheadline purple-text">Top Three Tournaments</h2>
-      <div class="statcard-container">
-        <div class="statcard">
-          <div class="statcard-top-row">
-            <p class="subheadline">1st</p>
-            <p class="title2 purple-text">8 WINS</p>
+      {% for game_type, entries in grouped_results.items() %}
+        <div class="top3-section" data-type="wins" data-game-type="{{ game_type }}">
+          <div class="top3-header">
+            <span class="top3-title">TOP 3 TOURNAMENTS: HIGHEST WIN COUNT</span>
+            <span class="top3-game">{{ game_type }}</span>
           </div>
-          <div class="statcard-middle-row">
-            <p class="medium5">80% WR</p>
-            <p class="medium5">OPWR%</p>
-            <p class="medium5">OPOPWR%</p>
+          <div class="statcard-container">
+            {% for result, tournament in entries[:3] %}
+              <div class="statcard">
+                <div class="statcard-top-row">
+                  <p class="subheadline">
+                    {{ result.rank }}{{ 'st' if result.rank == 1 else 'nd' if result.rank == 2 else 'rd' if result.rank == 3 else 'th' }}
+                  </p>
+                  <p class="title2 purple-text">{{ result.wins }} WINS</p>
+                </div>
+                <div class="statcard-middle-row">
+                  <p class="medium5">{{ (result.wins / (result.wins + result.losses) * 100) | round(1) }}% WR</p>
+                  <p class="medium5">{{ (result.opponent_win_percentage * 100) | round(1) }}% OPWR%</p>
+                  <p class="medium5">{{ (result.opp_opp_win_percentage * 100) | round(1) }}% OPOWR%</p>
+                </div>
+                <p class="medium4 italic tournament-type">{{ tournament.format }}</p>
+                <p class="medium4">{{ tournament.title }}</p>
+              </div>
+            {% endfor %}
           </div>
-          <p class="medium4 italic tournament-type">Tournament Type</p>
-          <p class="medium4">Tournament Name</p>
         </div>
-        <div class="statcard">
-          <div class="statcard-top-row">
-            <p class="subheadline">1st</p>
-            <p class="title2 purple-text">10 WINS</p>
-          </div>
-          <div class="statcard-middle-row">
-            <p class="medium5">100% WR</p>
-            <p class="medium5">OPWR%</p>
-            <p class="medium5">OPOPWR%</p>
-          </div>
-          <p class="medium4 italic tournament-type">Tournament Type</p>
-          <p class="medium4">Tournament Name</p>
-        </div>
-        <div class="statcard">
-          <div class="statcard-top-row">
-            <p class="subheadline">1st</p>
-            <p class="title2 purple-text">5 WINS</p>
-          </div>
-          <div class="statcard-middle-row">
-            <p class="medium5">100% WR</p>
-            <p class="medium5">OPWR%</p>
-            <p class="medium5">OPOPWR%</p>
-          </div>
-          <p class="medium4 italic tournament-type">Tournament Type</p>
-          <p class="medium4">Tournament Name</p>
-        </div>
-      </div>
+      {% endfor %}
       <h2 class="subheadline purple-text">Recent Tournaments</h2>
-      <div class="statcard-container">
-        <div class="statcard">
-          <div class="statcard-top-row">
-            <p class="subheadline">3rd</p>
-            <p class="title2 purple-text">4 WINS</p>
-          </div>
-          <div class="statcard-middle-row">
-            <p class="medium5">80% WR</p>
-            <p class="medium5">OPWR%</p>
-            <p class="medium5">OPOPWR%</p>
-          </div>
-          <p class="medium4 italic tournament-type">Tournament Type</p>
-          <p class="medium4">Tournament Name</p>
+      {% if last_3_results %}
+        <div class="statcard-container">
+          {% for result, tournament in last_3_results %}
+            <div class="recent-tournaments" data-game-type="{{ tournament.game_type }}">
+              <div class="statcard">
+                <div class="statcard-top-row">
+                  <p class="subheadline">
+                    {{ result.rank }}{{ 'st' if result.rank == 1 else 'nd' if result.rank == 2 else 'rd' if result.rank == 3 else 'th' }}
+                  </p>
+                  <p class="title2 purple-text">{{ result.wins }} WINS</p>
+                </div>
+                <div class="statcard-middle-row">
+                  <p class="medium5">{{ (result.wins / (result.wins + result.losses) * 100) | round(1) }}% WR</p>
+                  <p class="medium5">{{ (result.opponent_win_percentage * 100) | round(1) }}% OPWR%</p>
+                  <p class="medium5">{{ (result.opp_opp_win_percentage * 100) | round(1) }}% OPOWR%</p>
+                </div>
+                <p class="medium4 italic tournament-type">{{ tournament.format }}</p>
+                <p class="medium4">{{ tournament.title }}</p>
+              </div>
+            </div>
+          {% endfor %}
         </div>
-        <div class="statcard">
-          <div class="statcard-top-row">
-            <p class="subheadline">1st</p>
-            <p class="title2 purple-text">10 WINS</p>
-          </div>
-          <div class="statcard-middle-row">
-            <p class="medium5">100% WR</p>
-            <p class="medium5">OPWR%</p>
-            <p class="medium5">OPOPWR%</p>
-          </div>
-          <p class="medium4 italic tournament-type">Tournament Type</p>
-          <p class="medium4">Tournament Name</p>
-        </div>
-        <div class="statcard">
-          <div class="statcard-top-row">
-            <p class="subheadline">5th</p>
-            <p class="title2 purple-text">5 WINS</p>
-          </div>
-          <div class="statcard-middle-row">
-            <p class="medium5">63% WR</p>
-            <p class="medium5">OPWR%</p>
-            <p class="medium5">OPOPWR%</p>
-          </div>
-          <p class="medium4 italic tournament-type">Tournament Type</p>
-          <p class="medium4">Tournament Name</p>
-        </div>
-      </div>   
+      {% else %}
+        <p class="medium4 italic">No recent tournaments found.</p>
+      {% endif %} 
     </div>
   
     <div id="adminView" class="analytics-view" style="display: none;">

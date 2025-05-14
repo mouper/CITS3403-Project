@@ -8,6 +8,8 @@ from app import application, mail
 from models import Friend, User, UserStat, Tournament, TournamentPlayer, TournamentResult, Match, Round, Invite
 from db import db  # Use the centralized db object from db.py
 from sqlalchemy import func
+from sqlalchemy.orm import aliased
+from collections import defaultdict
 import json, io
 import re
 import os
@@ -156,7 +158,40 @@ def dashboard():
 @application.route('/analytics')
 @login_required
 def analytics():
+    # User's personal performance data
+
+    TP = aliased(TournamentPlayer)
+
+    all_results = (
+        db.session.query(TournamentResult, Tournament)
+        .join(Tournament, TournamentResult.tournament_id == Tournament.id)
+        .join(TP, TournamentResult.player_id == TP.id)
+        .filter(TP.user_id == current_user.id)
+        .all()
+    )
+
+    grouped_results = defaultdict(list)
+    for result, tournament in all_results:
+        grouped_results[tournament.game_type].append((result, tournament))
+    for game_type in grouped_results:
+        grouped_results[game_type].sort(key=lambda x: x[0].wins, reverse=True)
+
+    last_3_results = sorted(all_results, key=lambda x: x[1].created_at, reverse=True)[:3]
+
+    grouped_by_winrate = {}
+    for game_type, entries in grouped_results.items():
+        sorted_entries = sorted(
+            entries,
+            key=lambda x: (x[0].wins / (x[0].wins + x[0].losses)) if (x[0].wins + x[0].losses) > 0 else 0,
+            reverse=True
+        )
+        grouped_by_winrate[game_type] = sorted_entries
+
     user_stats = db.session.query(UserStat).filter_by(user_id=current_user.id).all()
+
+    # Adjust win_percentage for display
+    for stat in user_stats:
+        stat.win_percentage = round(stat.win_percentage * 100, 2)
 
     limit_param = request.args.get('limit', 'all')
     try:
@@ -202,11 +237,10 @@ def analytics():
                 'opp_owp':  round(result.opp_opp_win_percentage   * 100, 2)
             })
 
-
         if len(standings) < 3:
             continue
 
-        standings.sort(key=lambda p: (p['wins'], p['opp_owp']),reverse=True)
+        standings.sort(key=lambda p: (p['wins'], p['opp_owp']), reverse=True)
         recent_tournaments.append({
             'id':                   tourney.id,
             'title':                tourney.title,
@@ -222,6 +256,9 @@ def analytics():
         title='Analytics',
         stats=user_stats,
         recent_tournaments=recent_tournaments,
+        grouped_results=grouped_results,
+        grouped_by_winrate=grouped_by_winrate,
+        last_3_results=last_3_results,
         limit=limit_param
     )
 
@@ -388,6 +425,8 @@ def save_display_settings():
     current_user.show_last_three = data.get('show_last_three', False)
     current_user.show_best_three = data.get('show_best_three', False)
     current_user.show_admin = data.get('show_admin', False)
+    current_user.preferred_game_type = data.get('preferred_game_type', None)
+    current_user.preferred_top3_sorting = data.get('preferred_top3_sorting', 'wins')
     db.session.commit()
     return jsonify(success=True)
 
@@ -395,6 +434,20 @@ def save_display_settings():
 @application.route('/new_tournament')
 @login_required
 def new_tournament():
+    # Get accepted friends (do this for all cases)
+    sent_accepted = Friend.query.filter_by(user_id=current_user.id, status='accepted').all()
+    recv_accepted = Friend.query.filter_by(friend_id=current_user.id, status='accepted').all()
+
+    accepted_friends = [f.recipient for f in sent_accepted] + [f.sender for f in recv_accepted]
+    accepted_friend_usernames = [friend.username for friend in accepted_friends]
+    
+    # Create list of friend details including names
+    accepted_friend_details = [{
+        'username': friend.username,
+        'first_name': friend.first_name,
+        'last_name': friend.last_name
+    } for friend in accepted_friends]
+
     # Check if we're editing an existing draft tournament
     tournament_id = request.args.get('tournament_id')
     if tournament_id:
@@ -410,36 +463,28 @@ def new_tournament():
                     'has_tourney_pro_account': bool(player.user_id),
                     'guest_firstname': player.guest_firstname,
                     'guest_lastname': player.guest_lastname,
-                    'email': player.email
+                    'email': player.email,
+                    'user_id': player.user_id
                 }
                 if player.user_id:
                     user = User.query.get(player.user_id)
                     if user:
                         player_info['username'] = user.username
-                        player_info['user_id'] = user.id
+                        # If this is the current user and they're a player, mark them as confirmed
+                        if user.id == current_user.id:
+                            player_info['is_confirmed'] = True
                 player_data.append(player_info)
             
             return render_template('new_tournament.html', 
                                 tournament=tournament,
-                                players=player_data)
-        
-    # Get accepted friends
-    sent_accepted = Friend.query.filter_by(user_id=current_user.id, status='accepted').all()
-    recv_accepted = Friend.query.filter_by(friend_id=current_user.id, status='accepted').all()
-
-    accepted_friends = [f.recipient for f in sent_accepted] + [f.sender for f in recv_accepted]
-    accepted_friend_usernames = [friend.username for friend in accepted_friends]
+                                players=player_data,
+                                accepted_friend_usernames=accepted_friend_usernames,
+                                accepted_friend_details=accepted_friend_details)
     
-    # Create list of friend details including names
-    accepted_friend_details = [{
-        'username': friend.username,
-        'first_name': friend.first_name,
-        'last_name': friend.last_name
-    } for friend in accepted_friends]
-
+    # If not editing an existing tournament
     return render_template('new_tournament.html', 
-                         accepted_friend_usernames=accepted_friend_usernames,
-                         accepted_friend_details=accepted_friend_details)
+                        accepted_friend_usernames=accepted_friend_usernames,
+                        accepted_friend_details=accepted_friend_details)
 
 @application.route('/save_tournament', methods=['POST'])
 @login_required
@@ -2058,8 +2103,22 @@ def user_preview(username):
     grouped_results = defaultdict(list)
     for result, tournament in all_results:
         grouped_results[tournament.game_type].append((result, tournament))
+
+    # ✅ 根据用户偏好进行排序（wins 或 winrate）
     for game_type in grouped_results:
-        grouped_results[game_type].sort(key=lambda x: x[0].wins, reverse=True)
+        if user.preferred_top3_sorting == "winrate":
+            grouped_results[game_type].sort(
+                key=lambda x: (x[0].wins / (x[0].wins + x[0].losses)) if (x[0].wins + x[0].losses) > 0 else 0,
+                reverse=True
+            )
+        else:
+            grouped_results[game_type].sort(key=lambda x: x[0].wins, reverse=True)
+
+    # ✅ 如果用户设置了 preferred_game_type，只保留该类型的结果
+    if user.preferred_game_type and user.preferred_game_type in grouped_results:
+        grouped_results = {
+            user.preferred_game_type: grouped_results[user.preferred_game_type]
+        }
 
     # 最近 3 场卡片
     last_3_results = sorted(all_results, key=lambda x: x[1].created_at, reverse=True)[:3]
@@ -2082,7 +2141,7 @@ def user_preview(username):
     # 获取统计数据
     user_stats = db.session.query(UserStat).filter_by(user_id=user.id).all()
 
-    # 最近主办比赛（Admin 卡片，复用 account 和 analytics 的逻辑）
+    # 最近主办比赛（Admin 卡片）
     recent_tournaments = []
     base_q = (
         db.session.query(Tournament)
@@ -2138,6 +2197,3 @@ def user_preview(username):
         recent_tournaments=recent_tournaments,
         game_types=list(grouped_results.keys())
     )
-
-
-
