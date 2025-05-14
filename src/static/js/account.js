@@ -234,6 +234,16 @@ document.addEventListener('DOMContentLoaded', () => {
         show_admin
       };
 
+      // 仅在 Player 模式下添加 sorting 和 game_type
+      if (!show_admin) {
+        const selectedGameType = document.getElementById('gameTypeSelect')?.value || null;
+        const selectedTab = document.querySelector('.top3-tab.active')?.textContent || '';
+        const preferredSorting = selectedTab.includes('Win Rate') ? 'winrate' : 'wins';
+
+        data.preferred_game_type = selectedGameType;
+        data.preferred_top3_sorting = preferredSorting;
+      }
+
       fetch('/account/save_display_settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
