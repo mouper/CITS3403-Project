@@ -10,12 +10,11 @@
             <a href="{{ url_for('signup') }}" class="signup-btn medium2">Sign Up</a>
         </div>
     </nav>
-    <div class="login-form">
-        <h1 class="title2">Login</h1>
+        <h1 class="title2 text-center mb-[2rem]">Login</h1>
         
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
-        <div class="flashes">
+        <div class="flashes px-20 md:px-40 xl:px-60">
             {% for category, message in messages %}
             <div class="alert alert-{{ category }}">{{ message }}</div>
             {% endfor %}
@@ -23,16 +22,20 @@
         {% endif %}
     {% endwith %}
         
-        <div class="TextForm">
-            <form method="POST">
+    <form method="POST">
+        <div class="login-form">
+            <div class="TextForm w-3/5 sm:w-96">
                 <input type="text" name="username" placeholder="Username" required>
+            </div>
+            <div class="TextForm w-3/5 sm:w-96">
                 <input type="password" name="password" placeholder="Password" required>
-                <div class="SaveBtn" style="margin-top: 1rem;">
-                    <button type="submit">Login</button>
-                </div>
-            </form>
+            </div>
+            <div class="SaveBtn mt-1">
+                <button type="submit">Login</button>
+            </div>
         </div>
+    </form>
+    
         
-        <p class="medium4">Don't have an account? <a href="{{ url_for('signup') }}">Sign up</a></p>
-    </div>
+    <p class="medium4 text-center mt-[1.5rem] ">Don't have an account? <a href="{{ url_for('signup') }}" class="white-text underline decoration-1 underline-offset-4 hover:no-underline hover:font-medium">Sign Up</a></p>
 {% endblock %}
