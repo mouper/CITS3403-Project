@@ -60,6 +60,19 @@
         </div>
       </div>
 
+      {% if current_round and current_round.status == 'in progress' and view_state != 'confirm_results' %}
+      <div class="round-controls">
+        <!-- Round Timer -->
+        <div class="round-timer">
+          <span class="timer-label medium2">Round Timer:</span>
+          <span id="timerDisplay" class="timer-value regular3">{{ tournament.round_time_minutes }}:00</span>
+        </div>
+        <div class="Dialog">
+          <button id="resetRoundBtn" class="cancel">Reset Round</button>
+        </div>
+      </div>
+      {% endif %}
+
       <!-- Pairings -->
       <div class="table-container">
         <div class="table-label">
@@ -160,6 +173,72 @@
           {% endif %}
         </div>
         <div class="standings-table-container pb-[1.5rem]">
+          {% if (current_round and current_round.status == 'completed') or tournament.status == 'completed' %}
+            <div class="table-wrapper">
+              <table class="standings-table app-table">
+                <thead>
+                  <tr>
+                    <th>Rank</th>
+                    <th>Player</th>
+                    <th>W/L</th>
+                    {% if tournament.format == 'swiss' %}
+                      <th>OWP</th>
+                      <th>OOWP</th>
+                    {% endif %}
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for player_result in ranked_players %}
+                  <tr>
+                    <td>{{ player_result.rank }}</td>
+                    <td>{{ player_result.name }}</td>
+                    <td>{{ player_result.wins }}/{{ player_result.losses }}</td>
+                    {% if tournament.format == 'swiss' %}
+                      <td>{{ "%.1f"|format(player_result.owp * 100) }}%</td>
+                      <td>{{ "%.1f"|format(player_result.oowp * 100) }}%</td>
+                    {% endif %}
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% elif current_round and (current_round.status == 'not started' or current_round.status == 'in progress') %}
+            {% if current_round.round_number == 1 %}
+              <div class="standings-placeholder">
+                <p class="regular3">Standings will update after this round is confirmed.</p>
+              </div>
+            {% else %}
+              <div class="table-wrapper">
+                <table class="standings-table app-table">
+                  <thead>
+                    <tr>
+                      <th>Rank</th>
+                      <th>Player</th>
+                      <th>W/L</th>
+                      {% if tournament.format == 'swiss' %}
+                        <th>OWP</th>
+                        <th>OOWP</th>
+                      {% endif %}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for player_result in previous_round_ranked_players %}
+                    <tr>
+                      <td>{{ player_result.rank }}</td>
+                      <td>{{ player_result.name }}</td>
+                      <td>{{ player_result.wins }}/{{ player_result.losses }}</td>
+                      {% if tournament.format == 'swiss' %}
+                        <td>{{ "%.1f"|format(player_result.owp * 100) }}%</td>
+                        <td>{{ "%.1f"|format(player_result.oowp * 100) }}%</td>
+                      {% endif %}
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            {% endif %}
+          {% endif %}
+
           {% if tournament.format == 'single elimination' and rounds_count > 1 %}
             <!-- Render tournament bracket for single elimination format -->
             <div class="tournament-bracket">
@@ -214,35 +293,6 @@
               </div>
             </div>
           {% endif %}
-          
-          <div class="table-wrapper">
-            <table class="standings-table app-table">
-              <thead>
-                <tr>
-                  <th>Rank</th>
-                  <th>Player</th>
-                  <th>W/L</th>
-                  {% if tournament.format == 'swiss' %}
-                    <th>OWP</th>
-                    <th>OOWP</th>
-                  {% endif %}
-                </tr>
-              </thead>
-              <tbody>
-                {% for player_result in ranked_players %}
-                <tr>
-                  <td>{{ player_result.rank }}</td>
-                  <td>{{ player_result.name }}</td>
-                  <td>{{ player_result.wins }}/{{ player_result.losses }}</td>
-                  {% if tournament.format == 'swiss' %}
-                    <td>{{ "%.1f"|format(player_result.owp * 100) }}%</td>
-                    <td>{{ "%.1f"|format(player_result.oowp * 100) }}%</td>
-                  {% endif %}
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
         </div>
       </div>
 
@@ -261,7 +311,7 @@
         {% if not current_round or current_round.status == 'not started' %}
           <!-- Round Timer -->
           <div class="round-timer">
-            <span class="timer-label medium2">Round Time:</span>
+            <span class="timer-label medium2">Round Time Limit:</span>
             <span id="timerDisplay" class="timer-value">{{ tournament.round_time_minutes }}:00</span>
           </div>
           {% if not readonly %}
@@ -280,17 +330,18 @@
           </div>
           {% endif %}
         {% elif current_round and current_round.status == 'in progress' and view_state == 'confirm_results' %}
-          <!-- Round Timer - Hidden in confirm results state -->
-          <div class="round-timer">
-            <span class="timer-label medium2">Round Time Limit:</span>
-            <span id="timerDisplay" class="timer-value regular3">00:00</span>
-          </div>
+          {# No round timer in confirm results view #}
           {% if not readonly %}
           <div class="SendJoinBtn">
             <button id="confirmResultsBtn">Confirm Round Results</button>
           </div>
           {% endif %}
         {% elif current_round and current_round.status == 'in progress' and view_state != 'confirm_results' %}
+          <!-- Round Timer (VISIBLE during in progress) -->
+          <div class="round-timer">
+            <span class="timer-label medium2">Round Timer:</span>
+            <span id="timerDisplay" class="timer-value">{{ tournament.round_time_minutes }}:00</span>
+          </div>
           {% if not readonly %}
           <div class="SendJoinBtn justify-end">
             <button id="endRoundEarlyBtn">End Round Early</button>

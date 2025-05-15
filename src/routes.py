@@ -953,6 +953,43 @@ def view_tournament(tournament_id):
             is_creator=is_creator
         )
     else:
+        # Compute previous round standings for pre-round and in-progress phase after round 1
+        previous_round_ranked_players = []
+        if current_round and current_round.round_number > 1 and current_round.status in ['not started', 'in progress']:
+            # Find the previous round
+            prev_round = next((r for r in rounds if r.round_number == current_round.round_number - 1), None)
+            if prev_round:
+                # Use TournamentResult if available (after round completed), else compute
+                prev_results = TournamentResult.query.filter_by(tournament_id=tournament_id).order_by(TournamentResult.rank).all()
+                if prev_results:
+                    for result in prev_results:
+                        player = players.get(result.player_id)
+                        if not player:
+                            continue
+                        player_result = {
+                            'id': player.id,
+                            'name': player.user.username if player.user_id else f"{player.guest_firstname} {player.guest_lastname}",
+                            'wins': result.wins,
+                            'losses': result.losses,
+                            'owp': result.opponent_win_percentage or 0,
+                            'oowp': result.opp_opp_win_percentage or 0,
+                            'rank': result.rank
+                        }
+                        previous_round_ranked_players.append(player_result)
+                else:
+                    # Fallback: use compute_rankings for previous round
+                    prev_rankings = compute_rankings(tournament_id, tournament.format)
+                    for idx, rp in enumerate(prev_rankings, 1):
+                        player_obj = None
+                        for p in tournament_players:
+                            if (hasattr(p, 'user') and rp.get('name') == p.user.username) or (rp.get('name') == f"{p.guest_firstname} {p.guest_lastname}"):
+                                player_obj = p
+                                break
+                        rp_copy = dict(rp)
+                        if player_obj:
+                            rp_copy['id'] = player_obj.id
+                        rp_copy['rank'] = idx
+                        previous_round_ranked_players.append(rp_copy)
         # Use the regular tournament template for in-progress tournaments
         return render_template(
             'tournament.html',
@@ -965,6 +1002,7 @@ def view_tournament(tournament_id):
             matches_by_round=matches_by_round,
             current_matches=current_matches,
             ranked_players=ranked_players,
+            previous_round_ranked_players=previous_round_ranked_players,
             player_stats=player_stats,  # Add back player_stats for pairings table
             view_state=view_state
         )
