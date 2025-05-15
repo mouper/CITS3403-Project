@@ -1,21 +1,12 @@
 import os
 from flask import Flask, request
 from config import Config, DeploymentConfig
-from flask_login import LoginManager, current_user, logout_user
-from flask_mail import Mail, Message
-from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
+from flask_login import current_user, logout_user
 from dotenv import load_dotenv
+from db import db, mail, migrate, login_manager
 
 # Load environment variables
 load_dotenv()
-
-# Initialize Flask extensions
-db = SQLAlchemy()
-mail = Mail()
-migrate = Migrate()
-login_manager = LoginManager()
-login_manager.login_view = 'main.login'
 
 def create_app(config_class):
     # Create Flask app
@@ -31,9 +22,9 @@ def create_app(config_class):
     # Import models here to avoid circular imports
     from models import User
 
-    # Register blueprint
-    from blueprints import main
-    app.register_blueprint(main)
+    @login_manager.user_loader
+    def load_user(user_id):
+        return db.session.get(User, int(user_id))
 
     @app.before_request
     def logout_if_user_missing():
@@ -43,13 +34,12 @@ def create_app(config_class):
     @app.context_processor
     def inject_request():
         return dict(request=request)
+
+    # Register blueprint
+    from blueprints import main
+    app.register_blueprint(main)
     
     return app
-
-@login_manager.user_loader
-def load_user(user_id):
-    from models import User
-    return db.session.get(User, int(user_id))
 
 # Create the application instance
 application = create_app(DeploymentConfig)

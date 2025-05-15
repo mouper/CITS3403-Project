@@ -6,7 +6,7 @@ from flask_login import login_user, logout_user, current_user, login_required
 from flask_mail import Message
 from blueprints import main
 from models import Friend, User, UserStat, Tournament, TournamentPlayer, TournamentResult, Match, Round, Invite
-from app import db, mail  # Import db and mail from app
+from db import db, mail  # Import db and mail from database instead of app
 from sqlalchemy import func
 from sqlalchemy.orm import aliased
 from collections import defaultdict

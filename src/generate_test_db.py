@@ -185,8 +185,7 @@ def add_users():
         )
         new_user.set_password(user_info["password"])
         db.session.add(new_user)
-    
-    print("Added users successfully.")
+
     db.session.commit()
 
 def add_friendships():
@@ -238,7 +237,6 @@ def add_friendships():
         )
         db.session.add(new_friendship)
     
-    print("Added friendships successfully.")
     db.session.commit()
 
 def add_tournaments():
@@ -504,7 +502,6 @@ def add_tournaments():
         db.session.flush()  # Flush to get the ID
         created_tournaments.append((new_tournament.id, tournament_info))
     
-    print("Added tournaments successfully.")
     db.session.commit()
     
     return created_tournaments
@@ -591,7 +588,6 @@ def add_tournament_players(created_tournaments):
             )
             db.session.add(new_player)
     
-    print("Added tournament players successfully.")
     db.session.commit()
 
 def add_rounds_and_matches(created_tournaments):
@@ -691,7 +687,6 @@ def add_rounds_and_matches(created_tournaments):
                     )
                     db.session.add(bye_match)
     
-    print("Added rounds and matches successfully.")
     db.session.commit()
 
 def add_tournament_results(created_tournaments):
@@ -822,7 +817,6 @@ def add_tournament_results(created_tournaments):
                     opp_opp_win_percentage=entry["oowp"]
                 )
                 db.session.add(new_result)
-    print("Added tournament results successfully.")
     db.session.commit()
 
 def add_user_stats():
@@ -880,14 +874,12 @@ def add_user_stats():
                 )
                 db.session.add(new_stat)
     
-    print("Added user stats successfully based on completed tournament matches only.")
     db.session.commit()
 
 def init_db():
     try:
         db.drop_all()
         db.create_all()
-        print("Database initialized and tables created.")
 
     except Exception as e:
         print(f"Error during database initialization: {e}")
@@ -901,16 +893,10 @@ def populate_data():
     add_rounds_and_matches(created_tournaments)
     add_tournament_results(created_tournaments)
     add_user_stats()
-    print("All test data successfully added to the database!")
 
 if __name__ == "__main__":
     with app.app_context():
         # Check if the database file exists
-        if os.path.exists(db_path):
-            print(f"Found existing database at {db_path}")
-        else:
-            print(f"Creating new database at {db_path}")
-        
         init_db()
         populate_data()
         print(f"Successfully added test data to the existing app.db in {instance_path}!")

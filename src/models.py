@@ -1,7 +1,9 @@
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
-from app import db
 from sqlalchemy.sql import func
+from db import db
+
+# Import db at module level but don't use it until after initialization
 
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
