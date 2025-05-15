@@ -130,61 +130,52 @@ def signup():
 @application.route('/dashboard')
 @login_required
 def dashboard():
-    my_tournaments = Tournament.query.filter_by(created_by=current_user.id).all()
+    sent = Friend.query.filter_by(user_id=current_user.id, status='accepted').all()
+    recv = Friend.query.filter_by(friend_id=current_user.id, status='accepted').all()
+    sent_friends = [f.recipient for f in sent]
+    recv_friends = [f.sender    for f in recv]
+    all_ids = set(); accepted_friends = []
+    for u in sent_friends + recv_friends:
+        if u.id not in all_ids:
+            all_ids.add(u.id)
+            accepted_friends.append(u)
+    accepted_friend_usernames = [u.username for u in accepted_friends]
 
-    sent_accepted = Friend.query.filter_by(user_id=current_user.id, status='accepted').all()
-    recv_accepted = Friend.query.filter_by(friend_id=current_user.id, status='accepted').all()
+    status_filter = request.args.get('status', 'in progress creator')
+    parts = status_filter.rsplit(' ', 1)
+    status_text, role = parts[0], parts[1]
 
-    sent_friends = [f.recipient for f in sent_accepted]
-    recv_friends = [f.sender for f in recv_accepted]
-    
-    all_friend_ids = set()
-    accepted_friends = []
-    
-    for friend in sent_friends + recv_friends:
-        if friend.id not in all_friend_ids:
-            all_friend_ids.add(friend.id)
-            accepted_friends.append(friend)
-
-    accepted_friend_usernames = [friend.username for friend in accepted_friends]
-    
-    status = request.args.get('status', 'in progress player')
-    N = 5
+    if role == 'creator':
+        q = Tournament.query.filter(
+            Tournament.created_by == current_user.id,
+            Tournament.status     == status_text
+        )
+    else:  
+        q = Tournament.query.join(TournamentPlayer).filter(
+            TournamentPlayer.user_id == current_user.id,
+            Tournament.status        == status_text
+        )
 
     tournaments = (
-        Tournament.query
-        .outerjoin(TournamentPlayer, TournamentPlayer.tournament_id == Tournament.id)
-        .filter(
-            or_(
-                Tournament.created_by == current_user.id,
-                TournamentPlayer.user_id  == current_user.id
-            ),
-            Tournament.status == status
-        )
+        q
         .distinct()
         .order_by(func.random())
-        .limit(N)
         .all()
     )
 
-    for t in tournaments:
     for t in tournaments:
         rounds = Round.query.filter_by(tournament_id=t.id).all()
         completed = sum(1 for r in rounds if r.status == 'completed')
         in_prog   = any(r.status == 'in progress' for r in rounds)
         t.current_round   = completed + (1 if in_prog else 0)
         t.completed_rounds = completed
-        t.is_creator = (t.created_by == current_user.id)
-
-    sent = Friend.query.filter_by(user_id=current_user.id, status='accepted')
-    recv = Friend.query.filter_by(friend_id=current_user.id, status='accepted')
+        t.is_creator      = (t.created_by == current_user.id)
 
     return render_template(
         'dashboard.html',
-        tournaments=tournaments,         
-        accepted_friend_usernames=accepted_friend_usernames,
-        status_filter=status,
-        current_user=current_user
+        tournaments                = tournaments,
+        accepted_friend_usernames  = accepted_friend_usernames,
+        status_filter              = status_filter
     )
   
 @application.route('/analytics')
