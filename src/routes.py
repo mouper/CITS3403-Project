@@ -2400,3 +2400,43 @@ def edit_tournament(tournament_id):
         accepted_friend_usernames=accepted_friend_usernames,
         accepted_friend_details=accepted_friend_details
     )
+
+@application.route('/tournament/<int:tournament_id>/delete', methods=['POST'])
+@login_required
+def delete_tournament(tournament_id):
+    tournament = Tournament.query.get_or_404(tournament_id)
+    
+    # Only allow deletion if user is the creator and tournament is in draft status
+    if tournament.created_by != current_user.id:
+        return jsonify({
+            'success': False,
+            'message': 'You do not have permission to delete this tournament'
+        }), 403
+        
+    if tournament.status != 'draft':
+        return jsonify({
+            'success': False,
+            'message': 'Can only delete draft tournaments'
+        }), 400
+    
+    try:
+        # Delete all related records first
+        TournamentPlayer.query.filter_by(tournament_id=tournament_id).delete()
+        Round.query.filter_by(tournament_id=tournament_id).delete()
+        TournamentResult.query.filter_by(tournament_id=tournament_id).delete()
+        Invite.query.filter_by(tournament_id=tournament_id).delete()
+        
+        # Finally delete the tournament
+        db.session.delete(tournament)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Tournament deleted successfully'
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'message': f'Error deleting tournament: {str(e)}'
+        }), 500

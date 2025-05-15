@@ -979,10 +979,62 @@ function initTournamentForm() {
   }
 
   function handleDiscardTournament() {
+    // Get tournament data from hidden div if it exists
+    const tournamentDataDiv = document.getElementById('tournamentData');
+    const existingTournament = tournamentDataDiv ? JSON.parse(tournamentDataDiv.dataset.tournament) : null;
+
+    if (existingTournament && existingTournament.id) {
+        // If tournament exists, confirm deletion
+        if (confirm('Are you sure you want to delete this tournament draft? This action cannot be undone.')) {
+            // Show loading state
+            const discardBtn = document.getElementById('discardTournament');
+            const originalContent = discardBtn.innerHTML;
+            discardBtn.innerHTML = '<div class="loading-spinner"></div> Discarding...';
+            discardBtn.style.pointerEvents = 'none';
+
+            // Make API call to delete tournament
+            fetch(`/tournament/${existingTournament.id}/delete`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Reset the form instead of redirecting
+                    resetForm();
+                } else {
+                    // Show error message
+                    alert(data.message || 'Error deleting tournament');
+                }
+                // Restore button state
+                discardBtn.innerHTML = originalContent;
+                discardBtn.style.pointerEvents = 'auto';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error deleting tournament. Please try again.');
+                // Restore button state
+                discardBtn.innerHTML = originalContent;
+                discardBtn.style.pointerEvents = 'auto';
+            });
+        }
+    } else {
+        // If no existing tournament, just reset the form
+        if (confirm('Are you sure you want to discard this tournament? Any unsaved changes will be lost.')) {
+            resetForm();
+        }
+    }
+}
+
+function resetForm() {
     // Reset all form inputs
-    document.querySelectorAll('input[type="text"]').forEach(input => input.value = '');
-    document.querySelectorAll('input[type="email"]').forEach(input => input.value = '');
-    document.querySelectorAll('select').forEach(select => select.selectedIndex = 0);
+    document.getElementById('tournamentName').value = '';
+    document.getElementById('roundTimeLimit').selectedIndex = 0;
+    document.getElementById('tournamentType').selectedIndex = 0;
+    document.getElementById('gameType').selectedIndex = 0;
+    document.getElementById('competitorCount').selectedIndex = 0;
     document.getElementById('isCompetitor').checked = false;
     
     // Clear any errors
@@ -990,12 +1042,21 @@ function initTournamentForm() {
     document.querySelectorAll('.field-error').forEach(el => el.style.display = 'none');
     
     // Hide player container
-    playersContainer.style.display = 'none';
+    document.getElementById('playersContainer').style.display = 'none';
     
     // Clear player tabs and content
-    playerTabs.innerHTML = '';
-    playerContent.innerHTML = '';
-  }
+    document.getElementById('playerTabs').innerHTML = '';
+    document.getElementById('playerContent').innerHTML = '';
+    
+    // Remove the tournament data div if it exists
+    const tournamentDataDiv = document.getElementById('tournamentData');
+    if (tournamentDataDiv) {
+        tournamentDataDiv.remove();
+    }
+    
+    // Hide the start tournament button
+    document.querySelector('.SendJoinBtn').classList.add('hidden');
+}
 
   function handleIsCompetitorChange() {
     // Clear any errors
@@ -1201,48 +1262,56 @@ function initTournamentForm() {
 
   // Extract common tournament data collection and validation into a separate function
   function collectAndValidateTournamentData() {
-    // Collect tournament data
+    // Get tournament data from hidden div if it exists
+    const tournamentDataDiv = document.getElementById('tournamentData');
+    const existingTournament = tournamentDataDiv ? JSON.parse(tournamentDataDiv.dataset.tournament) : null;
+
     const tournamentData = {
-      title: document.getElementById('tournamentName').value,
-      format: document.getElementById('tournamentType').value,
-      game_type: document.getElementById('gameType').value,
-      include_creator_as_player: isCompetitorCheckbox.checked,
-      created_by: currentUser.id,
-      round_time_minutes: parseInt(document.getElementById('roundTimeLimit').value)
+        title: document.getElementById('tournamentName').value,
+        format: document.getElementById('tournamentType').value,
+        game_type: document.getElementById('gameType').value,
+        include_creator_as_player: isCompetitorCheckbox.checked,
+        created_by: currentUser.id,
+        round_time_minutes: parseInt(document.getElementById('roundTimeLimit').value)
     };
+
+    // Include tournament ID if we're editing an existing tournament
+    if (existingTournament && existingTournament.id) {
+        tournamentData.tournament_id = existingTournament.id;
+    }
 
     // Validate core tournament data
     if (!tournamentData.title || tournamentData.title.trim() === '') {
-      showError('Please enter a tournament name');
-      return null;
+        showError('Please enter a tournament name');
+        return null;
     }
 
     if (!tournamentData.round_time_minutes || isNaN(tournamentData.round_time_minutes)) {
-      showError('Please select a round time limit');
-      return null;
+        showError('Please select a round time limit');
+        return null;
     }
     
     if (!tournamentData.format || tournamentData.format === '') {
-      showError('Please select a tournament type');
-      return null;
+        showError('Please select a tournament type');
+        return null;
     }
 
     if (!tournamentData.game_type || tournamentData.game_type === '') {
-      showError('Please select a game type');
-      return null;
+        showError('Please select a game type');
+        return null;
     }
     
     // Get number of players
     const playerCount = parseInt(competitorCountSelect.value);
     if (isNaN(playerCount) || playerCount < 2) {
-      showError('Please select a valid number of competitors');
-      return null;
+        showError('Please select a valid number of competitors');
+        return null;
     }
     
     // Validate player data
     const playerData = validatePlayerData(playerCount);
     if (!playerData) {
-      return null; // Validation failed, errors already shown
+        return null; // Validation failed, errors already shown
     }
     
     // Add validated player data to tournament data
