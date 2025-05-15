@@ -153,6 +153,7 @@ def dashboard():
 
     my_tournaments = (
         Tournament.query
+                  .filter_by(created_by=current_user.id, status=status)
                   .filter_by(status=status)
                   .order_by(func.random())
                   .limit(N)
@@ -810,9 +811,11 @@ def view_tournament(tournament_id):
     tournament = Tournament.query.get_or_404(tournament_id)
     is_creator = (tournament.created_by == current_user.id)
     
-    if tournament.status == 'draft' and tournament.created_by != current_user.id:
-        flash("That tournament draft is private to its organizer.", "danger")
-        return redirect(url_for('dashboard', status='draft'))
+    if tournament.status == 'draft':
+        if tournament.created_by != current_user.id:
+            flash("That tournament draft is private to its organizer.", "danger")
+            return redirect(url_for('dashboard', status='draft'))
+        return redirect(url_for('edit_tournament', tournament_id=tournament_id))
     
     view_state = request.args.get('view_state', 'normal')
     
@@ -852,9 +855,10 @@ def view_tournament(tournament_id):
         current_matches = Match.query.filter_by(round_id=current_round.id).all()
     
     # Get tournament results ordered by rank
-    tournament_results = TournamentResult.query.filter_by(
-        tournament_id=tournament_id
-    ).order_by(TournamentResult.rank).all()
+    tournament_results = TournamentResult.query \
+        .filter_by(tournament_id=tournament_id) \
+        .order_by(TournamentResult.rank) \
+        .all()
     
     # Create player_stats dictionary from tournament results for pairings table
     player_stats = {}
@@ -921,7 +925,8 @@ def view_tournament(tournament_id):
             total_matches=total_matches,
             total_byes=total_byes,
             tournament_duration=tournament_duration,
-            is_creator=is_creator
+            is_creator=is_creator,
+            tournament_results=tournament_results,
         )
     else:
         # Use the regular tournament template for in-progress tournaments
