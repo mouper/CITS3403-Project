@@ -884,11 +884,11 @@ def add_user_stats():
     db.session.commit()
 
 def init_db():
-    """Initialize the database tables if they don't exist"""
     try:
-        # Only create tables that don't exist yet
+        db.drop_all()
         db.create_all()
-        print("Database tables created if they didn't exist.")
+        print("Database initialized and tables created.")
+
     except Exception as e:
         print(f"Error during database initialization: {e}")
 
@@ -912,15 +912,5 @@ if __name__ == "__main__":
             print(f"Creating new database at {db_path}")
         
         init_db()
-        
-        # Check if we already have data
-        existing_users = User.query.count()
-        if existing_users > 0:
-            print(f"Found {existing_users} existing users in the database.")
-            proceed = input("Do you want to add more test data? (y/n): ")
-            if proceed.lower() != 'y':
-                print("Exiting without adding data.")
-                exit()
-        
         populate_data()
         print(f"Successfully added test data to the existing app.db in {instance_path}!")

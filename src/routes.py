@@ -4,9 +4,9 @@ import random
 from flask import render_template, request, redirect, url_for, flash, jsonify, send_from_directory, abort
 from flask_login import login_user, logout_user, current_user, login_required
 from flask_mail import Message
-from app import application, mail
+from blueprints import main
 from models import Friend, User, UserStat, Tournament, TournamentPlayer, TournamentResult, Match, Round, Invite
-from db import db  # Use the centralized db object from db.py
+from app import db, mail  # Import db and mail from app
 from sqlalchemy import func
 from sqlalchemy.orm import aliased
 from collections import defaultdict
@@ -15,16 +15,16 @@ import re
 import os
 from werkzeug.utils import secure_filename
 
-@application.route('/')
+@main.route('/')
 def landing():
     if current_user.is_authenticated:
-        return redirect(url_for('dashboard'))
+        return redirect(url_for('main.dashboard'))
     return render_template('landing.html')
 
-@application.route('/login', methods=['GET', 'POST'])
+@main.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('dashboard'))
+        return redirect(url_for('main.dashboard'))
 
     if request.method == 'POST':
         username = request.form.get('username')
@@ -35,22 +35,22 @@ def login():
         if user and user.verify_password(password):
             login_user(user)
             flash('Login successful!', 'success')
-            return redirect(url_for('dashboard'))
+            return redirect(url_for('main.dashboard'))
         else:
             flash('Invalid username or password', 'error')
 
     return render_template('login.html')
 
-@application.route('/logout')
+@main.route('/logout')
 @login_required
 def logout():
     logout_user()
-    return redirect(url_for('landing', fresh=1))
+    return redirect(url_for('main.landing', fresh=1))
 
-@application.route('/signup', methods=['GET', 'POST'])
+@main.route('/signup', methods=['GET', 'POST'])
 def signup():
     if current_user.is_authenticated:
-        return redirect(url_for('dashboard'))
+        return redirect(url_for('main.dashboard'))
     if request.method == 'POST':
         first_name = request.form.get('first_name')
         last_name = request.form.get('last_name')
@@ -69,7 +69,7 @@ def signup():
         if errors:
             for error in errors:
                 flash(error, 'error')
-            return redirect(url_for('signup'))
+            return redirect(url_for('main.signup'))
         user = User(
             username=username,
             email=email,
@@ -123,11 +123,11 @@ def signup():
             flash('No past results found for this email.', 'info')
 
         flash('Account created! Please login.', 'success')
-        return redirect(url_for('login', fresh=1))
+        return redirect(url_for('main.login', fresh=1))
 
     return render_template('signup.html')
 
-@application.route('/dashboard')
+@main.route('/dashboard')
 @login_required
 def dashboard():
     my_tournaments = Tournament.query.filter_by(created_by=current_user.id).all()
@@ -216,7 +216,7 @@ def dashboard():
         current_user=current_user
     )
   
-@application.route('/analytics')
+@main.route('/analytics')
 @login_required
 def analytics():
     # User's personal performance data
@@ -324,7 +324,7 @@ def analytics():
     )
 
     
-@application.route('/requests')
+@main.route('/requests')
 @login_required
 def view_requests():
     incoming_rels = Friend.query.filter_by(friend_id=current_user.id).all()
@@ -336,7 +336,7 @@ def view_requests():
 
     return render_template('requests.html', incoming=incoming)
 
-@application.route('/account')
+@main.route('/account')
 @login_required
 def account():
     from sqlalchemy.orm import aliased
@@ -477,7 +477,7 @@ def account():
         recent_tournaments=recent_tournaments
     )
 
-@application.route('/account/save_display_settings', methods=['POST'])
+@main.route('/account/save_display_settings', methods=['POST'])
 @login_required
 def save_display_settings():
     data = request.json
@@ -492,7 +492,7 @@ def save_display_settings():
     return jsonify(success=True)
 
 
-@application.route('/new_tournament')
+@main.route('/new_tournament')
 @login_required
 def new_tournament():
     # Get accepted friends (do this for all cases)
@@ -547,7 +547,7 @@ def new_tournament():
                         accepted_friend_usernames=accepted_friend_usernames,
                         accepted_friend_details=accepted_friend_details)
 
-@application.route('/save_tournament', methods=['POST'])
+@main.route('/save_tournament', methods=['POST'])
 @login_required
 def save_tournament():
     try:
@@ -641,7 +641,7 @@ def save_tournament():
             'message': f"Error saving tournament: {str(e)}"
         }), 
 
-@application.route('/start_tournament', methods=['POST'])
+@main.route('/start_tournament', methods=['POST'])
 @login_required
 def start_tournament():
     try:
@@ -846,7 +846,7 @@ def start_tournament():
             'message': f"Error starting tournament: {str(e)}"
         }), 500
     
-@application.route('/tournament/<int:tournament_id>', methods=['GET'])
+@main.route('/tournament/<int:tournament_id>', methods=['GET'])
 @login_required
 def view_tournament(tournament_id):
     # Get the tournament
@@ -856,8 +856,8 @@ def view_tournament(tournament_id):
     if tournament.status == 'draft':
         if tournament.created_by != current_user.id:
             flash("That tournament draft is private to its organizer.", "danger")
-            return redirect(url_for('dashboard', status='draft'))
-        return redirect(url_for('new_tournament', tournament_id=tournament_id))
+            return redirect(url_for('main.dashboard', status='draft'))
+        return redirect(url_for('main.new_tournament', tournament_id=tournament_id))
     
     is_creator = (tournament.created_by == current_user.id)
     view_state = request.args.get('view_state', 'normal')
@@ -1050,7 +1050,7 @@ def view_tournament(tournament_id):
             view_state=view_state
         )
 
-@application.route('/tournament/<int:tournament_id>/completed', methods=['GET'])
+@main.route('/tournament/<int:tournament_id>/completed', methods=['GET'])
 @login_required
 def view_tournament_completed(tournament_id):
     # Mark tournament as completed if it's not already
@@ -1060,9 +1060,9 @@ def view_tournament_completed(tournament_id):
         db.session.commit()
     
     # Redirect to the main tournament view, which will now render the completed template
-    return redirect(url_for('view_tournament', tournament_id=tournament_id))
+    return redirect(url_for('main.view_tournament', tournament_id=tournament_id))
 
-@application.route('/tournament/<int:tournament_id>/start_round', methods=['POST'])
+@main.route('/tournament/<int:tournament_id>/start_round', methods=['POST'])
 @login_required
 def start_round(tournament_id):
     """Start a round in the tournament."""
@@ -1094,7 +1094,7 @@ def start_round(tournament_id):
     return jsonify(success=True)
 
 
-@application.route('/tournament/<int:tournament_id>/complete_round', methods=['POST'])
+@main.route('/tournament/<int:tournament_id>/complete_round', methods=['POST'])
 @login_required
 def complete_round(tournament_id):
     """Complete the current round and save match results."""
@@ -1141,7 +1141,7 @@ def complete_round(tournament_id):
 
 
 
-@application.route('/tournament/<int:tournament_id>/save_results', methods=['POST'])
+@main.route('/tournament/<int:tournament_id>/save_results', methods=['POST'])
 @login_required
 def save_results(tournament_id):
     """Save match results without completing the round."""
@@ -1163,7 +1163,7 @@ def save_results(tournament_id):
     return jsonify(success=True)
 
 
-@application.route('/tournament/<int:tournament_id>/next_round', methods=['POST'])
+@main.route('/tournament/<int:tournament_id>/next_round', methods=['POST'])
 @login_required
 def next_round(tournament_id):
     """Create the next round for the tournament."""
@@ -1213,7 +1213,7 @@ def next_round(tournament_id):
     
     return jsonify(success=True)
 
-@application.route('/tournament/<int:tournament_id>/send_results', methods=['POST'])
+@main.route('/tournament/<int:tournament_id>/send_results', methods=['POST'])
 @login_required
 def send_results_to_players(tournament_id):
     tournament = Tournament.query.get_or_404(tournament_id)
@@ -1244,7 +1244,7 @@ def send_results_to_players(tournament_id):
         mail.send(msg)
 
     flash("Results sent to all players!", "success")
-    return redirect(url_for('dashboard'))
+    return redirect(url_for('main.dashboard'))
 
 def compute_rankings(tournament_id, format):
     # Get all tournament players
@@ -1944,7 +1944,7 @@ def create_match(tournament_id, round_number, player1_id, player2_id=None, is_by
     db.session.add(new_match)
     return new_match
 
-@application.route('/search_players')
+@main.route('/search_players')
 def search_players():
     query = request.args.get('query', '')
     
@@ -1965,7 +1965,7 @@ def search_players():
     
     return jsonify({'players': results})
 
-@application.route('/send_invite', methods=['POST'])
+@main.route('/send_invite', methods=['POST'])
 @login_required
 def send_invite():
     data = request.get_json()
@@ -1983,7 +1983,7 @@ def send_invite():
     ).first()
     if exists:
         flash("You've already invited that player to this tournament.", "warning")
-        return redirect(url_for('dashboard'))
+        return redirect(url_for('main.dashboard'))
 
     inv = Invite(
         sender_id=current_user.id,
@@ -1993,9 +1993,9 @@ def send_invite():
     db.session.add(inv)
     db.session.commit()
     flash("Invite sent!", "success")
-    return redirect(url_for('dashboard'))
+    return redirect(url_for('main.dashboard'))
 
-@application.route('/friends/respond/<int:request_id>', methods=['POST'])
+@main.route('/friends/respond/<int:request_id>', methods=['POST'])
 @login_required
 def respond_friend_request(request_id):
     fr = Friend.query.filter_by(
@@ -2011,9 +2011,9 @@ def respond_friend_request(request_id):
         db.session.delete(fr)
 
     db.session.commit()
-    return redirect(url_for('view_requests'))
+    return redirect(url_for('main.view_requests'))
 
-@application.route('/friends/request', methods=['POST'])
+@main.route('/friends/request', methods=['POST'])
 @login_required
 def send_friend_request():
     data = request.get_json() or {}
@@ -2041,7 +2041,7 @@ def send_friend_request():
     db.session.commit()
     return jsonify(success=True)
 
-@application.route('/friends/edit/<int:request_id>', methods=['POST'])
+@main.route('/friends/edit/<int:request_id>', methods=['POST'])
 @login_required
 def edit_friend_request(request_id):
     fr = Friend.query.filter_by(
@@ -2051,9 +2051,9 @@ def edit_friend_request(request_id):
 
     fr.status = 'pending'
     db.session.commit()
-    return redirect(url_for('view_requests'))
+    return redirect(url_for('main.view_requests'))
 
-@application.route('/get_friends')
+@main.route('/get_friends')
 @login_required
 def get_friends():
     try:
@@ -2091,7 +2091,7 @@ def get_friends():
 UPLOAD_FOLDER = os.path.join("static", "uploads", "avatars")
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-@application.route('/upload_avatar', methods=['POST'])
+@main.route('/upload_avatar', methods=['POST'])
 @login_required
 def upload_avatar():
     file = request.files.get('avatar')
@@ -2109,9 +2109,9 @@ def upload_avatar():
             flash("Invalid file type. Please upload an image.", "error")
     else:
         flash("No file selected.", "error")
-    return redirect(url_for('account'))
+    return redirect(url_for('main.account'))
 
-@application.route('/update_profile', methods=['POST'])
+@main.route('/update_profile', methods=['POST'])
 @login_required
 def update_profile():
     email = request.form.get('email')
@@ -2127,9 +2127,9 @@ def update_profile():
 
     db.session.commit()
     flash("Profile updated successfully!", "success")
-    return redirect(url_for('account'))
+    return redirect(url_for('main.account'))
 
-@application.route('/tournament/<int:tournament_id>/send_pairings', methods=['POST'])
+@main.route('/tournament/<int:tournament_id>/send_pairings', methods=['POST'])
 @login_required
 def send_round_pairings(tournament_id):
     tournament = Tournament.query.get_or_404(tournament_id)
@@ -2148,7 +2148,7 @@ def send_round_pairings(tournament_id):
     
     if not current_round:
         flash("No active round found.", "error")
-        return redirect(url_for('view_tournament', tournament_id=tournament_id))
+        return redirect(url_for('main.view_tournament', tournament_id=tournament_id))
     
     # Get all players and their matches
     players = TournamentPlayer.query.filter_by(tournament_id=tournament_id).all()
@@ -2211,12 +2211,12 @@ def send_round_pairings(tournament_id):
     
     # Preserve the current view state and stay on the tournament page
     view_state = request.args.get('view_state', 'normal')
-    return redirect(url_for('view_tournament', tournament_id=tournament_id, view_state=view_state))
+    return redirect(url_for('main.view_tournament', tournament_id=tournament_id, view_state=view_state))
 
 
 
 
-@application.route('/user_preview/<username>')
+@main.route('/user_preview/<username>')
 @login_required
 def user_preview(username):
     user = User.query.filter_by(username=username).first()
@@ -2335,13 +2335,13 @@ def user_preview(username):
         game_types=list(grouped_results.keys())
     )
 
-@application.route('/tournament/<int:tournament_id>/edit')
+@main.route('/tournament/<int:tournament_id>/edit')
 @login_required
 def edit_tournament(tournament_id):
     tournament = Tournament.query.get_or_404(tournament_id)
     if tournament.created_by != current_user.id or tournament.status != 'draft':
         flash("You don't have permission to edit that tournament.", "error")
-        return redirect(url_for('view_tournament', tournament_id=tournament_id))
+        return redirect(url_for('main.view_tournament', tournament_id=tournament_id))
 
     rows = TournamentPlayer.query.filter_by(
         tournament_id=tournament.id
@@ -2401,7 +2401,7 @@ def edit_tournament(tournament_id):
         accepted_friend_details=accepted_friend_details
     )
 
-@application.route('/tournament/<int:tournament_id>/delete', methods=['POST'])
+@main.route('/tournament/<int:tournament_id>/delete', methods=['POST'])
 @login_required
 def delete_tournament(tournament_id):
     tournament = Tournament.query.get_or_404(tournament_id)

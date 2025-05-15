@@ -1,51 +1,58 @@
 import os
 from flask import Flask, request
+from config import Config, DeploymentConfig
 from flask_login import LoginManager, current_user, logout_user
 from flask_mail import Mail, Message
-from models import User
-from db import db, migrate
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 from dotenv import load_dotenv
 
+# Load environment variables
 load_dotenv()
 
-basedir = os.path.abspath(os.path.dirname(__file__))
-
-application = Flask(__name__)
-
-application.config['MAIL_SERVER'] = os.getenv("MAIL_SERVER", "smtp.gmail.com")
-application.config['MAIL_PORT'] = int(os.getenv("MAIL_PORT", 587))
-application.config['MAIL_USE_TLS'] = True
-application.config['MAIL_USERNAME'] = os.getenv("MAIL_USERNAME")  # your email
-application.config['MAIL_PASSWORD'] = os.getenv("MAIL_PASSWORD")  # app password or real pass
-application.config['MAIL_DEFAULT_SENDER'] = application.config['MAIL_USERNAME']
-
-mail = Mail(application)
-
-application.config['SECRET_KEY'] = os.environ.get("SECRET_KEY") or "your-secret-key-here"
-
-application.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DATABASE_URL") or \
-    "sqlite:///" + os.path.join(basedir, "app.db")
-
-application.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-db.init_app(application)
-migrate.init_app(application, db)
-
-@application.before_request
-def logout_if_user_missing():
-    if current_user.is_authenticated and db.session.get(User, current_user.id) is None:
-        logout_user()
-
+# Initialize Flask extensions
+db = SQLAlchemy()
+mail = Mail()
+migrate = Migrate()
 login_manager = LoginManager()
-login_manager.init_app(application)
-login_manager.login_view = 'login'
+login_manager.login_view = 'main.login'
+
+def create_app(config_class):
+    # Create Flask app
+    app = Flask(__name__)
+    app.config.from_object(config_class)
+    
+    # Initialize extensions with app
+    db.init_app(app)
+    mail.init_app(app)
+    login_manager.init_app(app)
+    migrate.init_app(app, db)
+
+    # Import models here to avoid circular imports
+    from models import User
+
+    # Register blueprint
+    from blueprints import main
+    app.register_blueprint(main)
+
+    @app.before_request
+    def logout_if_user_missing():
+        if current_user.is_authenticated and db.session.get(User, current_user.id) is None:
+            logout_user()
+
+    @app.context_processor
+    def inject_request():
+        return dict(request=request)
+    
+    return app
 
 @login_manager.user_loader
 def load_user(user_id):
+    from models import User
     return db.session.get(User, int(user_id))
 
-@application.context_processor
-def inject_request():
-    return dict(request=request)
+# Create the application instance
+application = create_app(DeploymentConfig)
 
-import routes
+if __name__ == '__main__':
+    application.run()

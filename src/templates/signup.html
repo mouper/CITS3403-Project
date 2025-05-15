@@ -5,8 +5,8 @@
             <div class="LogoLandingNav"></div>
         </div>
         <div class="nav-links">
-            <a href="{{ url_for('login') }}" class="login-btn medium2">Login</a>
-            <a href="{{ url_for('signup') }}" class="signup-btn medium2">Sign Up</a>
+            <a href="{{ url_for('main.login') }}" class="login-btn medium2">Login</a>
+            <a href="{{ url_for('main.signup') }}" class="signup-btn medium2">Sign Up</a>
         </div>
     </nav>
         <h1 class="title2 text-center mb-[2rem]">Sign Up</h1>
@@ -44,5 +44,5 @@
             </div>
         </div>
     </form>
-        <p class="medium4 text-center mt-[1.5rem]">Already have an account? <a href="{{ url_for('login') }}" class="white-text underline decoration-1 underline-offset-4 hover:no-underline hover:font-medium">Login</a></p>
+        <p class="medium4 text-center mt-[1.5rem]">Already have an account? <a href="{{ url_for('main.login') }}" class="white-text underline decoration-1 underline-offset-4 hover:no-underline hover:font-medium">Login</a></p>
 {% endblock %}
