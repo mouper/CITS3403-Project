@@ -7,7 +7,7 @@ from flask_mail import Message
 from app import application, mail
 from models import Friend, User, UserStat, Tournament, TournamentPlayer, TournamentResult, Match, Round, Invite
 from db import db  # Use the centralized db object from db.py
-from sqlalchemy import func
+from sqlalchemy import func, or_
 from sqlalchemy.orm import aliased
 from collections import defaultdict
 import json, io
@@ -151,13 +151,23 @@ def dashboard():
     status = request.args.get('status', 'in progress')
     N = 5
 
+    player_tourney_ids = (
+        db.session
+          .query(TournamentPlayer.tournament_id)
+          .filter_by(user_id=current_user.id)
+          .subquery()
+    )
+
     my_tournaments = (
         Tournament.query
-                  .filter_by(created_by=current_user.id, status=status)
-                  .filter_by(status=status)
-                  .order_by(func.random())
-                  .limit(N)
-                  .all()
+                .filter(
+                    Tournament.status == status,
+                    or_(Tournament.created_by == current_user.id,
+                         Tournament.id.in_(player_tourney_ids))
+                )
+                .order_by(func.random())
+                .limit(N)
+                .all()
     )
 
     for t in my_tournaments:
