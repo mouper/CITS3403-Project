@@ -809,7 +809,6 @@ def start_tournament():
 def view_tournament(tournament_id):
     # Get the tournament
     tournament = Tournament.query.get_or_404(tournament_id)
-    is_creator = (tournament.created_by == current_user.id)
     
     if tournament.status == 'draft':
         if tournament.created_by != current_user.id:
@@ -817,6 +816,7 @@ def view_tournament(tournament_id):
             return redirect(url_for('dashboard', status='draft'))
         return redirect(url_for('edit_tournament', tournament_id=tournament_id))
     
+    is_creator = (tournament.created_by == current_user.id)
     view_state = request.args.get('view_state', 'normal')
     
     # Get all rounds for this tournament
@@ -944,7 +944,7 @@ def view_tournament(tournament_id):
             player_stats=player_stats,  # Add back player_stats for pairings table
             view_state=view_state
         )
-    
+
 @application.route('/tournament/<int:tournament_id>/completed', methods=['GET'])
 @login_required
 def view_tournament_completed(tournament_id):
@@ -1146,7 +1146,7 @@ def compute_rankings(tournament_id, format):
     players = TournamentPlayer.query.filter_by(tournament_id=tournament_id).all()
 
     # Initialize stats for each player
-    player_stats = {p.id: {"player": p, "wins": 0, "losses": 0, "opponents": []} for p in players}
+    player_stats = {p.id: {"player": p, "wins": 0, "losses": 0, "opponents": [], "head_to_head": {}} for p in players}
 
     # Get the matches for this tournament
     matches = Match.query.join(Round, Match.round_id == Round.id)\
@@ -1164,10 +1164,7 @@ def compute_rankings(tournament_id, format):
                 # Player 1 gets the win
                 player_stats[p1]["wins"] += 1
                 player_stats[p1]["opponents"].append(None)  # No opponent for player1 in bye
-            if p2:
-                # Player 2 got a bye, they don't get the loss
-                player_stats[p2]["wins"] += 1
-                player_stats[p2]["opponents"].append(None)  # No opponent for player2 in bye
+            # Do NOT update p2 if p2 is None (prevents KeyError)
             continue
 
         # Track the players' opponents if it's a real match (i.e., no bye)
@@ -1178,11 +1175,17 @@ def compute_rankings(tournament_id, format):
         # Track wins and losses
         if winner == p1:
             player_stats[p1]["wins"] += 1
-            if p2:
+            if p2 is not None:
                 player_stats[p2]["losses"] += 1
+            # Head-to-head only if both players exist
+            if p2 is not None:
+                player_stats[p1]["head_to_head"][p2] = player_stats[p1]["head_to_head"].get(p2, 0) + 1
         elif winner == p2:
-            player_stats[p2]["wins"] += 1
+            if p2 is not None:
+                player_stats[p2]["wins"] += 1
             player_stats[p1]["losses"] += 1
+            if p2 is not None:
+                player_stats[p2]["head_to_head"][p1] = player_stats[p2]["head_to_head"].get(p1, 0) + 1
 
     # Calculate OWP (Opponent Win Percentage) and OOWP (Opponents' Opponent Win Percentage)
     standings = []
@@ -2232,7 +2235,7 @@ def user_preview(username):
 def edit_tournament(tournament_id):
     tournament = Tournament.query.get_or_404(tournament_id)
     if tournament.created_by != current_user.id or tournament.status != 'draft':
-        flash("You don’t have permission to edit that tournament.", "error")
+        flash("You don't have permission to edit that tournament.", "error")
         return redirect(url_for('view_tournament', tournament_id=tournament_id))
 
     rows = TournamentPlayer.query.filter_by(
@@ -2250,7 +2253,8 @@ def edit_tournament(tournament_id):
                 "guest_firstname": "",
                 "guest_lastname": "",
                 "email": "",
-                "is_confirmed": True
+                "is_confirmed": True,
+                "has_tourney_pro_account": True
             })
         else:
             players_data.append({
@@ -2260,7 +2264,8 @@ def edit_tournament(tournament_id):
                 "guest_firstname": p.guest_firstname,
                 "guest_lastname": p.guest_lastname,
                 "email": p.email,
-                "is_confirmed": p.is_confirmed
+                "is_confirmed": p.is_confirmed,
+                "has_tourney_pro_account": False
             })
 
     if tournament.include_creator_as_player and not any(d["user_id"] == current_user.id for d in players_data):
