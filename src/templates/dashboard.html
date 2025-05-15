@@ -1,9 +1,9 @@
 {% extends "base.html" %}
+{% import "components/tournament_cards.html" as cards %}
 
 {% block content %}
 <div class="dashboard-container">
-  <h1 class="title2 page-header">TourneyPro Dashboard</h1>
-
+  <h1 class="title2 page-header"> <span>TourneyPro Dashboard</span> </h1>
   {% with messages = get_flashed_messages(with_categories=true) %}
   {% if messages %}
     <div class="flashes" style="margin: 2rem;">
@@ -13,82 +13,87 @@
     </div>
   {% endif %}
   {% endwith %}
-
   <p class="medium4" style="margin-bottom: 3rem;">Welcome to your dashboard!</p>
-
-  <!-- Button Container -->
   <div class="dashboard-btn-container">
-    <button class="NewBtn">
+    <a href="{{ url_for('new_tournament') }}" target="_blank" class="NewBtn">
       <div class="CreateIcon"></div>
       Create New Tournament
-    </button>
-    <button class="UploadBtn">
-      <div class="UploadIcon"></div>
-      Upload Tournament Data
-    </button>
+    </a>
   </div>
-
-  <!-- My Tournaments Section -->
   <div class="tournament-section">
     <div class="tournament-header">
       <h2 class="subheadline">My Tournaments</h2>
-
-      <!-- FilterComponent variant -->
-      <div class="FilterComponent">
-        <span>In Progress</span>
-        <div class="FilterIcon"></div>
-      </div>
+      <form method="GET" class="FilterComponent" id="statusFilterForm">
+        <select
+          name="status"
+          id="statusFilter"
+          class="filter-dropdown"
+          onchange="document.getElementById('statusFilterForm').submit()"
+        >
+          <option
+            value="in progress player"
+            {% if status_filter == 'in progress player' %}selected{% endif %}
+          >In Progress (Player)</option>
+          <option
+            value="in progress creator"
+            {% if status_filter == 'in progress creator' %}selected{% endif %}
+          >In Progress (Creator)</option>
+          <option
+            value="draft player"
+            {% if status_filter == 'draft player' %}selected{% endif %}
+          >Draft (Player)</option>
+          <option
+            value="draft creator"
+            {% if status_filter == 'draft creator' %}selected{% endif %}
+          >Draft (Creator)</option>
+        </select>
+      </form>
     </div>
-
-    <!-- GameCard Container -->
-    <div class="card-container">
-      <div class="typecard">
-        <div class="card-image">
-          <img src="/static/assets/SwissImg.svg" alt="Swiss Tournament" class="swissimg">
-        </div>
-        <div class="card-content">
-          <h3 class="title medium3">Swiss Showdown</h3>
-          <p class="paragraph regular3">A 6-round swiss tournament currently in progress.</p>
-        </div>
-      </div>
-
-      <div class="typecard">
-        <div class="card-image">
-          <img src="/static/assets/RoundRobinImg.svg" alt="Round Robin Tournament" class="roundrobinimg">
-        </div>
-        <div class="card-content">
-          <h3 class="title medium3">Round Robin Rumble</h3>
-          <p class="paragraph regular3">Every team plays each other once. Two rounds remain.</p>
-        </div>
-      </div>
-
-      <div class="typecard">
-        <div class="card-image">
-          <img src="/static/assets/SingleElimImg.svg" alt="Single Elimination Tournament" class="singleelimimg">
-        </div>
-        <div class="card-content">
-          <h3 class="title medium3">Elimination Royale</h3>
-          <p class="paragraph regular3">Knockout-style bracket. Semi-finals coming up!</p>
-        </div>
-      </div>
+    <div id="myTourneyCards">
+      {{ cards.tournament_cards(tournaments, current_user) }}
     </div>
   </div>
-  <!-- Friend Search Section -->
   <div class="friend-search-section">
     <div class="friend-search-text">
-      <h2 class="subheadline">Find Friends</h2>
-      <p class="regular3">Search for other players to invite to your tournaments.</p>
+      <h2 class="subheadline purple-text">My Friends</h2>
+      <p class="regular3">Friends List:</p>
+      <div class="friend-list-section" style="min-height: auto; max-height: none; overflow: visible;">
+        <ul class="friend-list" style="max-height: none; overflow: visible;">
+          <ul class="friend-list"></ul>
+            {% for username in accepted_friend_usernames %}
+              <li class="friend-item clickable-friend" data-username="{{ username }}">{{ username }}</li>
+            {% else %}
+              <li class="friend-item">No accepted friends found</li>
+            {% endfor %}
+          </ul>
+        </ul>
+      </div>
+      <div class="modal w-full pt-10" id="friendModal" style="display:none;">
+        <div class="modal-content w-full max-w-full">
+          <span class="close-btn justify-items-end" onclick="document.getElementById('friendModal').style.display='none'">
+              <svg class="close-icon" width="21" height="21" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M54 2.00001L2 54M54 54L2 2" stroke="#FAFAFA" stroke-width="2.5" stroke-linecap="round"/>
+              </svg>
+            </span>
+          <div id="friendPreviewContainer"></div>
+        </div>
+      </div>
+      <p class="regular3">Add new friends to invite them to your tournaments:</p>
     </div>
 
     <div class="friend-search-bar">
-      <input type="text" placeholder="Search by username or email">
+      <div class="search-container">
+        <input id="playerSearch" type="text" placeholder="Search by username or email" autocomplete="off">
+        <div id="searchResults" class="search-results"></div>
+      </div>
       <div class="SendJoinBtn">
-        <button>
+        <button id="sendInviteBtn" type="submit">
           <div class="SendIcon"></div>
           Send Invite
         </button>
       </div>
     </div>
   </div>
+
 </div>
 {% endblock %}

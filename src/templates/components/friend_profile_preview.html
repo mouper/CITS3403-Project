@@ -1,0 +1,115 @@
+{% from "components/admincards_macros.html" import admincards %}
+
+<div class="profile-preview-wrapper" id="playerView">
+  <div class="preview-upper">
+    <div class="preview-avatar-wrapper">
+      <img src="{{ url_for('static', filename=friend.avatar_path or 'default-avatar.png') }}" class="avatar-preview-img" alt="Avatar">
+    </div>
+  </div>
+
+  <div class="preview-lower">
+    {% set total_wins = user_stats | map(attribute='games_won') | sum %}
+    {% set total_played = user_stats | map(attribute='games_played') | sum %}
+    <div class="identity-stat-line">
+      <div class="username">{{ friend.username }}</div>
+      <div class="stat-line-right">
+        {% if friend.show_win_rate %}
+          <span class="winrate">{{ total_winrate }}% WR</span>
+        {% endif %}
+        {% if friend.show_total_wins_played %}
+          <span class="totalcount">{{ total_wins }}/{{ total_played }}</span>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if friend.show_last_three %}
+    <div class="last3-section" data-section="last3">
+      <div class="top3-header">
+        <span class="top3-title">LAST 3 TOURNAMENTS</span>
+      </div>
+      {% if last_3_results %}
+        <div class="statcard-container">
+        {% for result, tournament in last_3_results %}
+        <div class="statcard">
+            <div class="statcard-top-row">
+              <p class="subheadline">{{ loop.index }}.</p>
+              <p class="title2 purple-text">{{ result.wins }} WINS</p>
+            </div>
+            <div class="statcard-middle-row">
+              <p class="medium5">
+                {{ (result.wins / (result.wins + result.losses) * 100) | round(1) if (result.wins + result.losses) > 0 else 0 }}% WR
+              </p>
+              <p class="medium5">{{ (result.opponent_win_percentage * 100) | round(1) if result.opponent_win_percentage else 0 }}% OPWR%</p>
+              <p class="medium5">{{ (result.opp_opp_win_percentage * 100) | round(1) if result.opp_opp_win_percentage else 0 }}% OPOWR%</p>
+            </div>
+            <p class="medium4 italic tournament-type">{{ tournament.format }}</p>
+            <p class="medium4">{{ tournament.title }}</p>
+          </div>
+        {% endfor %}
+        </div>
+      {% else %}
+        <p class="medium4 italic">No recent tournaments found.</p>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    {% if friend.show_best_three %}
+    <div class="statcard-wrapper" data-section="top3">
+      {% for game_type, entries in grouped_results.items() %}
+      <div class="top3-section" data-type="wins" data-game-type="{{ game_type }}">
+        <div class="top3-header">
+          {% if friend.preferred_top3_sorting == 'winrate' %}
+            <span class="top3-title">TOP 3 TOURNAMENTS: HIGHEST WIN RATE</span>
+          {% else %}
+            <span class="top3-title">TOP 3 TOURNAMENTS: HIGHEST WIN COUNT</span>
+          {% endif %}
+            <span class="top3-game">{{ game_type }}</span>
+        </div>
+        <div class="statcard-container">
+          {% for result, tournament in entries[:3] %}
+          <div class="statcard">
+            <div class="statcard-top-row">
+              <p class="subheadline">
+                {% if loop.index == 1 %}1st{% elif loop.index == 2 %}2nd{% elif loop.index == 3 %}3rd{% else %}{{ loop.index }}th{% endif %}
+              </p>
+              {% if friend.preferred_top3_sorting == 'winrate' %}
+                <p class="title2 purple-text">
+                  {{ (result.wins / (result.wins + result.losses) * 100) | round(1) if (result.wins + result.losses) > 0 else 0 }}% WR
+                </p>
+              {% else %}
+                <p class="title2 purple-text">{{ result.wins }} WINS</p>
+              {% endif %}
+            </div>
+            <div class="statcard-middle-row">
+              <p class="medium5">
+                {{ (result.wins / (result.wins + result.losses) * 100) | round(1) if (result.wins + result.losses) > 0 else 0 }}% WR
+              </p>
+              <p class="medium5">{{ (result.opponent_win_percentage * 100) | round(1) if result.opponent_win_percentage else 0 }}% OPWR%</p>
+              <p class="medium5">{{ (result.opp_opp_win_percentage * 100) | round(1) if result.opp_opp_win_percentage else 0 }}% OPOWR%</p>
+            </div>
+            <p class="medium4 italic tournament-type">{{ tournament.format }}</p>
+            <p class="medium4">{{ tournament.title }}</p>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if friend.show_admin %}
+    <div class="admin-hosted-section hosted-preview-section" data-section="hosted" id="adminView">
+      <div class="top3-header">
+        <span class="top3-title">LAST 3 TOURNAMENTS HOSTED</span>
+      </div>
+      {% if recent_tournaments %}
+        {{ admincards(recent_tournaments) }}
+      {% else %}
+        <p class="medium4 italic">No hosted tournaments found.</p>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+

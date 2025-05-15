@@ -5,7 +5,7 @@ Group project for CITS3403 - Agile Web Development
 | ----------- | ----------- | ----------- |
 | Keandria Ong | 23365164 | mouper |
 | Jessie Gunawan | 24125314 | jessiecg |
-| Kunning Shao | 23825311 | Kunning Shao |
+| Kunning Shao | 23825311 | KunningShao |
 | Aidan Hutchison | 23722738  | Lion-Rampant  |
 
 
@@ -21,14 +21,29 @@ Initial Set Up:
     python3 -m venv env
     source env/bin/activate
     pip install -r requirements.txt
-    flask run
 
-After Set Up Has Been Completed Once:
+    # Setting up the database
+    flask --app app db upgrade
+
+Initialise Test Database (previous steps must be completed):
+    python3 generate_test_db.py
+
+Running the Website (after set up has been completed once):
+    # If you are not already in the src folder
+    cd src 
+
+    # In src folder:
     source env/bin/activate
-    flask run
+    flask --app app run
 
 If you want to leave the environment:
     deactivate
+
+If you want to update db tables:
+    flask --app app db migrate -m "Describe your changes"
+    flask --app app db upgrade
+
+Note: Please ensure that if any changes have occured to the db tables after you have already completed the setup, please delete all listed folders/ files in the .gitignore file before redoing the initial setup steps.
 ```
 Site can now be viewed from [http://127.0.0.1:5000](http://127.0.0.1:5000)
 
@@ -80,8 +95,8 @@ This project follows a consistent branch naming strategy to improve collaboratio
 - **`bugfix/`**  
   Used for fixing a bug.
 
-- **`test/`**  
-  Used for experimenting or prototyping outside of a specific ticket or issue.
+- **`testing/`**  
+  Used for adding/ updating tests.
 
 ### Reference
 

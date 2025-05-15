@@ -1,0 +1,249 @@
+{% extends "base.html" %}
+{% block content %}
+    <div class="tournament-container">
+        <input type="hidden" id="tournamentId" value="{{ tournament.id }}">
+        
+        <!-- Tournament Header -->
+        <div class="tournament-header">
+            <h1 class="title2 page-header"> <span>{{ tournament.title }}</span> </h1>
+            <div class="completed-badge pb-[2rem]">
+                <i ></i> COMPLETED
+            </div>
+        </div>
+
+        <!-- Tournament Meta Info -->
+        <div class="tournament-meta">
+            <div class="meta-item">
+                <span class="meta-label regular3">Format:</span>
+                <span class="meta-value medium3">{{ tournament.format|title }}</span>
+            </div>
+            <div class="meta-item">
+                <span class="meta-label regular3">Game:</span>
+                <span class="meta-value medium3">{{ tournament.game_type }}</span>
+            </div>
+            <div class="meta-item">
+                <span class="meta-label regular3">Total Rounds:</span>
+                <span class="meta-value medium3">{{ rounds_count }}</span>
+            </div>
+            <div class="meta-item">
+                <span class="meta-label regular3">Players:</span>
+                <span class="meta-value medium3">{{ player_count }}</span>
+            </div>
+        </div>
+
+        <!-- Tournament Results Section -->
+        <div class="tournament-results">
+            <div class="round-header">
+                <h2 class="round-title subheadline">
+                    <span>TOURNAMENT RESULTS</span>
+                </h2>
+            </div>
+            
+            <!-- Champion Section -->
+            <div class="champion-section">
+                {% if ranked_players|length > 0 and ranked_players[0].rank == 1 %}
+                <div class="champion-card">
+                    <div class="champion-avatar">
+                        <i class="fas fa-crown"></i>
+                    </div>
+                    <div class="champion-name">{{ ranked_players[0].name }}</div>
+                    <div class="champion-title">Tournament Champion</div>
+                    <div class="champion-record">Final Record (W/L): {{ ranked_players[0].wins }}/{{ ranked_players[0].losses }}</div>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Final Standings Table -->
+            <div class="table-container pt-[4rem]">
+                <div class="table-label">
+                    <h3 class="medium2 table-heading">FINAL STANDINGS:</h3>
+                    {% if tournament.format == 'swiss' %}
+                        <p class="caption table-caption">OWP = Opponents Win Percentage</p>
+                    {% endif %}
+                </div>
+                    <div class="standings-table-container pb-[2rem]">
+                    <div class="table-wrapper">
+                        <table class="standings-table app-table">
+                            <thead>
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>Player</th>
+                                    <th>W/L</th>
+                                    {% if tournament.format == 'swiss' %}
+                                        <th>OWP</th>
+                                        <th>OOWP</th>
+                                    {% endif %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for player_result in ranked_players %}
+                                <tr {% if player_result.rank == 1 %}class="champion-row"{% endif %}>
+                                    <td>{{ player_result.rank }}</td>
+                                    <td>{{ player_result.name }}</td>
+                                    <td>{{ player_result.wins }}/{{ player_result.losses }}</td>
+                                    {% if tournament.format == 'swiss' %}
+                                        <td>{{ "%.1f"|format(player_result.owp * 100) }}%</td>
+                                        <td>{{ "%.1f"|format(player_result.oowp * 100) }}%</td>
+                                    {% endif %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                {% if tournament.format == 'single elimination' and rounds_count > 1 %}
+                <!-- Final Bracket For Single Elimination -->
+                <h3 class="medium2 table-heading pt-[4rem]">FINAL BRACKET</h3>
+                <div class="tournament-bracket">
+                    <div class="bracket-container">
+                        {% for round_num in range(1, tournament.total_rounds + 1) %}
+                            <div class="bracket-round">
+                                <div class="bracket-round-header">Round {{ round_num }}</div>
+                                {% set round_matches = matches_by_round.get(round_num, []) %}
+                                {% for match in round_matches %}
+                                    <div class="bracket-match {% if match.winner_id %}match-completed{% endif %}">
+                                        <div class="bracket-player {% if match.winner_id == match.player1_id %}winner{% endif %}">
+                                            {% set player1 = players.get(match.player1_id) %}
+                                            {% if player1 %}
+                                                {% if player1.user_id %}
+                                                    {{ player1.user.username }}
+                                                {% else %}
+                                                    {{ player1.guest_firstname }} {{ player1.guest_lastname }}
+                                                {% endif %}
+                                            {% else %}
+                                                TBD
+                                            {% endif %}
+                                        </div>
+                                        <div class="bracket-player {% if match.winner_id == match.player2_id %}winner{% endif %}">
+                                            {% if match.player2_id %}
+                                                {% set player2 = players.get(match.player2_id) %}
+                                                {% if player2 %}
+                                                    {% if player2.user_id %}
+                                                        {{ player2.user.username }}
+                                                    {% else %}
+                                                        {{ player2.guest_firstname }} {{ player2.guest_lastname }}
+                                                    {% endif %}
+                                                {% endif %}
+                                            {% else %}
+                                                {% if match.is_bye %}BYE{% else %}TBD{% endif %}
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            
+            <!-- Round Results -->
+            <h3 class="round-header pt-[4rem]">FINAL ROUND RESULTS</h3>
+            <div class="round-results-container">
+                <div class="medium2 table-heading pb-[2rem]" data-round="{{ rounds_count }}">
+                    ROUND {{ rounds_count }}:
+                </div>
+                
+                <div class="round-content-container pb-[1.5rem]">
+                    {% for round_num in range(1, rounds_count + 1) %}
+                        <div class="round-content" id="round-content-{{ round_num }}" {% if round_num != rounds_count %}style="display: none;"{% endif %}>
+                        <div class="table-wrapper">
+                            <table class="match-results-table app-table">
+                                <thead>
+                                    <tr>
+                                        <th>Table</th>
+                                        <th>Player 1</th>
+                                        <th>Player 2</th>
+                                        <th>Winner</th>
+                                    </tr>
+                                </thead>
+                                    <tbody>
+                                        {% set round_matches = matches_by_round.get(rounds_count, []) %}
+                                        {% for match in round_matches %}
+                                            <tr class="match-row {% if match.is_bye %}bye-match{% endif %}">
+                                                <td>{{ loop.index }}</td>
+                                                <td class="player1-cell">
+                                                    {% set player1 = players.get(match.player1_id) %}
+                                                    {% if player1 %}
+                                                        {% if player1.user_id %}
+                                                            {{ player1.user.username }}
+                                                        {% else %}
+                                                            {{ player1.guest_firstname }} {{ player1.guest_lastname }}
+                                                        {% endif %}
+                                                    {% endif %}
+                                                </td>
+                                                <td class="player2-cell">
+                                                    {% if match.player2_id %}
+                                                        {% set player2 = players.get(match.player2_id) %}
+                                                        {% if player2 %}
+                                                            {% if player2.user_id %}
+                                                                {{ player2.user.username }}
+                                                            {% else %}
+                                                                {{ player2.guest_firstname }} {{ player2.guest_lastname }}
+                                                            {% endif %}
+                                                        {% endif %}
+                                                    {% else %}
+                                                        BYE
+                                                    {% endif %}
+                                                </td>
+                                                <td class="winner-cell">
+                                                    {% if match.winner_id %}
+                                                        {% set winner = players.get(match.winner_id) %}
+                                                        {% if winner %}
+                                                            {% if winner.user_id %}
+                                                                {{ winner.user.username }}
+                                                            {% else %}
+                                                                {{ winner.guest_firstname }} {{ winner.guest_lastname }}
+                                                            {% endif %}
+                                                        {% endif %}
+                                                    {% else %}
+                                                        Not Determined
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                            </table>
+                        </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <!-- Tournament Stats -->
+            <h3 class="round-header pt-[4rem]">TOURNAMENT STATS</h3>
+            <div class="round-controls">
+                <div class="stats-card">
+                    <div class="stats-icon"><i class="fas fa-handshake"></i></div>
+                    <div class="stats-value">{{ total_matches }}</div>
+                    <div class="stats-label">Total Matches</div>
+                </div>
+                
+                <div class="stats-card">
+                    <div class="stats-icon"><i class="fas fa-user-plus"></i></div>
+                    <div class="stats-value">{{ total_byes }}</div>
+                    <div class="stats-label">Total Byes</div>
+                </div>
+            </div>
+            
+            <!-- Actions -->
+            <div class="round-controls pt-[4rem]">
+                <div class="SendJoinBtn">
+                    <a href="{{ url_for('dashboard') }}">
+                        <button>
+                            Back to Dashboard
+                        </button>
+                    </a>
+                </div>
+                {% if is_creator %}
+                <div class="SendJoinBtn">
+                    <form method="POST" action="/tournament/{{ tournament.id }}/send_results">
+                        <button type="submit">
+                            <i class="fas fa-envelope"></i> Send Results to Players
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

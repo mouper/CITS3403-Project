@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-bottom: 1em;
+    }
+    th, td {
+      border: 1px solid #dddddd;
+      text-align: left;
+      padding: 8px;
+    }
+    th {
+      background-color: #f3f3f3;
+    }
+    .round-info {
+      margin-bottom: 1em;
+    }
+    .tournament-title {
+      color: #2e86de;
+      font-size: 1.2em;
+      margin-bottom: 0.5em;
+    }
+  </style>
+</head>
+<body>
+  <div class="tournament-title">{{ tournament.title }}</div>
+  <div class="round-info">
+    <h2>Round {{ current_round.round_number }} Pairings</h2>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Table</th>
+        <th>Player 1</th>
+        <th>W/L</th>
+        <th>Player 2</th>
+        <th>W/L</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for match in matches %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td>
+            {% set player1 = players.get(match.player1_id) %}
+            {% if player1 %}
+              {% if player1.user_id %}
+                {% set user = player_users.get(player1.id) %}
+                {% if user %}
+                  {{ user.first_name }} {{ user.last_name }}
+                {% endif %}
+              {% else %}
+                {{ player1.guest_firstname }} {{ player1.guest_lastname }}
+              {% endif %}
+            {% endif %}
+          </td>
+          <td>{{ player_stats.get(match.player1_id, {'wins': 0, 'losses': 0}).wins }}-{{ player_stats.get(match.player1_id, {'wins': 0, 'losses': 0}).losses }}</td>
+          <td>
+            {% if match.player2_id %}
+              {% set player2 = players.get(match.player2_id) %}
+              {% if player2 %}
+                {% if player2.user_id %}
+                  {% set user = player_users.get(player2.id) %}
+                  {% if user %}
+                    {{ user.first_name }} {{ user.last_name }}
+                  {% endif %}
+                {% else %}
+                  {{ player2.guest_firstname }} {{ player2.guest_lastname }}
+                {% endif %}
+              {% endif %}
+            {% else %}
+              BYE
+            {% endif %}
+          </td>
+          <td>
+            {% if match.player2_id %}
+              {{ player_stats.get(match.player2_id, {'wins': 0, 'losses': 0}).wins }}/{{ player_stats.get(match.player2_id, {'wins': 0, 'losses': 0}).losses }}
+            {% else %}
+              -
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <p>Round Time Limit: {{ tournament.round_time_minutes }} minutes</p>
+</body>
+</html> 
