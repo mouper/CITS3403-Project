@@ -63,10 +63,6 @@
       <h2 class="subheadline purple-text">Top Three Tournaments</h2>
       {% for game_type, entries in grouped_results.items() %}
         <div class="top3-section" data-type="wins" data-game-type="{{ game_type }}">
-          <div class="top3-header">
-            <span class="top3-title">TOP 3 TOURNAMENTS: HIGHEST WIN COUNT</span>
-            <span class="top3-game">{{ game_type }}</span>
-          </div>
           <div class="statcard-container">
             {% for result, tournament in entries[:3] %}
               <div class="statcard">

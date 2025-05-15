@@ -322,7 +322,7 @@ def add_tournaments():
             "start_time": datetime.datetime.now() - datetime.timedelta(days=85)
         },
         {
-            "title": "Pokémon Regional Championship",
+            "title": "Pokémon Regionals",
             "game_type": "Pokémon TCG",
             "format": "swiss",
             "created_by": 9,
@@ -455,7 +455,7 @@ def add_tournaments():
             "status": "draft",
             "num_players": 8,
             "round_time_minutes": 40,
-            "total_rounds": 3,
+            "total_rounds": None,
             "include_creator_as_player": True,
             "start_time": None
         },
@@ -467,7 +467,7 @@ def add_tournaments():
             "status": "draft",
             "num_players": 16,
             "round_time_minutes": 45,
-            "total_rounds": 4,
+            "total_rounds": None,
             "include_creator_as_player": True,
             "start_time": None
         },
@@ -479,7 +479,7 @@ def add_tournaments():
             "status": "draft",
             "num_players": 8,
             "round_time_minutes": 30,
-            "total_rounds": 7,
+            "total_rounds": None,
             "include_creator_as_player": True,
             "start_time": None
         }
@@ -535,7 +535,7 @@ def add_tournament_players(created_tournaments):
         
         # If creator is included as player, add them first
         if tournament_info["include_creator_as_player"]:
-            creator = User.query.get(creator_id)
+            creator = db.session.get(User, creator_id)
             new_player = TournamentPlayer(
                 tournament_id=tournament_id,
                 user_id=creator_id,
@@ -597,6 +597,10 @@ def add_tournament_players(created_tournaments):
 def add_rounds_and_matches(created_tournaments):
     """Create rounds and matches for tournaments with proper round status logic"""
     for tournament_id, tournament_info in created_tournaments:
+        # Skip draft tournaments as they don't have rounds yet
+        if tournament_info["status"] == "draft":
+            continue
+            
         if tournament_info["status"] in ["active", "completed"]:
             # Get players for this tournament
             players = TournamentPlayer.query.filter_by(tournament_id=tournament_id, is_confirmed=True).all()
