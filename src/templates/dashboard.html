@@ -1,9 +1,9 @@
 {% extends "base.html" %}
+{% import "components/tournament_cards.html" as cards %}
 
 {% block content %}
 <div class="dashboard-container">
   <h1 class="title2 page-header"> <span>TourneyPro Dashboard</span> </h1>
-
   {% with messages = get_flashed_messages(with_categories=true) %}
   {% if messages %}
     <div class="flashes" style="margin: 2rem;">
@@ -13,63 +13,46 @@
     </div>
   {% endif %}
   {% endwith %}
-
-  <p class="medium4" style="margin-bottom: 3rem;">Welcome to your dashboard!</p>
-
-  <!-- Button Container -->
+  <p class="medium4" style="margin-bottom: 1rem;">Welcome to your dashboard!</p>
   <div class="dashboard-btn-container">
     <a href="{{ url_for('new_tournament') }}" target="_blank" class="NewBtn">
       <div class="CreateIcon"></div>
       Create New Tournament
     </a>
   </div>
-
-  <!-- My Tournaments Section -->
   <div class="tournament-section">
     <div class="tournament-header">
-      <h2 class="subheadline">My Tournaments</h2>
-
-      <!-- FilterComponent variant -->
-      <div class="FilterComponent">
-        <span>In Progress</span>
-        <div class="FilterIcon"></div>
-      </div>
+      <h2 class="subheadline purple-text">My Tournaments</h2>
+      <form method="GET" class="FilterComponent" id="statusFilterForm">
+        <select
+          name="status"
+          id="statusFilter"
+          class="filter-dropdown"
+          onchange="document.getElementById('statusFilterForm').submit()"
+        >
+          <option
+            value="in progress player"
+            {% if status_filter == 'in progress player' %}selected{% endif %}
+          >In Progress (Player)</option>
+          <option
+            value="in progress creator"
+            {% if status_filter == 'in progress creator' %}selected{% endif %}
+          >In Progress (Creator)</option>
+          <option
+            value="draft player"
+            {% if status_filter == 'draft player' %}selected{% endif %}
+          >Draft (Player)</option>
+          <option
+            value="draft creator"
+            {% if status_filter == 'draft creator' %}selected{% endif %}
+          >Draft (Creator)</option>
+        </select>
+      </form>
     </div>
-
-    <!-- GameCard Container -->
-    <div class="card-container">
-      <div class="typecard">
-        <div class="card-image">
-          <img src="/static/assets/SwissImg.svg" alt="Swiss Tournament" class="swissimg">
-        </div>
-        <div class="card-content">
-          <h3 class="title medium3">Swiss Showdown</h3>
-          <p class="paragraph regular3">A 6-round swiss tournament currently in progress.</p>
-        </div>
-      </div>
-
-      <div class="typecard">
-        <div class="card-image">
-          <img src="/static/assets/RoundRobinImg.svg" alt="Round Robin Tournament" class="roundrobinimg">
-        </div>
-        <div class="card-content">
-          <h3 class="title medium3">Round Robin Rumble</h3>
-          <p class="paragraph regular3">Every team plays each other once. Two rounds remain.</p>
-        </div>
-      </div>
-
-      <div class="typecard">
-        <div class="card-image">
-          <img src="/static/assets/SingleElimImg.svg" alt="Single Elimination Tournament" class="singleelimimg">
-        </div>
-        <div class="card-content">
-          <h3 class="title medium3">Elimination Royale</h3>
-          <p class="paragraph regular3">Knockout-style bracket. Semi-finals coming up!</p>
-        </div>
-      </div>
+    <div id="myTourneyCards">
+      {{ cards.tournament_cards(tournaments, current_user) }}
     </div>
   </div>
-  <!-- Friend Search Section -->
   <div class="friend-search-section">
     <div class="friend-search-text">
       <h2 class="subheadline purple-text">My Friends</h2>
@@ -92,6 +75,9 @@
                 <path d="M54 2.00001L2 54M54 54L2 2" stroke="#FAFAFA" stroke-width="2.5" stroke-linecap="round"/>
               </svg>
             </span>
+          <div class="mobile-disclaimer py-2" style="display: none;">
+            <p class="regular4"> Please rotate your phone to landscape to view this section clearly.</p>
+          </div>
           <div id="friendPreviewContainer"></div>
         </div>
       </div>
@@ -100,7 +86,7 @@
 
     <div class="friend-search-bar">
       <div class="search-container">
-        <input id="playerSearch" type="text" placeholder="Search by username or email" autocomplete="off">
+        <input id="playerSearch" type="text" placeholder="Search by username" autocomplete="off">
         <div id="searchResults" class="search-results"></div>
       </div>
       <div class="SendJoinBtn">

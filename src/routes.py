@@ -1,7 +1,7 @@
 import datetime
 import math
 import random
-from flask import render_template, request, redirect, url_for, flash, jsonify, send_from_directory
+from flask import render_template, request, redirect, url_for, flash, jsonify, send_from_directory, abort
 from flask_login import login_user, logout_user, current_user, login_required
 from flask_mail import Message
 from app import application, mail
@@ -147,14 +147,75 @@ def dashboard():
             accepted_friends.append(friend)
 
     accepted_friend_usernames = [friend.username for friend in accepted_friends]
+    
+    status = request.args.get('status', 'in progress player')
+    N = 5
+
+    # New filter logic
+    tournaments = []
+    if status == 'in progress creator':
+        tournaments = (
+            Tournament.query
+                      .filter_by(status='active', created_by=current_user.id)
+                      .order_by(Tournament.created_at.desc())
+                      .all()
+        )
+    elif status == 'in progress player':
+        tournaments = (
+            Tournament.query
+                      .filter(Tournament.status == 'active')
+                      .join(TournamentPlayer, TournamentPlayer.tournament_id == Tournament.id)
+                      .filter(TournamentPlayer.user_id == current_user.id)
+                      .filter(Tournament.created_by != current_user.id)
+                      .order_by(Tournament.created_at.desc())
+                      .all()
+        )
+    elif status == 'draft creator':
+        tournaments = (
+            Tournament.query
+                      .filter_by(status='draft', created_by=current_user.id)
+                      .order_by(Tournament.created_at.desc())
+                      .all()
+        )
+    elif status == 'draft player':
+        tournaments = (
+            Tournament.query
+                      .filter(Tournament.status == 'draft')
+                      .join(TournamentPlayer, TournamentPlayer.tournament_id == Tournament.id)
+                      .filter(TournamentPlayer.user_id == current_user.id)
+                      .filter(Tournament.created_by != current_user.id)
+                      .order_by(Tournament.created_at.desc())
+                      .all()
+        )
+    else:
+        tournaments = (
+            Tournament.query
+                      .filter_by(status='active')
+                      .order_by(Tournament.created_at.desc())
+                      .all()
+        )
+
+    for t in tournaments:
+        rounds = Round.query.filter_by(tournament_id=t.id).all()
+        completed = sum(1 for r in rounds if r.status == 'completed')
+        in_progress = any(r.status == 'in progress' for r in rounds)
+        t.current_round = completed + (1 if in_progress else 0)
+        t.completed_rounds = completed
+        # Set is_player attribute for client-side filtering
+        t.is_player = False
+        for player in TournamentPlayer.query.filter_by(tournament_id=t.id).all():
+            if player.user_id == current_user.id:
+                t.is_player = True
+                break
 
     return render_template(
         'dashboard.html',
-        tournaments=my_tournaments,
-        accepted_friend_usernames=accepted_friend_usernames
+        tournaments=tournaments,
+        accepted_friend_usernames=accepted_friend_usernames,
+        status_filter=status,
+        current_user=current_user
     )
-
-    
+  
 @application.route('/analytics')
 @login_required
 def analytics():
@@ -201,7 +262,7 @@ def analytics():
 
     base_q = (
         db.session.query(Tournament)
-        .filter_by(created_by=current_user.id)
+        .filter_by(created_by=current_user.id, status='completed')  # Add status='completed' filter
         .order_by(Tournament.created_at.desc())
     )
 
@@ -788,9 +849,18 @@ def start_tournament():
 @application.route('/tournament/<int:tournament_id>', methods=['GET'])
 @login_required
 def view_tournament(tournament_id):
-    view_state = request.args.get('view_state', 'normal')
     # Get the tournament
     tournament = Tournament.query.get_or_404(tournament_id)
+    
+    # If this is a draft tournament, redirect to the new_tournament route
+    if tournament.status == 'draft':
+        if tournament.created_by != current_user.id:
+            flash("That tournament draft is private to its organizer.", "danger")
+            return redirect(url_for('dashboard', status='draft'))
+        return redirect(url_for('new_tournament', tournament_id=tournament_id))
+    
+    is_creator = (tournament.created_by == current_user.id)
+    view_state = request.args.get('view_state', 'normal')
     
     # Get all rounds for this tournament
     rounds = Round.query.filter_by(tournament_id=tournament_id).order_by(Round.round_number).all()
@@ -827,43 +897,69 @@ def view_tournament(tournament_id):
     if current_round:
         current_matches = Match.query.filter_by(round_id=current_round.id).all()
     
-    # Get tournament results ordered by rank
-    tournament_results = TournamentResult.query.filter_by(
-        tournament_id=tournament_id
-    ).order_by(TournamentResult.rank).all()
-    
-    # Create player_stats dictionary from tournament results for pairings table
-    player_stats = {}
-    for result in tournament_results:
-        player_stats[result.player_id] = {
-            'wins': result.wins,
-            'losses': result.losses
-        }
-    
-    # Prepare player results for rankings using stored ranks
-    ranked_players = []
-    for result in tournament_results:
-        player = players.get(result.player_id)
-        if not player:
-            continue
-            
-        player_result = {
-            'id': player.id,
-            'name': "",
-            'wins': result.wins,
-            'losses': result.losses,
-            'owp': result.opponent_win_percentage or 0,
-            'oowp': result.opp_opp_win_percentage or 0,
-            'rank': result.rank
-        }
-        
-        # Set player name
-        if player.user_id:
-            player_result['name'] = player.user.username
-        else:
-            player_result['name'] = f"{player.guest_firstname} {player.guest_lastname}"
-        
-        ranked_players.append(player_result)
+    # Standings logic: use live compute_rankings for in-progress, TournamentResult for completed
+    if tournament.status == 'completed':
+        # Use TournamentResult for completed tournaments
+        tournament_results = TournamentResult.query.filter_by(
+            tournament_id=tournament_id
+        ).order_by(TournamentResult.rank).all()
+        # Create player_stats dictionary from tournament results for pairings table
+        player_stats = {}
+        for result in tournament_results:
+            player_stats[result.player_id] = {
+                'wins': result.wins,
+                'losses': result.losses
+            }
+        # Prepare player results for rankings using stored ranks
+        ranked_players = []
+        for result in tournament_results:
+            player = players.get(result.player_id)
+            if not player:
+                continue
+            player_result = {
+                'id': player.id,
+                'name': "",
+                'wins': result.wins,
+                'losses': result.losses,
+                'owp': result.opponent_win_percentage or 0,
+                'oowp': result.opp_opp_win_percentage or 0,
+                'rank': result.rank
+            }
+            # Set player name
+            if player.user_id:
+                player_result['name'] = player.user.username
+            else:
+                player_result['name'] = f"{player.guest_firstname} {player.guest_lastname}"
+            ranked_players.append(player_result)
+    else:
+        # Use live compute_rankings for in-progress tournaments
+        ranked_players_raw = compute_rankings(tournament_id, tournament.format)
+        # Assign rank field based on sorted order (1-based)
+        ranked_players = []
+        for idx, rp in enumerate(ranked_players_raw, 1):
+            # Try to find the player object for id or name
+            player_obj = None
+            for p in tournament_players:
+                if (hasattr(p, 'user') and rp.get('name') == p.user.username) or (rp.get('name') == f"{p.guest_firstname} {p.guest_lastname}"):
+                    player_obj = p
+                    break
+            # If possible, add id field for template compatibility
+            rp_copy = dict(rp)
+            if player_obj:
+                rp_copy['id'] = player_obj.id
+            rp_copy['rank'] = idx
+            ranked_players.append(rp_copy)
+        # Also build player_stats for the pairings table
+        player_stats = {}
+        for player in tournament_players:
+            rp = next((p for p in ranked_players if p.get('id', None) == player.id or p.get('name', None) == (player.user.username if player.user_id else f"{player.guest_firstname} {player.guest_lastname}")), None)
+            if rp:
+                player_stats[player.id] = {
+                    'wins': rp['wins'],
+                    'losses': rp['losses']
+                }
+            else:
+                player_stats[player.id] = {'wins': 0, 'losses': 0}
     
     # If tournament is completed, use the completed template with special stats
     if tournament.status == 'completed':
@@ -900,6 +996,43 @@ def view_tournament(tournament_id):
             is_creator=is_creator
         )
     else:
+        # Compute previous round standings for pre-round and in-progress phase after round 1
+        previous_round_ranked_players = []
+        if current_round and current_round.round_number > 1 and current_round.status in ['not started', 'in progress']:
+            # Find the previous round
+            prev_round = next((r for r in rounds if r.round_number == current_round.round_number - 1), None)
+            if prev_round:
+                # Use TournamentResult if available (after round completed), else compute
+                prev_results = TournamentResult.query.filter_by(tournament_id=tournament_id).order_by(TournamentResult.rank).all()
+                if prev_results:
+                    for result in prev_results:
+                        player = players.get(result.player_id)
+                        if not player:
+                            continue
+                        player_result = {
+                            'id': player.id,
+                            'name': player.user.username if player.user_id else f"{player.guest_firstname} {player.guest_lastname}",
+                            'wins': result.wins,
+                            'losses': result.losses,
+                            'owp': result.opponent_win_percentage or 0,
+                            'oowp': result.opp_opp_win_percentage or 0,
+                            'rank': result.rank
+                        }
+                        previous_round_ranked_players.append(player_result)
+                else:
+                    # Fallback: use compute_rankings for previous round
+                    prev_rankings = compute_rankings(tournament_id, tournament.format)
+                    for idx, rp in enumerate(prev_rankings, 1):
+                        player_obj = None
+                        for p in tournament_players:
+                            if (hasattr(p, 'user') and rp.get('name') == p.user.username) or (rp.get('name') == f"{p.guest_firstname} {p.guest_lastname}"):
+                                player_obj = p
+                                break
+                        rp_copy = dict(rp)
+                        if player_obj:
+                            rp_copy['id'] = player_obj.id
+                        rp_copy['rank'] = idx
+                        previous_round_ranked_players.append(rp_copy)
         # Use the regular tournament template for in-progress tournaments
         return render_template(
             'tournament.html',
@@ -912,10 +1045,11 @@ def view_tournament(tournament_id):
             matches_by_round=matches_by_round,
             current_matches=current_matches,
             ranked_players=ranked_players,
+            previous_round_ranked_players=previous_round_ranked_players,
             player_stats=player_stats,  # Add back player_stats for pairings table
             view_state=view_state
         )
-    
+
 @application.route('/tournament/<int:tournament_id>/completed', methods=['GET'])
 @login_required
 def view_tournament_completed(tournament_id):
@@ -1117,7 +1251,7 @@ def compute_rankings(tournament_id, format):
     players = TournamentPlayer.query.filter_by(tournament_id=tournament_id).all()
 
     # Initialize stats for each player
-    player_stats = {p.id: {"player": p, "wins": 0, "losses": 0, "opponents": []} for p in players}
+    player_stats = {p.id: {"player": p, "wins": 0, "losses": 0, "opponents": [], "head_to_head": {}} for p in players}
 
     # Get the matches for this tournament
     matches = Match.query.join(Round, Match.round_id == Round.id)\
@@ -1135,10 +1269,7 @@ def compute_rankings(tournament_id, format):
                 # Player 1 gets the win
                 player_stats[p1]["wins"] += 1
                 player_stats[p1]["opponents"].append(None)  # No opponent for player1 in bye
-            if p2:
-                # Player 2 got a bye, they don't get the loss
-                player_stats[p2]["wins"] += 1
-                player_stats[p2]["opponents"].append(None)  # No opponent for player2 in bye
+            # Do NOT update p2 if p2 is None (prevents KeyError)
             continue
 
         # Track the players' opponents if it's a real match (i.e., no bye)
@@ -1149,11 +1280,17 @@ def compute_rankings(tournament_id, format):
         # Track wins and losses
         if winner == p1:
             player_stats[p1]["wins"] += 1
-            if p2:
+            if p2 is not None:
                 player_stats[p2]["losses"] += 1
+            # Head-to-head only if both players exist
+            if p2 is not None:
+                player_stats[p1]["head_to_head"][p2] = player_stats[p1]["head_to_head"].get(p2, 0) + 1
         elif winner == p2:
-            player_stats[p2]["wins"] += 1
+            if p2 is not None:
+                player_stats[p2]["wins"] += 1
             player_stats[p1]["losses"] += 1
+            if p2 is not None:
+                player_stats[p2]["head_to_head"][p1] = player_stats[p2]["head_to_head"].get(p1, 0) + 1
 
     # Calculate OWP (Opponent Win Percentage) and OOWP (Opponents' Opponent Win Percentage)
     standings = []
@@ -2145,7 +2282,7 @@ def user_preview(username):
     recent_tournaments = []
     base_q = (
         db.session.query(Tournament)
-        .filter_by(created_by=user.id)
+        .filter_by(created_by=user.id, status='completed')  # Add status='completed' filter
         .order_by(Tournament.created_at.desc())
     )
     recent = base_q.limit(6).all()
@@ -2197,3 +2334,109 @@ def user_preview(username):
         recent_tournaments=recent_tournaments,
         game_types=list(grouped_results.keys())
     )
+
+@application.route('/tournament/<int:tournament_id>/edit')
+@login_required
+def edit_tournament(tournament_id):
+    tournament = Tournament.query.get_or_404(tournament_id)
+    if tournament.created_by != current_user.id or tournament.status != 'draft':
+        flash("You don't have permission to edit that tournament.", "error")
+        return redirect(url_for('view_tournament', tournament_id=tournament_id))
+
+    rows = TournamentPlayer.query.filter_by(
+        tournament_id=tournament.id
+    ).all()
+
+    players_data = []
+    for p in rows:
+        if p.user_id:
+            user = User.query.get(p.user_id)
+            players_data.append({
+                "id": p.id,
+                "user_id": user.id,
+                "username": user.username,
+                "guest_firstname": "",
+                "guest_lastname": "",
+                "email": "",
+                "is_confirmed": True,
+                "has_tourney_pro_account": True
+            })
+        else:
+            players_data.append({
+                "id": p.id,
+                "user_id": None,
+                "username": "",
+                "guest_firstname": p.guest_firstname,
+                "guest_lastname": p.guest_lastname,
+                "email": p.email,
+                "is_confirmed": p.is_confirmed,
+                "has_tourney_pro_account": False
+            })
+
+    if tournament.include_creator_as_player and not any(d["user_id"] == current_user.id for d in players_data):
+        players_data.insert(0, {
+            "id": None,
+            "user_id": current_user.id,
+            "username": current_user.username,
+            "guest_firstname": "",
+            "guest_lastname": "",
+            "email": "",
+            "is_confirmed": True
+        })
+
+    sent = Friend.query.filter_by(user_id=current_user.id, status='accepted').all()
+    recv = Friend.query.filter_by(friend_id=current_user.id, status='accepted').all()
+    accepted = [f.recipient for f in sent] + [f.sender for f in recv]
+    accepted_friend_usernames = [u.username for u in accepted]
+    accepted_friend_details  = [
+        {"username":u.username, "first_name":u.first_name, "last_name":u.last_name}
+        for u in accepted
+    ]
+
+    return render_template(
+        'new_tournament.html',
+        tournament=tournament,
+        players=players_data,
+        accepted_friend_usernames=accepted_friend_usernames,
+        accepted_friend_details=accepted_friend_details
+    )
+
+@application.route('/tournament/<int:tournament_id>/delete', methods=['POST'])
+@login_required
+def delete_tournament(tournament_id):
+    tournament = Tournament.query.get_or_404(tournament_id)
+    
+    # Only allow deletion if user is the creator and tournament is in draft status
+    if tournament.created_by != current_user.id:
+        return jsonify({
+            'success': False,
+            'message': 'You do not have permission to delete this tournament'
+        }), 403
+        
+    if tournament.status != 'draft':
+        return jsonify({
+            'success': False,
+            'message': 'Can only delete draft tournaments'
+        }), 400
+    
+    try:
+        # Delete all related records first
+        TournamentPlayer.query.filter_by(tournament_id=tournament_id).delete()
+        Round.query.filter_by(tournament_id=tournament_id).delete()
+        TournamentResult.query.filter_by(tournament_id=tournament_id).delete()
+        Invite.query.filter_by(tournament_id=tournament_id).delete()
+        
+        # Finally delete the tournament
+        db.session.delete(tournament)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Tournament deleted successfully'
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'message': f'Error deleting tournament: {str(e)}'
+        }), 500
