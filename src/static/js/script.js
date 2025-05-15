@@ -1983,7 +1983,7 @@ function initTournamentManager() {
           saveResults()
           .then(data => {
               if (data.success) {
-                  window.location.href = '/tournaments';
+                  window.location.href = '/dashboard';
               } else {
                   handleTournamentError({ data }, saveExitBtn, defaultText);
               }

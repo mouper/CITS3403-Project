@@ -60,18 +60,34 @@
         </div>
       </div>
 
+      {% if not readonly %}
+        {% if current_round and current_round.status == 'in progress' and view_state != 'confirm_results' %}
+        <div class="round-controls">
+          <!-- Round Timer -->
+          <div class="round-timer">
+            <span class="timer-label medium2">Round Timer:</span>
+            <span id="timerDisplay" class="timer-value regular3">{{ tournament.round_time_minutes }}:00</span>
+          </div>
+          <div class="Dialog">
+            <button id="resetRoundBtn" class="cancel">Reset Round</button>
+          </div>
+        </div>
+        {% endif %}
+      {% endif %}
+
+      {% if readonly %}
       {% if current_round and current_round.status == 'in progress' and view_state != 'confirm_results' %}
       <div class="round-controls">
-        <!-- Round Timer -->
+        <!-- Round Timer (STATIC for read-only users) -->
         <div class="round-timer">
           <span class="timer-label medium2">Round Timer:</span>
-          <span id="timerDisplay" class="timer-value regular3">{{ tournament.round_time_minutes }}:00</span>
-        </div>
-        <div class="Dialog">
-          <button id="resetRoundBtn" class="cancel">Reset Round</button>
+          <span class="timer-value regular3">
+            {{ '%02d:00' % tournament.round_time_minutes }}
+          </span>
         </div>
       </div>
       {% endif %}
+    {% endif %}
 
       <!-- Pairings -->
       <div class="table-container">
@@ -338,11 +354,11 @@
           {% endif %}
         {% elif current_round and current_round.status == 'in progress' and view_state != 'confirm_results' %}
           <!-- Round Timer (VISIBLE during in progress) -->
+          {% if not readonly %}
           <div class="round-timer">
             <span class="timer-label medium2">Round Timer:</span>
             <span id="timerDisplay" class="timer-value">{{ tournament.round_time_minutes }}:00</span>
           </div>
-          {% if not readonly %}
           <div class="SendJoinBtn justify-end">
             <button id="endRoundEarlyBtn">End Round Early</button>
           </div>
