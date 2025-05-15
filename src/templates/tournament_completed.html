@@ -32,25 +32,14 @@
         </div>
 
         <!-- Tournament Results Section -->
+        <div class="mobile-disclaimer py-2" style="display: none;">
+            <p class="regular4"> Please rotate your phone to landscape to view this section clearly.</p>
+        </div>
         <div class="tournament-results">
             <div class="round-header">
                 <h2 class="round-title subheadline">
                     <span>TOURNAMENT RESULTS</span>
                 </h2>
-            </div>
-            
-            <!-- Champion Section -->
-            <div class="champion-section">
-                {% if ranked_players|length > 0 and ranked_players[0].rank == 1 %}
-                <div class="champion-card">
-                    <div class="champion-avatar">
-                        <i class="fas fa-crown"></i>
-                    </div>
-                    <div class="champion-name">{{ ranked_players[0].name }}</div>
-                    <div class="champion-title">Tournament Champion</div>
-                    <div class="champion-record">Final Record (W/L): {{ ranked_players[0].wins }}/{{ ranked_players[0].losses }}</div>
-                </div>
-                {% endif %}
             </div>
             
             <!-- Final Standings Table -->
@@ -206,22 +195,6 @@
                         </div>
                         </div>
                     {% endfor %}
-                </div>
-            </div>
-            
-            <!-- Tournament Stats -->
-            <h3 class="round-header pt-[4rem]">TOURNAMENT STATS</h3>
-            <div class="round-controls">
-                <div class="stats-card">
-                    <div class="stats-icon"><i class="fas fa-handshake"></i></div>
-                    <div class="stats-value">{{ total_matches }}</div>
-                    <div class="stats-label">Total Matches</div>
-                </div>
-                
-                <div class="stats-card">
-                    <div class="stats-icon"><i class="fas fa-user-plus"></i></div>
-                    <div class="stats-value">{{ total_byes }}</div>
-                    <div class="stats-label">Total Byes</div>
                 </div>
             </div>
             
