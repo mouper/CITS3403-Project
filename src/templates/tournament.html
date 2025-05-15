@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% set is_creator = is_creator %}
 {% block content %}
     <div class="tournament-container">
         <input type="hidden" id="tournamentId" value="{{ tournament.id }}">
@@ -10,12 +11,14 @@
         <!-- Tournament Header -->
         <div class="intourney-header">
             <h1 class="title2 page-header"> <span>{{ tournament.title }}</span> </h1>
+            {% if is_creator %}
             <div class="SaveBtn">
                 <button id="saveExitBtn">
                     <div class="SaveIcon"></div>
                     Save & Exit
                 </button>
             </div>
+            {% endif %}
         </div>
 
         <!-- Tournament Meta Info -->
@@ -64,7 +67,7 @@
                     <span id="timerDisplay" class="timer-value regular3">{{ tournament.round_time_minutes }}:00</span>
                 </div>
                 <div class="Dialog">
-                    <button id="resetRoundBtn" class="cancel">Reset Round</button>
+                    <button id="resetRoundBtn" class="cancel" {% if not is_creator %}disabled{% endif %}>Reset Round</button>
                 </div>
             </div>
             {% endif %}
@@ -137,7 +140,7 @@
                                     <td class="winner-selection">
                                         <div class="RadioSelection">
                                             <label class="radio-option">
-                                            <input type="radio" name="winner{{ match.id }}" value="player1" class="radio-input" {% if match.is_bye %}checked disabled{% elif match.winner_id == match.player1_id %}checked{% endif %}>
+                                            <input type="radio" name="winner{{ match.id }}" value="player1" class="radio-input" {% if match.is_bye %}checked disabled{% elif match.winner_id == match.player1_id %}checked{% endif %} {% if not is_creator %}disabled{% endif %} >
                                             <div class="radio-custom">
                                                 <div class="radio-icon">
                                                 <div class="unselected-icon RadialIcon"></div>
@@ -149,7 +152,7 @@
 
                                             {% if match.player2_id %}
                                             <label class="radio-option">
-                                            <input type="radio" name="winner{{ match.id }}" value="player2" class="radio-input" {% if match.winner_id == match.player2_id %}checked{% endif %}>
+                                            <input type="radio" name="winner{{ match.id }}" value="player2" class="radio-input" {% if match.winner_id == match.player2_id %}checked{% endif %} {% if not is_creator %}disabled{% endif %}>
                                             <div class="radio-custom">
                                                 <div class="radio-icon">
                                                 <div class="unselected-icon RadialIcon"></div>
@@ -278,58 +281,73 @@
             <!-- Round Controls -->
             <div class="round-controls">
                 {% if not current_round or current_round.status == 'not started' %}
-                    <!-- Round Timer -->
-                    <div class="round-timer">
-                        <span class="timer-label medium2">Round Time:</span>
-                        <span id="timerDisplay" class="timer-value">{{ tournament.round_time_minutes }}:00</span>
-                    </div>
-                    <div class="SaveBtn">
-                        <button id="startRoundBtn">
-                            <div class="CreateIcon"></div>
-                            Start Round
-                        </button>
-                    </div>
-                    <div class="SendJoinBtn">
-                        <form method="POST" action="/tournament/{{ tournament.id }}/send_pairings">
-                            <button type="submit">
-                                <i class="fas fa-envelope"></i> Send Pairings to Players
-                            </button>
-                        </form>
-                    </div>
+                <!-- Round Timer (always visible) -->
+                <div class="round-timer">
+                    <span class="timer-label medium2">Round Time:</span>
+                    <span id="timerDisplay" class="timer-value">
+                    {{ tournament.round_time_minutes }}:00
+                    </span>
+                </div>
+            
+                <!-- Start Round -->
+                <div class="SaveBtn">
+                    <button id="startRoundBtn" {% if not is_creator %}disabled{% endif %}>
+                    <div class="CreateIcon"></div>
+                    Start Round
+                    </button>
+                </div>
+            
+                <!-- Send Pairings -->
+                <div class="SendJoinBtn">
+                    <form method="POST" action="/tournament/{{ tournament.id }}/send_pairings">
+                    <button type="submit" {% if not is_creator %}disabled{% endif %}>
+                        <i class="fas fa-envelope"></i> Send Pairings to Players
+                    </button>
+                    </form>
+                </div>
+            
                 {% elif current_round and current_round.status == 'in progress' and view_state == 'confirm_results' %}
-                    <!-- Round Timer - Hidden in confirm results state -->
-                    <div class="round-timer">
-                        <span class="timer-label medium2">Round Time Limit:</span>
-                        <span id="timerDisplay" class="timer-value regular3">00:00</span>
-                    </div>
-                    <div class="SendJoinBtn">
-                        <button id="confirmResultsBtn">Confirm Round Results</button>
-                    </div>
+                <!-- Confirm Results -->
+                <div class="round-timer">
+                    <span class="timer-label medium2">Round Time Limit:</span>
+                    <span id="timerDisplay" class="timer-value regular3">00:00</span>
+                </div>
+                <div class="SendJoinBtn">
+                    <button id="confirmResultsBtn" {% if not is_creator %}disabled{% endif %}>
+                    Confirm Round Results
+                    </button>
+                </div>
+            
                 {% elif current_round and current_round.status == 'in progress' and view_state != 'confirm_results' %}
-
-                    <div class="SendJoinBtn justify-end">
-                        <button id="endRoundEarlyBtn">End Round Early</button>
-                    </div>
+                <!-- End Round Early -->
+                <div class="SendJoinBtn justify-end">
+                    <button id="endRoundEarlyBtn" {% if not is_creator %}disabled{% endif %}>
+                    End Round Early
+                    </button>
+                </div>
+            
                 {% elif current_round and current_round.status == 'completed' %}
-                    {% if current_round.round_number == tournament.total_rounds %}
-                        <!-- Round Timer -->
-                        <div class="round-timer">
-                            <span class="timer-label medium2">Round Time Limit:</span>
-                            <span id="timerDisplay" class="timer-value regular3">{{ tournament.round_time_minutes }}:00</span>
-                        </div>
-                        <div class="SendJoinBtn">
-                            <button id="viewResultsBtn">View Tournament Results</button>
-                        </div>
-                    {% else %}
-                        <!-- Round Timer -->
-                        <div class="round-timer">
-                            <span class="timer-label medium2">Round Time Limit:</span>
-                            <span id="timerDisplay" class="timer-value regular3">{{ tournament.round_time_minutes }}:00</span>
-                        </div>
-                        <div class="SendJoinBtn">
-                            <button id="proceedNextRoundBtn">Proceed To Next Round</button>
-                        </div>
-                    {% endif %}
+                <!-- When the tournament is finished -->
+                <div class="round-timer">
+                    <span class="timer-label medium2">Round Time Limit:</span>
+                    <span id="timerDisplay" class="timer-value regular3">
+                    {{ tournament.round_time_minutes }}:00
+                    </span>
+                </div>
+            
+                {% if current_round.round_number == tournament.total_rounds %}
+                    <div class="SendJoinBtn">
+                    <button id="viewResultsBtn" {% if not is_creator %}disabled{% endif %}>
+                        View Tournament Results
+                    </button>
+                    </div>
+                {% else %}
+                    <div class="SendJoinBtn">
+                    <button id="proceedNextRoundBtn" {% if not is_creator %}disabled{% endif %}>
+                        Proceed To Next Round
+                    </button>
+                    </div>
+                {% endif %}
                 {% endif %}
             </div>
         </div>

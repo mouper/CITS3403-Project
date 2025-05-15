@@ -151,35 +151,36 @@ def dashboard():
     status = request.args.get('status', 'in progress')
     N = 5
 
-    player_tourney_ids = (
-        db.session
-          .query(TournamentPlayer.tournament_id)
-          .filter_by(user_id=current_user.id)
-          .subquery()
-    )
-
-    my_tournaments = (
+    tournaments = (
         Tournament.query
-                .filter(
-                    Tournament.status == status,
-                    or_(Tournament.created_by == current_user.id,
-                         Tournament.id.in_(player_tourney_ids))
-                )
-                .order_by(func.random())
-                .limit(N)
-                .all()
+        .outerjoin(TournamentPlayer, TournamentPlayer.tournament_id == Tournament.id)
+        .filter(
+            or_(
+                Tournament.created_by == current_user.id,
+                TournamentPlayer.user_id  == current_user.id
+            ),
+            Tournament.status == status
+        )
+        .distinct()
+        .order_by(func.random())
+        .limit(N)
+        .all()
     )
 
-    for t in my_tournaments:
+    for t in tournaments:
         rounds = Round.query.filter_by(tournament_id=t.id).all()
         completed = sum(1 for r in rounds if r.status == 'completed')
-        in_progress = any(r.status == 'in progress' for r in rounds)
-        t.current_round = completed + (1 if in_progress else 0)
+        in_prog   = any(r.status == 'in progress' for r in rounds)
+        t.current_round   = completed + (1 if in_prog else 0)
         t.completed_rounds = completed
+        t.is_creator = (t.created_by == current_user.id)
+
+    sent = Friend.query.filter_by(user_id=current_user.id, status='accepted')
+    recv = Friend.query.filter_by(friend_id=current_user.id, status='accepted')
 
     return render_template(
         'dashboard.html',
-        tournaments=my_tournaments,
+        tournaments=tournaments,         
         accepted_friend_usernames=accepted_friend_usernames,
         status_filter=status
     )
@@ -936,6 +937,7 @@ def view_tournament(tournament_id):
             total_byes=total_byes,
             tournament_duration=tournament_duration,
             is_creator=is_creator,
+            view_state=view_state,
             tournament_results=tournament_results,
         )
     else:
@@ -951,8 +953,9 @@ def view_tournament(tournament_id):
             matches_by_round=matches_by_round,
             current_matches=current_matches,
             ranked_players=ranked_players,
-            player_stats=player_stats,  # Add back player_stats for pairings table
-            view_state=view_state
+            player_stats=player_stats, 
+            view_state=view_state,
+            is_creator=is_creator
         )
 
 @application.route('/tournament/<int:tournament_id>/completed', methods=['GET'])
