@@ -148,7 +148,7 @@ def dashboard():
 
     accepted_friend_usernames = [friend.username for friend in accepted_friends]
     
-    status = request.args.get('status', 'in progress')
+    status = request.args.get('status', 'in progress player')
     N = 5
 
     tournaments = (
@@ -168,6 +168,7 @@ def dashboard():
     )
 
     for t in tournaments:
+    for t in tournaments:
         rounds = Round.query.filter_by(tournament_id=t.id).all()
         completed = sum(1 for r in rounds if r.status == 'completed')
         in_prog   = any(r.status == 'in progress' for r in rounds)
@@ -182,7 +183,8 @@ def dashboard():
         'dashboard.html',
         tournaments=tournaments,         
         accepted_friend_usernames=accepted_friend_usernames,
-        status_filter=status
+        status_filter=status,
+        current_user=current_user
     )
   
 @application.route('/analytics')
@@ -231,7 +233,7 @@ def analytics():
 
     base_q = (
         db.session.query(Tournament)
-        .filter_by(created_by=current_user.id)
+        .filter_by(created_by=current_user.id, status='completed')  # Add status='completed' filter
         .order_by(Tournament.created_at.desc())
     )
 
@@ -941,6 +943,43 @@ def view_tournament(tournament_id):
             tournament_results=tournament_results,
         )
     else:
+        # Compute previous round standings for pre-round and in-progress phase after round 1
+        previous_round_ranked_players = []
+        if current_round and current_round.round_number > 1 and current_round.status in ['not started', 'in progress']:
+            # Find the previous round
+            prev_round = next((r for r in rounds if r.round_number == current_round.round_number - 1), None)
+            if prev_round:
+                # Use TournamentResult if available (after round completed), else compute
+                prev_results = TournamentResult.query.filter_by(tournament_id=tournament_id).order_by(TournamentResult.rank).all()
+                if prev_results:
+                    for result in prev_results:
+                        player = players.get(result.player_id)
+                        if not player:
+                            continue
+                        player_result = {
+                            'id': player.id,
+                            'name': player.user.username if player.user_id else f"{player.guest_firstname} {player.guest_lastname}",
+                            'wins': result.wins,
+                            'losses': result.losses,
+                            'owp': result.opponent_win_percentage or 0,
+                            'oowp': result.opp_opp_win_percentage or 0,
+                            'rank': result.rank
+                        }
+                        previous_round_ranked_players.append(player_result)
+                else:
+                    # Fallback: use compute_rankings for previous round
+                    prev_rankings = compute_rankings(tournament_id, tournament.format)
+                    for idx, rp in enumerate(prev_rankings, 1):
+                        player_obj = None
+                        for p in tournament_players:
+                            if (hasattr(p, 'user') and rp.get('name') == p.user.username) or (rp.get('name') == f"{p.guest_firstname} {p.guest_lastname}"):
+                                player_obj = p
+                                break
+                        rp_copy = dict(rp)
+                        if player_obj:
+                            rp_copy['id'] = player_obj.id
+                        rp_copy['rank'] = idx
+                        previous_round_ranked_players.append(rp_copy)
         # Use the regular tournament template for in-progress tournaments
         return render_template(
             'tournament.html',
@@ -2190,7 +2229,7 @@ def user_preview(username):
     recent_tournaments = []
     base_q = (
         db.session.query(Tournament)
-        .filter_by(created_by=user.id)
+        .filter_by(created_by=user.id, status='completed')  # Add status='completed' filter
         .order_by(Tournament.created_at.desc())
     )
     recent = base_q.limit(6).all()
