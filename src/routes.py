@@ -808,12 +808,15 @@ def start_tournament():
 def view_tournament(tournament_id):
     # Get the tournament
     tournament = Tournament.query.get_or_404(tournament_id)
+    
+    # If this is a draft tournament, redirect to the new_tournament route
+    if tournament.status == 'draft':
+        if tournament.created_by != current_user.id:
+            flash("That tournament draft is private to its organizer.", "danger")
+            return redirect(url_for('dashboard', status='draft'))
+        return redirect(url_for('new_tournament', tournament_id=tournament_id))
+    
     is_creator = (tournament.created_by == current_user.id)
-    
-    if tournament.status == 'draft' and tournament.created_by != current_user.id:
-        flash("That tournament draft is private to its organizer.", "danger")
-        return redirect(url_for('dashboard', status='draft'))
-    
     view_state = request.args.get('view_state', 'normal')
     
     # Get all rounds for this tournament
@@ -939,7 +942,7 @@ def view_tournament(tournament_id):
             player_stats=player_stats,  # Add back player_stats for pairings table
             view_state=view_state
         )
-    
+
 @application.route('/tournament/<int:tournament_id>/completed', methods=['GET'])
 @login_required
 def view_tournament_completed(tournament_id):
@@ -2227,7 +2230,7 @@ def user_preview(username):
 def edit_tournament(tournament_id):
     tournament = Tournament.query.get_or_404(tournament_id)
     if tournament.created_by != current_user.id or tournament.status != 'draft':
-        flash("You don’t have permission to edit that tournament.", "error")
+        flash("You don't have permission to edit that tournament.", "error")
         return redirect(url_for('view_tournament', tournament_id=tournament_id))
 
     rows = TournamentPlayer.query.filter_by(
@@ -2245,7 +2248,8 @@ def edit_tournament(tournament_id):
                 "guest_firstname": "",
                 "guest_lastname": "",
                 "email": "",
-                "is_confirmed": True
+                "is_confirmed": True,
+                "has_tourney_pro_account": True
             })
         else:
             players_data.append({
@@ -2255,7 +2259,8 @@ def edit_tournament(tournament_id):
                 "guest_firstname": p.guest_firstname,
                 "guest_lastname": p.guest_lastname,
                 "email": p.email,
-                "is_confirmed": p.is_confirmed
+                "is_confirmed": p.is_confirmed,
+                "has_tourney_pro_account": False
             })
 
     if tournament.include_creator_as_player and not any(d["user_id"] == current_user.id for d in players_data):
