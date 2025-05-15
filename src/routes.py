@@ -148,29 +148,72 @@ def dashboard():
 
     accepted_friend_usernames = [friend.username for friend in accepted_friends]
     
-    status = request.args.get('status', 'in progress')
+    status = request.args.get('status', 'in progress player')
     N = 5
 
-    my_tournaments = (
-        Tournament.query
-                  .filter_by(status=status)
-                  .order_by(func.random())
-                  .limit(N)
-                  .all()
-    )
+    # New filter logic
+    tournaments = []
+    if status == 'in progress creator':
+        tournaments = (
+            Tournament.query
+                      .filter_by(status='active', created_by=current_user.id)
+                      .order_by(Tournament.created_at.desc())
+                      .all()
+        )
+    elif status == 'in progress player':
+        tournaments = (
+            Tournament.query
+                      .filter(Tournament.status == 'active')
+                      .join(TournamentPlayer, TournamentPlayer.tournament_id == Tournament.id)
+                      .filter(TournamentPlayer.user_id == current_user.id)
+                      .filter(Tournament.created_by != current_user.id)
+                      .order_by(Tournament.created_at.desc())
+                      .all()
+        )
+    elif status == 'draft creator':
+        tournaments = (
+            Tournament.query
+                      .filter_by(status='draft', created_by=current_user.id)
+                      .order_by(Tournament.created_at.desc())
+                      .all()
+        )
+    elif status == 'draft player':
+        tournaments = (
+            Tournament.query
+                      .filter(Tournament.status == 'draft')
+                      .join(TournamentPlayer, TournamentPlayer.tournament_id == Tournament.id)
+                      .filter(TournamentPlayer.user_id == current_user.id)
+                      .filter(Tournament.created_by != current_user.id)
+                      .order_by(Tournament.created_at.desc())
+                      .all()
+        )
+    else:
+        tournaments = (
+            Tournament.query
+                      .filter_by(status='active')
+                      .order_by(Tournament.created_at.desc())
+                      .all()
+        )
 
-    for t in my_tournaments:
+    for t in tournaments:
         rounds = Round.query.filter_by(tournament_id=t.id).all()
         completed = sum(1 for r in rounds if r.status == 'completed')
         in_progress = any(r.status == 'in progress' for r in rounds)
         t.current_round = completed + (1 if in_progress else 0)
         t.completed_rounds = completed
+        # Set is_player attribute for client-side filtering
+        t.is_player = False
+        for player in TournamentPlayer.query.filter_by(tournament_id=t.id).all():
+            if player.user_id == current_user.id:
+                t.is_player = True
+                break
 
     return render_template(
         'dashboard.html',
-        tournaments=my_tournaments,
+        tournaments=tournaments,
         accepted_friend_usernames=accepted_friend_usernames,
-        status_filter=status
+        status_filter=status,
+        current_user=current_user
     )
   
 @application.route('/analytics')

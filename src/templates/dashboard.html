@@ -31,18 +31,26 @@
           onchange="document.getElementById('statusFilterForm').submit()"
         >
           <option
-            value="in progress"
-            {% if status_filter == 'in progress' %}selected{% endif %}
-          >In Progress</option>
+            value="in progress player"
+            {% if status_filter == 'in progress player' %}selected{% endif %}
+          >In Progress (Player)</option>
           <option
-            value="draft"
-            {% if status_filter == 'draft' %}selected{% endif %}
-          >Draft</option>
+            value="in progress creator"
+            {% if status_filter == 'in progress creator' %}selected{% endif %}
+          >In Progress (Creator)</option>
+          <option
+            value="draft player"
+            {% if status_filter == 'draft player' %}selected{% endif %}
+          >Draft (Player)</option>
+          <option
+            value="draft creator"
+            {% if status_filter == 'draft creator' %}selected{% endif %}
+          >Draft (Creator)</option>
         </select>
       </form>
     </div>
     <div id="myTourneyCards">
-      {{ cards.tournament_cards(tournaments) }}
+      {{ cards.tournament_cards(tournaments, current_user) }}
     </div>
   </div>
   <div class="friend-search-section">

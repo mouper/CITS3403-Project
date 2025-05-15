@@ -1,9 +1,11 @@
-{% macro tournament_cards(tournaments) %}
+{% macro tournament_cards(tournaments, current_user) %}
 <div class="statcard-container" id="adminStatcards">
   {% for t in tournaments %}
     <div class="statcard" 
          data-tourney-id="{{ t.id }}" 
-         data-status="{{ t.status }}">               
+         data-status="{{ t.status }}"
+         data-creator="{{ 'true' if t.created_by == current_user.id else 'false' }}"
+         data-player="{{ 'true' if t.is_player else 'false' }}">               
       <div class="statcard-top-row">
         <p class="subheadline">
           {{ t.current_round }} / {{ t.total_rounds }} Rounds
