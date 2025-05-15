@@ -421,6 +421,11 @@ html, body {
     font-size: 1rem;
 }
 
+.FilterComponent option{
+    background-color: var(--background-shade2);
+    color: var(--off-white);
+}
+
 /* Tournament Cards Styling - specific to myTourneyCards */
 #myTourneyCards .statcard-container {
     display: grid;
@@ -883,6 +888,10 @@ html, body {
         gap: 0.4rem !important;
     }
 
+    .tabs-container{
+        flex-direction: column;
+    }
+
 }
 
 /* 500px and smaller devices */
@@ -1065,6 +1074,19 @@ html, body {
 
     .page-header {
         font-size: 1.8rem !important;
+    }
+
+    .mobile-disclaimer{
+        display: block !important;
+    }
+
+    .analytics-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .dropdown-row {
+        align-items: flex-start !important;
     }
 }
 
@@ -1302,6 +1324,11 @@ html, body {
 #adminLimitSelector {
     padding: 0.1rem;
     min-width: 8ch;
+}
+
+#adminLimitSelector option{
+    background-color: var(--background-shade2);
+    color: var(--off-white);
 }
 
 .admin-limit-selector-container {

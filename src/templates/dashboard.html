@@ -13,7 +13,7 @@
     </div>
   {% endif %}
   {% endwith %}
-  <p class="medium4" style="margin-bottom: 3rem;">Welcome to your dashboard!</p>
+  <p class="medium4" style="margin-bottom: 1rem;">Welcome to your dashboard!</p>
   <div class="dashboard-btn-container">
     <a href="{{ url_for('new_tournament') }}" target="_blank" class="NewBtn">
       <div class="CreateIcon"></div>
@@ -22,7 +22,7 @@
   </div>
   <div class="tournament-section">
     <div class="tournament-header">
-      <h2 class="subheadline">My Tournaments</h2>
+      <h2 class="subheadline purple-text">My Tournaments</h2>
       <form method="GET" class="FilterComponent" id="statusFilterForm">
         <select
           name="status"
@@ -75,6 +75,9 @@
                 <path d="M54 2.00001L2 54M54 54L2 2" stroke="#FAFAFA" stroke-width="2.5" stroke-linecap="round"/>
               </svg>
             </span>
+          <div class="mobile-disclaimer py-2" style="display: none;">
+            <p class="regular4"> Please rotate your phone to landscape to view this section clearly.</p>
+          </div>
           <div id="friendPreviewContainer"></div>
         </div>
       </div>
@@ -83,7 +86,7 @@
 
     <div class="friend-search-bar">
       <div class="search-container">
-        <input id="playerSearch" type="text" placeholder="Search by username or email" autocomplete="off">
+        <input id="playerSearch" type="text" placeholder="Search by username" autocomplete="off">
         <div id="searchResults" class="search-results"></div>
       </div>
       <div class="SendJoinBtn">
