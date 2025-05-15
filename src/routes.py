@@ -262,7 +262,7 @@ def analytics():
 
     base_q = (
         db.session.query(Tournament)
-        .filter_by(created_by=current_user.id)
+        .filter_by(created_by=current_user.id, status='completed')  # Add status='completed' filter
         .order_by(Tournament.created_at.desc())
     )
 
@@ -2282,7 +2282,7 @@ def user_preview(username):
     recent_tournaments = []
     base_q = (
         db.session.query(Tournament)
-        .filter_by(created_by=user.id)
+        .filter_by(created_by=user.id, status='completed')  # Add status='completed' filter
         .order_by(Tournament.created_at.desc())
     )
     recent = base_q.limit(6).all()
