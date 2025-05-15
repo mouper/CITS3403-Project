@@ -854,43 +854,69 @@ def view_tournament(tournament_id):
     if current_round:
         current_matches = Match.query.filter_by(round_id=current_round.id).all()
     
-    # Get tournament results ordered by rank
-    tournament_results = TournamentResult.query.filter_by(
-        tournament_id=tournament_id
-    ).order_by(TournamentResult.rank).all()
-    
-    # Create player_stats dictionary from tournament results for pairings table
-    player_stats = {}
-    for result in tournament_results:
-        player_stats[result.player_id] = {
-            'wins': result.wins,
-            'losses': result.losses
-        }
-    
-    # Prepare player results for rankings using stored ranks
-    ranked_players = []
-    for result in tournament_results:
-        player = players.get(result.player_id)
-        if not player:
-            continue
-            
-        player_result = {
-            'id': player.id,
-            'name': "",
-            'wins': result.wins,
-            'losses': result.losses,
-            'owp': result.opponent_win_percentage or 0,
-            'oowp': result.opp_opp_win_percentage or 0,
-            'rank': result.rank
-        }
-        
-        # Set player name
-        if player.user_id:
-            player_result['name'] = player.user.username
-        else:
-            player_result['name'] = f"{player.guest_firstname} {player.guest_lastname}"
-        
-        ranked_players.append(player_result)
+    # Standings logic: use live compute_rankings for in-progress, TournamentResult for completed
+    if tournament.status == 'completed':
+        # Use TournamentResult for completed tournaments
+        tournament_results = TournamentResult.query.filter_by(
+            tournament_id=tournament_id
+        ).order_by(TournamentResult.rank).all()
+        # Create player_stats dictionary from tournament results for pairings table
+        player_stats = {}
+        for result in tournament_results:
+            player_stats[result.player_id] = {
+                'wins': result.wins,
+                'losses': result.losses
+            }
+        # Prepare player results for rankings using stored ranks
+        ranked_players = []
+        for result in tournament_results:
+            player = players.get(result.player_id)
+            if not player:
+                continue
+            player_result = {
+                'id': player.id,
+                'name': "",
+                'wins': result.wins,
+                'losses': result.losses,
+                'owp': result.opponent_win_percentage or 0,
+                'oowp': result.opp_opp_win_percentage or 0,
+                'rank': result.rank
+            }
+            # Set player name
+            if player.user_id:
+                player_result['name'] = player.user.username
+            else:
+                player_result['name'] = f"{player.guest_firstname} {player.guest_lastname}"
+            ranked_players.append(player_result)
+    else:
+        # Use live compute_rankings for in-progress tournaments
+        ranked_players_raw = compute_rankings(tournament_id, tournament.format)
+        # Assign rank field based on sorted order (1-based)
+        ranked_players = []
+        for idx, rp in enumerate(ranked_players_raw, 1):
+            # Try to find the player object for id or name
+            player_obj = None
+            for p in tournament_players:
+                if (hasattr(p, 'user') and rp.get('name') == p.user.username) or (rp.get('name') == f"{p.guest_firstname} {p.guest_lastname}"):
+                    player_obj = p
+                    break
+            # If possible, add id field for template compatibility
+            rp_copy = dict(rp)
+            if player_obj:
+                rp_copy['id'] = player_obj.id
+            rp_copy['rank'] = idx
+            ranked_players.append(rp_copy)
+        # Also build player_stats for the pairings table
+        player_stats = {}
+        for player in tournament_players:
+            rp = next((p for p in ranked_players if p.get('id', None) == player.id or p.get('name', None) == (player.user.username if player.user_id else f"{player.guest_firstname} {player.guest_lastname}")), None)
+            if rp:
+                player_stats[player.id] = {
+                    'wins': rp['wins'],
+                    'losses': rp['losses']
+                }
+            else:
+                player_stats[player.id] = {'wins': 0, 'losses': 0}
     
     # If tournament is completed, use the completed template with special stats
     if tournament.status == 'completed':
@@ -1144,7 +1170,7 @@ def compute_rankings(tournament_id, format):
     players = TournamentPlayer.query.filter_by(tournament_id=tournament_id).all()
 
     # Initialize stats for each player
-    player_stats = {p.id: {"player": p, "wins": 0, "losses": 0, "opponents": []} for p in players}
+    player_stats = {p.id: {"player": p, "wins": 0, "losses": 0, "opponents": [], "head_to_head": {}} for p in players}
 
     # Get the matches for this tournament
     matches = Match.query.join(Round, Match.round_id == Round.id)\
@@ -1162,10 +1188,7 @@ def compute_rankings(tournament_id, format):
                 # Player 1 gets the win
                 player_stats[p1]["wins"] += 1
                 player_stats[p1]["opponents"].append(None)  # No opponent for player1 in bye
-            if p2:
-                # Player 2 got a bye, they don't get the loss
-                player_stats[p2]["wins"] += 1
-                player_stats[p2]["opponents"].append(None)  # No opponent for player2 in bye
+            # Do NOT update p2 if p2 is None (prevents KeyError)
             continue
 
         # Track the players' opponents if it's a real match (i.e., no bye)
@@ -1176,11 +1199,17 @@ def compute_rankings(tournament_id, format):
         # Track wins and losses
         if winner == p1:
             player_stats[p1]["wins"] += 1
-            if p2:
+            if p2 is not None:
                 player_stats[p2]["losses"] += 1
+            # Head-to-head only if both players exist
+            if p2 is not None:
+                player_stats[p1]["head_to_head"][p2] = player_stats[p1]["head_to_head"].get(p2, 0) + 1
         elif winner == p2:
-            player_stats[p2]["wins"] += 1
+            if p2 is not None:
+                player_stats[p2]["wins"] += 1
             player_stats[p1]["losses"] += 1
+            if p2 is not None:
+                player_stats[p2]["head_to_head"][p1] = player_stats[p2]["head_to_head"].get(p1, 0) + 1
 
     # Calculate OWP (Opponent Win Percentage) and OOWP (Opponents' Opponent Win Percentage)
     standings = []

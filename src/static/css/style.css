@@ -1620,6 +1620,21 @@ html, body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
+.bracket-player.winner {
+    background-color: var(--primary-shade1);
+    color: var(--background-shade2);
+    position: relative;
+  }
+  
+  .bracket-player.winner::after {
+    content: "🏆";
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.2em;
+  }
+
 .dashboard-container .title2{
     color: var(--Primary-Shade-1, #BBB2FF);
     text-shadow: 6px 6px 25px #0E0E0E;

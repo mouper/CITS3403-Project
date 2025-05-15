@@ -60,21 +60,6 @@
         </div>
       </div>
 
-      {% if current_round and current_round.status == 'in progress' and view_state != 'confirm_results' %}
-      <div class="round-controls">
-        <div class="round-timer">
-          <span class="timer-label medium2">Round Time Limit:</span>
-          <span id="timerDisplay" class="timer-value regular3">{{ tournament.round_time_minutes }}:00</span>
-        </div>
-        <div class="Dialog">
-          <button id="resetRoundBtn" class="cancel"
-                  {% if readonly %}disabled class="opacity-50 cursor-not-allowed"{% endif %}>
-            Reset Round
-          </button>
-        </div>
-      </div>
-      {% endif %}
-
       <!-- Pairings -->
       <div class="table-container">
         <div class="table-label">
@@ -166,20 +151,169 @@
         </div>
       </div>
 
-      <!-- Standings omitted for brevity... -->
+      <!-- Standings Section -->
+      <div class="table-container pt-[4rem]">
+        <div class="table-label">
+          <h3 class="medium2 table-heading">STANDINGS:</h3>
+          {% if tournament.format == 'swiss' %}
+            <p class="caption table-caption">OWP = Opponents Win Percentage</p>
+          {% endif %}
+        </div>
+        <div class="standings-table-container pb-[1.5rem]">
+          {% if tournament.format == 'single elimination' and rounds_count > 1 %}
+            <!-- Render tournament bracket for single elimination format -->
+            <div class="tournament-bracket">
+              <h4>Bracket View</h4>
+              <div class="bracket-container">
+                {% for round_num in range(1, tournament.total_rounds + 1) %}
+                  <div class="bracket-round">
+                    <div class="bracket-round-header">Round {{ round_num }}</div>
+                    {% set round_matches = matches_by_round.get(round_num, []) %}
+                    {% if round_num <= rounds_count %}
+                      {% for match in round_matches %}
+                        <div class="bracket-match {% if match.winner_id %}match-completed{% endif %}">
+                          <div class="bracket-player {% if match.winner_id == match.player1_id %}winner{% endif %}">
+                            {% set player1 = players.get(match.player1_id) %}
+                            {% if player1 %}
+                              {% if player1.user_id %}
+                                {{ player1.user.first_name }} {{ player1.user.last_name }} 
+                              {% else %}
+                                {{ player1.guest_firstname }} {{ player1.guest_lastname }}
+                              {% endif %}
+                            {% else %}
+                              TBD
+                            {% endif %}
+                          </div>
+                          <div class="bracket-player {% if match.winner_id == match.player2_id %}winner{% endif %}">
+                            {% if match.player2_id %}
+                              {% set player2 = players.get(match.player2_id) %}
+                              {% if player2 %}
+                                {% if player2.user_id %}
+                                  {{ player2.user.first_name }} {{ player2.user.last_name }}
+                                {% else %}
+                                  {{ player2.guest_firstname }} {{ player2.guest_lastname }}
+                                {% endif %}
+                              {% endif %}
+                            {% else %}
+                              {% if match.is_bye %}BYE{% else %}TBD{% endif %}
+                            {% endif %}
+                          </div>
+                        </div>
+                      {% endfor %}
+                    {% else %}
+                      {% set num_matches = 2**(tournament.total_rounds - round_num) %}
+                      {% for _ in range(num_matches) %}
+                        <div class="bracket-match">
+                          <div class="bracket-player">TBD</div>
+                          <div class="bracket-player">TBD</div>
+                        </div>
+                      {% endfor %}
+                    {% endif %}
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+          {% endif %}
+          
+          <div class="table-wrapper">
+            <table class="standings-table app-table">
+              <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>Player</th>
+                  <th>W/L</th>
+                  {% if tournament.format == 'swiss' %}
+                    <th>OWP</th>
+                    <th>OOWP</th>
+                  {% endif %}
+                </tr>
+              </thead>
+              <tbody>
+                {% for player_result in ranked_players %}
+                <tr>
+                  <td>{{ player_result.rank }}</td>
+                  <td>{{ player_result.name }}</td>
+                  <td>{{ player_result.wins }}/{{ player_result.losses }}</td>
+                  {% if tournament.format == 'swiss' %}
+                    <td>{{ "%.1f"|format(player_result.owp * 100) }}%</td>
+                    <td>{{ "%.1f"|format(player_result.oowp * 100) }}%</td>
+                  {% endif %}
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
 
-      <!-- Footer Round Controls -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flashes" style="margin: 2rem; width: 100%;">
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+      {% endwith %}
+
+      <!-- Round Controls -->
       <div class="round-controls">
-        <div class="round-timer">
-          <span class="timer-label medium2">Round Time:</span>
-          <span id="timerDisplay" class="timer-value">{{ tournament.round_time_minutes }}:00</span>
-        </div>
-        <div class="SendJoinBtn">
-          <button id="endRoundEarlyBtn"
-                  {% if readonly %}disabled class="opacity-50 cursor-not-allowed"{% endif %}>
-            End Round Early
-          </button>
-        </div>
+        {% if not current_round or current_round.status == 'not started' %}
+          <!-- Round Timer -->
+          <div class="round-timer">
+            <span class="timer-label medium2">Round Time:</span>
+            <span id="timerDisplay" class="timer-value">{{ tournament.round_time_minutes }}:00</span>
+          </div>
+          {% if not readonly %}
+          <div class="SaveBtn">
+            <button id="startRoundBtn">
+              <div class="CreateIcon"></div>
+              Start Round
+            </button>
+          </div>
+          <div class="SendJoinBtn">
+            <form method="POST" action="/tournament/{{ tournament.id }}/send_pairings">
+              <button type="submit">
+                <i class="fas fa-envelope"></i> Send Pairings to Players
+              </button>
+            </form>
+          </div>
+          {% endif %}
+        {% elif current_round and current_round.status == 'in progress' and view_state == 'confirm_results' %}
+          <!-- Round Timer - Hidden in confirm results state -->
+          <div class="round-timer">
+            <span class="timer-label medium2">Round Time Limit:</span>
+            <span id="timerDisplay" class="timer-value regular3">00:00</span>
+          </div>
+          {% if not readonly %}
+          <div class="SendJoinBtn">
+            <button id="confirmResultsBtn">Confirm Round Results</button>
+          </div>
+          {% endif %}
+        {% elif current_round and current_round.status == 'in progress' and view_state != 'confirm_results' %}
+          {% if not readonly %}
+          <div class="SendJoinBtn justify-end">
+            <button id="endRoundEarlyBtn">End Round Early</button>
+          </div>
+          {% endif %}
+        {% elif current_round and current_round.status == 'completed' %}
+          <!-- Round Timer -->
+          <div class="round-timer">
+            <span class="timer-label medium2">Round Time Limit:</span>
+            <span id="timerDisplay" class="timer-value regular3">{{ tournament.round_time_minutes }}:00</span>
+          </div>
+          {% if not readonly %}
+            {% if current_round.round_number == tournament.total_rounds %}
+            <div class="SendJoinBtn">
+              <button id="viewResultsBtn">View Tournament Results</button>
+            </div>
+            {% else %}
+            <div class="SendJoinBtn">
+              <button id="proceedNextRoundBtn">Proceed To Next Round</button>
+            </div>
+            {% endif %}
+          {% endif %}
+        {% endif %}
       </div>
     </div>
   </div>
