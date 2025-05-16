@@ -1,51 +1,47 @@
-import os
 from flask import Flask, request
-from flask_login import LoginManager, current_user, logout_user
-from flask_mail import Mail, Message
-from models import User
-from db import db, migrate
+from config import Config, DeploymentConfig
+from flask_login import current_user, logout_user
 from dotenv import load_dotenv
+from db import db, mail, migrate, login_manager
 
+# Load environment variables
 load_dotenv()
 
-basedir = os.path.abspath(os.path.dirname(__file__))
+def create_app(Config):
+    # Create Flask app
+    app = Flask(__name__)
+    app.config.from_object(Config)
+    
+    # Initialize extensions with app
+    db.init_app(app)
+    mail.init_app(app)
+    login_manager.init_app(app)
+    migrate.init_app(app, db)
 
-application = Flask(__name__)
+    # Import models here to avoid circular imports
+    from models import User
 
-application.config['MAIL_SERVER'] = os.getenv("MAIL_SERVER", "smtp.gmail.com")
-application.config['MAIL_PORT'] = int(os.getenv("MAIL_PORT", 587))
-application.config['MAIL_USE_TLS'] = True
-application.config['MAIL_USERNAME'] = os.getenv("MAIL_USERNAME")  # your email
-application.config['MAIL_PASSWORD'] = os.getenv("MAIL_PASSWORD")  # app password or real pass
-application.config['MAIL_DEFAULT_SENDER'] = application.config['MAIL_USERNAME']
+    @login_manager.user_loader
+    def load_user(user_id):
+        return db.session.get(User, int(user_id))
 
-mail = Mail(application)
+    @app.before_request
+    def logout_if_user_missing():
+        if current_user.is_authenticated and db.session.get(User, current_user.id) is None:
+            logout_user()
 
-application.config['SECRET_KEY'] = os.environ.get("SECRET_KEY") or "your-secret-key-here"
+    @app.context_processor
+    def inject_request():
+        return dict(request=request)
 
-application.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DATABASE_URL") or \
-    "sqlite:///" + os.path.join(basedir, "app.db")
+    # Register blueprint
+    from blueprints import main
+    app.register_blueprint(main)
+    
+    return app
 
-application.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+# Create the application instance
+application = create_app(DeploymentConfig)
 
-db.init_app(application)
-migrate.init_app(application, db)
-
-@application.before_request
-def logout_if_user_missing():
-    if current_user.is_authenticated and db.session.get(User, current_user.id) is None:
-        logout_user()
-
-login_manager = LoginManager()
-login_manager.init_app(application)
-login_manager.login_view = 'login'
-
-@login_manager.user_loader
-def load_user(user_id):
-    return db.session.get(User, int(user_id))
-
-@application.context_processor
-def inject_request():
-    return dict(request=request)
-
-import routes
+if __name__ == '__main__':
+    application.run()

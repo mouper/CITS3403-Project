@@ -375,7 +375,7 @@ html, body {
     display: flex;
     gap: 1.5rem;
     margin-top: 2rem;
-    margin-bottom: 2rem;
+    margin-bottom: 4rem;
 }
   
 .NewBtn, .UploadBtn {
@@ -2085,7 +2085,6 @@ html, body {
     font-weight: 500;
     line-height: 1.5rem; 
     letter-spacing: 0.0125rem;
-    padding-top: 1rem;
     padding-bottom: 1rem;
 }
 

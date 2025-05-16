@@ -19,9 +19,9 @@
       <div class="tournament-footer">
         <span class="regular3">{{ t.format|title }}</span>
         {% if t.status == 'draft' %}
-          <a href="{{ url_for('edit_tournament', tournament_id=t.id) }}" class="ViewBtn">View</a>
+          <a href="{{ url_for('main.edit_tournament', tournament_id=t.id) }}" class="ViewBtn">View</a>
         {% else %}
-          <a href="{{ url_for('view_tournament', tournament_id=t.id) }}" class="ViewBtn">View</a>
+          <a href="{{ url_for('main.view_tournament', tournament_id=t.id) }}" class="ViewBtn">View</a>
         {% endif %}
       </div>
     </div>
