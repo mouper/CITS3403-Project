@@ -43,7 +43,7 @@
             </div>
             
             <!-- Final Standings Table -->
-            <div class="table-container pt-[4rem]">
+            <div class="table-container">
                 <div class="table-label">
                     <h3 class="medium2 table-heading">FINAL STANDINGS:</h3>
                     {% if tournament.format == 'swiss' %}
@@ -126,9 +126,9 @@
                 {% endif %}
             
             <!-- Round Results -->
-            <h3 class="round-header pt-[4rem]">FINAL ROUND RESULTS</h3>
+            <h3 class="table-heading pt-[4rem]">FINAL ROUND RESULTS</h3>
             <div class="round-results-container">
-                <div class="medium2 table-heading pb-[2rem]" data-round="{{ rounds_count }}">
+                <div class="medium3 round-header pb-[1rem]" data-round="{{ rounds_count }}">
                     ROUND {{ rounds_count }}:
                 </div>
                 
@@ -201,7 +201,7 @@
             <!-- Actions -->
             <div class="round-controls pt-[4rem]">
                 <div class="SendJoinBtn">
-                    <a href="{{ url_for('dashboard') }}">
+                    <a href="{{ url_for('main.dashboard') }}">
                         <button>
                             Back to Dashboard
                         </button>

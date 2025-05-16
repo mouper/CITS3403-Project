@@ -9,7 +9,7 @@
     <div class="ProfileSection">
       <div class="profile-top"></div>
       <!-- ✅ Avatar Upload Form -->
-      <form method="POST" action="{{ url_for('upload_avatar') }}" enctype="multipart/form-data" class="avatar-upload-form">
+      <form method="POST" action="{{ url_for('main.upload_avatar') }}" enctype="multipart/form-data" class="avatar-upload-form">
         <div class="profile-avatar">
           <label for="avatarUpload">
             <img id="avatarPreview" src="{{ url_for('static', filename=current_user.avatar_path or 'default-avatar.png') }}" alt="Avatar" class="clickable-avatar">
@@ -24,7 +24,7 @@
       <div class="profile-info">
         <h2 class="title2 pb-6">{{ current_user.username }}</h2>
         <!-- ✅ Email 可编辑并自动提交 -->
-        <form method="POST" action="{{ url_for('update_profile') }}">
+        <form method="POST" action="{{ url_for('main.update_profile') }}">
           <div class="email-display-line">
             <input type="email" class="email-input" name="email" id="emailInput" value="{{ current_user.email }}" readonly>
             <button type="button" class="edit-icon-btn" onclick="enableAndSubmit('emailInput', this)"><div class="EditIcon"></div></button>
@@ -35,14 +35,14 @@
       <div class="profile-bottom">
         <div class="player-details">
           <!-- ✅ First Name -->
-          <form method="POST" action="{{ url_for('update_profile') }}">
+          <form method="POST" action="{{ url_for('main.update_profile') }}">
             <div class="AccountTextForm with-edit">
               <input type="text" name="first_name" id="firstNameInput" value="{{ current_user.first_name }}" readonly>
               <button type="button" class="edit-icon-btn" onclick="enableAndSubmit('firstNameInput', this)"><div class="EditIcon"></div></button>
             </div>
           </form>
           <!-- ✅ Last Name -->
-          <form method="POST" action="{{ url_for('update_profile') }}">
+          <form method="POST" action="{{ url_for('main.update_profile') }}">
             <div class="AccountTextForm with-edit">
               <input type="text" name="last_name" id="lastNameInput" value="{{ current_user.last_name }}" readonly>
               <button type="button" class="edit-icon-btn" onclick="enableAndSubmit('lastNameInput', this)"><div class="EditIcon"></div></button>
@@ -285,7 +285,7 @@
         {% if current_user.is_authenticated %}
           <div class="SendJoinBtn">
             <button>
-              <a class="logout" href="{{ url_for('logout') }}">Logout</a>
+              <a class="logout" href="{{ url_for('main.logout') }}">Logout</a>
             </button>
           </div>
         {% endif %}
