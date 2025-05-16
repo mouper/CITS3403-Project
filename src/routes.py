@@ -1,7 +1,7 @@
 import datetime
 import math
 import random
-from flask import render_template, request, redirect, url_for, flash, jsonify
+from flask import render_template, request, redirect, url_for, flash, jsonify, abort
 from flask_login import login_user, logout_user, current_user, login_required
 from flask_mail import Message
 from blueprints import main
@@ -510,7 +510,7 @@ def new_tournament():
     # Check if we're editing an existing draft tournament
     tournament_id = request.args.get('tournament_id')
     if tournament_id:
-        tournament = Tournament.query.get(tournament_id)
+        tournament = db.session.get(Tournament, tournament_id)
         if tournament and tournament.created_by == current_user.id and tournament.status == 'draft':
             # Get tournament players
             players = TournamentPlayer.query.filter_by(tournament_id=tournament_id).all()
@@ -526,7 +526,7 @@ def new_tournament():
                     'user_id': player.user_id
                 }
                 if player.user_id:
-                    user = User.query.get(player.user_id)
+                    user = db.session.get(User, player.user_id)
                     if user:
                         player_info['username'] = user.username
                         # If this is the current user and they're a player, mark them as confirmed
@@ -559,7 +559,7 @@ def save_tournament():
         # Check if we're updating an existing draft tournament
         tournament_id = data.get('tournament_id')
         if tournament_id:
-            tournament = Tournament.query.get(tournament_id)
+            tournament = db.session.get(Tournament, tournament_id)
             if not tournament:
                 return jsonify({
                     'success': False,
@@ -654,7 +654,7 @@ def start_tournament():
         # Check if we're updating an existing draft tournament
         tournament_id = data.get('tournament_id')
         if tournament_id:
-            tournament = Tournament.query.get(tournament_id)
+            tournament = db.session.get(Tournament, tournament_id)
             if not tournament:
                 return jsonify({
                     'success': False,
@@ -848,7 +848,7 @@ def start_tournament():
 @login_required
 def view_tournament(tournament_id):
     # Get the tournament
-    tournament = Tournament.query.get_or_404(tournament_id)
+    tournament = db.session.get(Tournament, tournament_id) or abort(404)
     
     # If this is a draft tournament, redirect to the new_tournament route
     if tournament.status == 'draft':
@@ -877,14 +877,14 @@ def view_tournament(tournament_id):
         players[player.id] = player
         # Eagerly load user data if player is a registered user
         if player.user_id:
-            player.user = User.query.get(player.user_id)
+            player.user = db.session.get(User, player.user_id)
     
     # Get all matches organized by round
     matches_by_round = {}
     all_matches = Match.query.join(Round).filter(Round.tournament_id == tournament_id).all()
     
     for match in all_matches:
-        round_obj = Round.query.get(match.round_id)
+        round_obj = db.session.get(Round, match.round_id)
         round_num = round_obj.round_number
         if round_num not in matches_by_round:
             matches_by_round[round_num] = []
@@ -1052,7 +1052,7 @@ def view_tournament(tournament_id):
 @login_required
 def view_tournament_completed(tournament_id):
     # Mark tournament as completed if it's not already
-    tournament = Tournament.query.get_or_404(tournament_id)
+    tournament = db.session.get(Tournament, tournament_id) or abort(404)
     if tournament.status != 'completed':
         tournament.status = 'completed'
         db.session.commit()
@@ -1064,7 +1064,7 @@ def view_tournament_completed(tournament_id):
 @login_required
 def start_round(tournament_id):
     """Start a round in the tournament."""
-    tournament = Tournament.query.get_or_404(tournament_id)
+    tournament = db.session.get(Tournament, tournament_id) or abort(404)
     
     # Get the current round (first non-completed round)
     rounds = Round.query.filter_by(tournament_id=tournament_id).order_by(Round.round_number).all()
@@ -1096,7 +1096,7 @@ def start_round(tournament_id):
 @login_required
 def complete_round(tournament_id):
     """Complete the current round and save match results."""
-    tournament = Tournament.query.get_or_404(tournament_id)
+    tournament = db.session.get(Tournament, tournament_id) or abort(404)
     
     # Get the current round
     current_round = Round.query.filter_by(
@@ -1123,7 +1123,7 @@ def complete_round(tournament_id):
         match_id = result.get('match_id')
         winner_id = result.get('winner_id')
         
-        match = Match.query.get(match_id)
+        match = db.session.get(Match, match_id)
         if match and match.round_id == current_round.id:
             match.winner_id = winner_id
             match.status = 'completed'
@@ -1143,7 +1143,7 @@ def complete_round(tournament_id):
 @login_required
 def save_results(tournament_id):
     """Save match results without completing the round."""
-    tournament = Tournament.query.get_or_404(tournament_id)
+    tournament = db.session.get(Tournament, tournament_id) or abort(404)
     
     # Get match results from request
     match_results = request.json.get('match_results', [])
@@ -1153,7 +1153,7 @@ def save_results(tournament_id):
         match_id = result.get('match_id')
         winner_id = result.get('winner_id')
         
-        match = Match.query.get(match_id)
+        match = db.session.get(Match, match_id)
         if match:
             match.winner_id = winner_id
     
@@ -1165,7 +1165,7 @@ def save_results(tournament_id):
 @login_required
 def next_round(tournament_id):
     """Create the next round for the tournament."""
-    tournament = Tournament.query.get_or_404(tournament_id)
+    tournament = db.session.get(Tournament, tournament_id) or abort(404)
     
     # Get the current round
     current_round = Round.query.filter_by(
@@ -1214,7 +1214,7 @@ def next_round(tournament_id):
 @main.route('/tournament/<int:tournament_id>/send_results', methods=['POST'])
 @login_required
 def send_results_to_players(tournament_id):
-    tournament = Tournament.query.get_or_404(tournament_id)
+    tournament = db.session.get(Tournament, tournament_id) or abort(404)
     players = TournamentPlayer.query.filter_by(tournament_id=tournament_id).all()
 
     ranked_players = compute_rankings(tournament_id, tournament.format)
@@ -1338,7 +1338,7 @@ def compute_rankings(tournament_id, format):
         
         # Use the guest's name if user_id is None
         if p.user_id:
-            user = User.query.get(p.user_id)
+            user = db.session.get(User, p.user_id)
             player_name = f"{user.first_name} {user.last_name}" if user else f"{p.guest_firstname} {p.guest_lastname}"
         else:
             player_name = f"{p.guest_firstname} {p.guest_lastname}"
@@ -1620,7 +1620,7 @@ def create_round_robin_pairings(tournament, current_round, players):
 
 def update_tournament_results(tournament_id):
     """Update tournament results and tiebreakers after a round is completed."""
-    tournament = Tournament.query.get(tournament_id)
+    tournament =  db.session.get(Tournament, tournament_id)
     
     # Get all players in this tournament
     players = TournamentPlayer.query.filter_by(tournament_id=tournament_id).all()
@@ -1969,8 +1969,8 @@ def send_invite():
     data = request.get_json()
     recipient_id  = data.get('recipient_id')
     tournament_id = data.get('tournament_id')
-    recipient = User.query.get(recipient_id)
-    tournament = Tournament.query.get(tournament_id)
+    recipient = db.session.get(User, recipient_id)
+    tournament = db.session.get(Tournament, tournament_id)
     if not recipient or not tournament:
         flash("Invalid user or tournament.", "error")
         return jsonify(success=True)
@@ -2019,7 +2019,7 @@ def send_friend_request():
     if not friend_id:
         return jsonify(success=False, message="No user selected"), 400
 
-    if User.query.get(friend_id) is None:
+    if db.session.get(User, friend_id) is None:
         return jsonify(success=False, message="User not found"), 404
 
     existing = Friend.query.filter_by(
@@ -2066,7 +2066,7 @@ def get_friends():
         for friend in friends:
             # Determine which user is the friend (not the current user)
             friend_id = friend.friend_id if friend.user_id == current_user.id else friend.user_id
-            friend_user = User.query.get(friend_id)
+            friend_user = db.session.get(User, friend_id)
             if friend_user:
                 friend_list.append({
                     'id': friend_user.id,
@@ -2130,7 +2130,7 @@ def update_profile():
 @main.route('/tournament/<int:tournament_id>/send_pairings', methods=['POST'])
 @login_required
 def send_round_pairings(tournament_id):
-    tournament = Tournament.query.get_or_404(tournament_id)
+    tournament = db.session.get(Tournament, tournament_id) or abort(404)
     
     # Get current round
     current_round = Round.query.filter_by(
@@ -2159,7 +2159,7 @@ def send_round_pairings(tournament_id):
     player_users = {}
     for player in players:
         if player.user_id:
-            user = User.query.get(player.user_id)
+            user = db.session.get(User, player.user_id)
             if user:
                 player_users[player.id] = user
     
@@ -2336,7 +2336,7 @@ def user_preview(username):
 @main.route('/tournament/<int:tournament_id>/edit')
 @login_required
 def edit_tournament(tournament_id):
-    tournament = Tournament.query.get_or_404(tournament_id)
+    tournament = db.session.get(Tournament, tournament_id) or abort(404)
     if tournament.created_by != current_user.id or tournament.status != 'draft':
         flash("You don't have permission to edit that tournament.", "error")
         return redirect(url_for('main.view_tournament', tournament_id=tournament_id))
@@ -2348,7 +2348,7 @@ def edit_tournament(tournament_id):
     players_data = []
     for p in rows:
         if p.user_id:
-            user = User.query.get(p.user_id)
+            user = db.session.get(User, p.user_id)
             players_data.append({
                 "id": p.id,
                 "user_id": user.id,
@@ -2402,7 +2402,7 @@ def edit_tournament(tournament_id):
 @main.route('/tournament/<int:tournament_id>/delete', methods=['POST'])
 @login_required
 def delete_tournament(tournament_id):
-    tournament = Tournament.query.get_or_404(tournament_id)
+    tournament = db.session.get(Tournament, tournament_id) or abort(404)
     
     # Only allow deletion if user is the creator and tournament is in draft status
     if tournament.created_by != current_user.id:
