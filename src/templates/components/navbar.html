@@ -25,28 +25,28 @@
 
     <!-- Div for Menu -->
     <div class="navbar-menu" id="mobile-menu">
-        <a href="{{ url_for('dashboard') }}" class="navbar-item {{ 'active' if request.path == '/dashboard' else '' }}">
+        <a href="{{ url_for('main.dashboard') }}" class="navbar-item {{ 'active' if request.path == '/dashboard' else '' }}">
           <span class="icon-container">
             <div class="DashboardIcon"></div>
           </span>
             <span class="medium3">Dashboard</span>
           </a>
           
-          <a href="{{ url_for('analytics') }}" class="navbar-item {{ 'active' if request.path == '/analytics' else '' }}">
+          <a href="{{ url_for('main.analytics') }}" class="navbar-item {{ 'active' if request.path == '/analytics' else '' }}">
             <span class="icon-container">
               <div class="AnalyticsIcon"></div>
             </span>
             <span class="medium3">Analytics</span>
           </a>
           
-          <a href="{{ url_for('view_requests') }}" class="navbar-item {{ 'active' if request.path == '/view_requests' else '' }}">
+          <a href="{{ url_for('main.view_requests') }}" class="navbar-item {{ 'active' if request.path == '/view_requests' else '' }}">
             <span class="icon-container">
               <div class="RequestsIcon"></div>
             </span>
             <span class="medium3">My Requests</span>
           </a>
           
-          <a href="{{ url_for('account') }}" class="navbar-item {{ 'active' if request.path == '/account' else '' }}">
+          <a href="{{ url_for('main.account') }}" class="navbar-item {{ 'active' if request.path == '/account' else '' }}">
             <span class="icon-container">
               <div class="ProfileIcon"></div>
             </span>
