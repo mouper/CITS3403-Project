@@ -1,4 +1,3 @@
-import os
 from flask import Flask, request
 from config import Config, DeploymentConfig
 from flask_login import current_user, logout_user
@@ -8,10 +7,10 @@ from db import db, mail, migrate, login_manager
 # Load environment variables
 load_dotenv()
 
-def create_app(config_class):
+def create_app(Config):
     # Create Flask app
     app = Flask(__name__)
-    app.config.from_object(config_class)
+    app.config.from_object(Config)
     
     # Initialize extensions with app
     db.init_app(app)

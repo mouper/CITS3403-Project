@@ -7,11 +7,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import Select
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
-import runpy
 import os
 import sys
 
@@ -44,7 +40,7 @@ class SeleniumTestCase(TestCase):
         # Add window size to ensure consistent viewport
         options.add_argument("--window-size=1920,1080")
         self.driver = webdriver.Chrome(options=options)
-        self.wait = WebDriverWait(self.driver, 20)  # Increase default wait time
+        self.wait = WebDriverWait(self.driver, 30)  # Increase default wait time
         self.driver.get(localHost)
 
     def tearDown(self):
@@ -508,6 +504,7 @@ class SeleniumTestCase(TestCase):
         # Select winners for each match
         for match_num in range(1, 7):  # Tables 1 through 6
             # Wait for the match row to be present
+            time.sleep(2)
             match_row = wait.until(EC.presence_of_element_located((
                 By.XPATH, f"//tr[@class='match-row'][{match_num}]"
             )))

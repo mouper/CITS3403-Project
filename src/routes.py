@@ -1,7 +1,7 @@
 import datetime
 import math
 import random
-from flask import render_template, request, redirect, url_for, flash, jsonify, send_from_directory, abort
+from flask import render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_user, logout_user, current_user, login_required
 from flask_mail import Message
 from blueprints import main
@@ -10,8 +10,6 @@ from db import db, mail  # Import db and mail from database instead of app
 from sqlalchemy import func
 from sqlalchemy.orm import aliased
 from collections import defaultdict
-import json, io
-import re
 import os
 from werkzeug.utils import secure_filename
 
