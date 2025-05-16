@@ -36,7 +36,7 @@ flask --app app db upgrade
 
 4. Initialise the test database (optional):
 ```
-python3 generate_test_db.py
+python generate_test_db.py
 ```
 
 5. Running the website:
@@ -58,16 +58,16 @@ deactivate
 
 1. Running the unit tests:
 ```
-TODO
+python -m unittest tests/unitTests.py -v
 ```
 
 2. Running the selenium tests:
 ```
-TODO
+python -m unittest tests/seleniumTests.py -v
 ```
 
 ---
 
 ## References
 
-> AI tools e.g., GitHub Copilot, chatGPT, Claude were used in the development of this project. These tools were used to assist the team in correcting code logic, and optimising code efficiency in some instances.
+> AI tools (e.g. GitHub Copilot, chatGPT, Claude) were used in the development of this project. These tools were used to assist the team in correcting code logic, and optimising code efficiency in some instances.
