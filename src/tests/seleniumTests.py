@@ -47,14 +47,13 @@ class SeleniumTestCase(TestCase):
         self.driver.get(localHost)
 
     def tearDown(self):
-        db.session.remove()
-        db.drop_all()
-        self.app_context.pop()
-
+        self.driver.quit()
         # Shutdown server and join thread
         self.server.shutdown()
         self.server_thread.join()
-        self.driver.close()
+        db.session.remove()
+        db.drop_all()
+        self.app_context.pop()
 
     def scroll_to_element(self, element):
         """Helper method to scroll element into view"""

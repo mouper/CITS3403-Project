@@ -1,39 +1,33 @@
 import unittest
 import json
-from app import application, db
+from app import create_app, db
 from models import User
+from config import TestConfig   
 
 class RoutesTestCase(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        # Configure app for testing
-        application.config['TESTING'] = True
-        application.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
-        application.config['WTF_CSRF_ENABLED'] = False
-        # Keep login enabled to test redirect logic
-        application.config['LOGIN_DISABLED'] = False
-        cls.app = application
-        with cls.app.app_context():
-            db.create_all()
-            # Create a test user
-            user = User(username='testuser', email='test@example.com', first_name='Test', last_name='User')
-            user.set_password('password')
-            db.session.add(user)
-            db.session.commit()
-            cls.test_user_id = user.id
-
-    @classmethod
-    def tearDownClass(cls):
-        # Drop all tables after tests finish
-        with cls.app.app_context():
-            db.drop_all()
-
     def setUp(self):
+        self.app = create_app(TestConfig)
+        self.app_context = self.app.app_context()
+        self.app_context.push()
+        db.create_all()
+        # Create a test user
+        user = User(username='testuser', email='test@example.com', first_name='Test', last_name='User')
+        user.set_password('password')
+        db.session.add(user)
+        db.session.commit()
+        self.test_user_id = user.id
+
         # Create a test client and simulate a logged-in session
         self.client = self.app.test_client()
         with self.client.session_transaction() as sess:
             sess['_user_id'] = str(self.test_user_id)
             sess['_fresh'] = True
+
+    def tearDown(self):
+        # Drop all tables after tests finish
+        db.session.remove()
+        db.drop_all()
+        self.app_context.pop()
 
     def test_landing_authenticated_redirect(self):
         # Test GET /

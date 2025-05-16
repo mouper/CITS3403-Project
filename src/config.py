@@ -7,6 +7,7 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 
 class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    # Not relying on environment variables for the key for marking purposes, since we are not uploading the .env file to the public repository. 
     SECRET_KEY = os.environ.get("SECRET_KEY") or 'dev-key-please-change'
 
     MAIL_SERVER = os.getenv("MAIL_SERVER", "smtp.gmail.com")
@@ -17,8 +18,7 @@ class Config:
     MAIL_DEFAULT_SENDER = MAIL_USERNAME
 
 class DeploymentConfig(Config):
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
-        "sqlite:///" + os.path.join(basedir, 'app.db')
+    SQLALCHEMY_DATABASE_URI = "sqlite:///app.db"
 
 class TestConfig(Config):
     SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
